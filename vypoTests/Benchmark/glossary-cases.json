@@ -1,0 +1,465 @@
+{
+  "glossary": [
+    {
+      "term": "Claus",
+      "soundsLike": [
+        "Kloot",
+        "Clot",
+        "Klod"
+      ]
+    },
+    {
+      "term": "Claus Code"
+    },
+    {
+      "term": "Cursor"
+    },
+    {
+      "term": "Xcode"
+    },
+    {
+      "term": "SwiftUI"
+    },
+    {
+      "term": "GitHub"
+    },
+    {
+      "term": "Vercel"
+    },
+    {
+      "term": "Supabase"
+    },
+    {
+      "term": "TypeScript"
+    },
+    {
+      "term": "Tailwind"
+    },
+    {
+      "term": "localhost"
+    },
+    {
+      "term": "README"
+    },
+    {
+      "term": "Scrum"
+    },
+    {
+      "term": "Sprint"
+    },
+    {
+      "term": "Backlog"
+    },
+    {
+      "term": "Jira"
+    },
+    {
+      "term": "Confluence"
+    },
+    {
+      "term": "Stand-up"
+    },
+    {
+      "term": "Retro"
+    },
+    {
+      "term": "Story Points"
+    },
+    {
+      "term": "Stakeholder"
+    },
+    {
+      "term": "Vypo",
+      "soundsLike": [
+        "vipo",
+        "viper"
+      ]
+    },
+    {
+      "term": "Parakeet"
+    }
+  ],
+  "cases": [
+    {
+      "id": "de-claus-code",
+      "kind": "hit",
+      "lang": "de",
+      "text": "Ich hab das gestern mit Claus Code gebaut.",
+      "terms": [
+        "Claus Code"
+      ]
+    },
+    {
+      "id": "de-jira-retro",
+      "kind": "hit",
+      "lang": "de",
+      "text": "Kannst du das Backlog in Jira aufräumen, bevor die Retro anfängt?",
+      "terms": [
+        "Backlog",
+        "Jira",
+        "Retro"
+      ]
+    },
+    {
+      "id": "de-standup",
+      "kind": "hit",
+      "lang": "de",
+      "text": "Das Stand-up ist heute um zehn.",
+      "terms": [
+        "Stand-up"
+      ]
+    },
+    {
+      "id": "de-story-points",
+      "kind": "hit",
+      "lang": "de",
+      "text": "Wir schätzen das in Story Points, nicht in Stunden.",
+      "terms": [
+        "Story Points"
+      ]
+    },
+    {
+      "id": "de-confluence",
+      "kind": "hit",
+      "lang": "de",
+      "text": "Die Doku liegt in Confluence.",
+      "terms": [
+        "Confluence"
+      ]
+    },
+    {
+      "id": "de-xcode",
+      "kind": "hit",
+      "lang": "de",
+      "text": "Öffne das Projekt in Xcode und bau es neu.",
+      "terms": [
+        "Xcode"
+      ]
+    },
+    {
+      "id": "de-swiftui",
+      "kind": "hit",
+      "lang": "de",
+      "text": "Die Ansicht ist komplett in SwiftUI geschrieben.",
+      "terms": [
+        "SwiftUI"
+      ]
+    },
+    {
+      "id": "de-github",
+      "kind": "hit",
+      "lang": "de",
+      "text": "Pushe den Fix bitte auf GitHub.",
+      "terms": [
+        "GitHub"
+      ]
+    },
+    {
+      "id": "de-vercel-supabase",
+      "kind": "hit",
+      "lang": "de",
+      "text": "Die Seite läuft auf Vercel, die Datenbank auf Supabase.",
+      "terms": [
+        "Vercel",
+        "Supabase"
+      ]
+    },
+    {
+      "id": "de-sprint-stakeholder",
+      "kind": "hit",
+      "lang": "de",
+      "text": "Im nächsten Sprint kümmern wir uns um den Stakeholder.",
+      "terms": [
+        "Sprint",
+        "Stakeholder"
+      ]
+    },
+    {
+      "id": "de-readme",
+      "kind": "hit",
+      "lang": "de",
+      "text": "Schreib das bitte in die README.",
+      "terms": [
+        "README"
+      ]
+    },
+    {
+      "id": "de-cursor",
+      "kind": "hit",
+      "lang": "de",
+      "text": "Ich hab den Ordner in Cursor geöffnet.",
+      "terms": [
+        "Cursor"
+      ]
+    },
+    {
+      "id": "de-claus",
+      "kind": "hit",
+      "lang": "de",
+      "text": "Frag mal Claus, ob das so passt.",
+      "terms": [
+        "Claus"
+      ]
+    },
+    {
+      "id": "de-vypo-parakeet",
+      "kind": "hit",
+      "lang": "de",
+      "text": "Vypo nutzt Parakeet für die Spracherkennung.",
+      "terms": [
+        "Vypo",
+        "Parakeet"
+      ]
+    },
+    {
+      "id": "de-tailwind",
+      "kind": "hit",
+      "lang": "de",
+      "text": "Das Styling machen wir mit Tailwind.",
+      "terms": [
+        "Tailwind"
+      ]
+    },
+    {
+      "id": "en-claus",
+      "kind": "hit",
+      "lang": "en",
+      "text": "Just ask Claus to refactor this function.",
+      "terms": [
+        "Claus"
+      ]
+    },
+    {
+      "id": "en-localhost",
+      "kind": "hit",
+      "lang": "en",
+      "text": "The app runs on localhost port three thousand.",
+      "terms": [
+        "localhost"
+      ]
+    },
+    {
+      "id": "en-typescript",
+      "kind": "hit",
+      "lang": "en",
+      "text": "Let's convert the whole thing to TypeScript.",
+      "terms": [
+        "TypeScript"
+      ]
+    },
+    {
+      "id": "en-scrum",
+      "kind": "hit",
+      "lang": "en",
+      "text": "Our team switched to Scrum last year.",
+      "terms": [
+        "Scrum"
+      ]
+    },
+    {
+      "id": "en-xcode",
+      "kind": "hit",
+      "lang": "en",
+      "text": "Open the project in Xcode and run the tests.",
+      "terms": [
+        "Xcode"
+      ]
+    },
+    {
+      "id": "en-vercel",
+      "kind": "hit",
+      "lang": "en",
+      "text": "I deployed the preview on Vercel.",
+      "terms": [
+        "Vercel"
+      ]
+    },
+    {
+      "id": "en-supabase",
+      "kind": "hit",
+      "lang": "en",
+      "text": "The backend is just Supabase and a few functions.",
+      "terms": [
+        "Supabase"
+      ]
+    },
+    {
+      "id": "en-readme",
+      "kind": "hit",
+      "lang": "en",
+      "text": "Can you update the README before the demo?",
+      "terms": [
+        "README"
+      ]
+    },
+    {
+      "id": "en-cursor-claus-code",
+      "kind": "hit",
+      "lang": "en",
+      "text": "Cursor and Claus Code both edited the same file.",
+      "terms": [
+        "Cursor",
+        "Claus Code"
+      ]
+    },
+    {
+      "id": "en-github",
+      "kind": "hit",
+      "lang": "en",
+      "text": "Push it to GitHub and open a pull request.",
+      "terms": [
+        "GitHub"
+      ]
+    },
+    {
+      "id": "de-glaube",
+      "kind": "trap",
+      "lang": "de",
+      "text": "Ich glaube, das klappt heute nicht mehr.",
+      "keep": [
+        "glaube"
+      ],
+      "forbid": [
+        "Claus"
+      ]
+    },
+    {
+      "id": "de-cloud",
+      "kind": "trap",
+      "lang": "de",
+      "text": "Wir speichern die Fotos in der Cloud.",
+      "keep": [
+        "Cloud"
+      ],
+      "forbid": [
+        "Claus"
+      ]
+    },
+    {
+      "id": "en-cloud",
+      "kind": "trap",
+      "lang": "en",
+      "text": "The files are stored in the cloud.",
+      "keep": [
+        "cloud"
+      ],
+      "forbid": [
+        "Claus"
+      ]
+    },
+    {
+      "id": "de-claudia",
+      "kind": "trap",
+      "lang": "de",
+      "text": "Claudia kommt heute etwas später.",
+      "keep": [
+        "Claudia"
+      ],
+      "forbid": [
+        "Claus"
+      ]
+    },
+    {
+      "id": "de-code",
+      "kind": "trap",
+      "lang": "de",
+      "text": "Schick mir den Code bitte nochmal.",
+      "keep": [
+        "Code"
+      ],
+      "forbid": [
+        "Claus"
+      ]
+    },
+    {
+      "id": "de-kurs",
+      "kind": "trap",
+      "lang": "de",
+      "text": "Der Kurs beginnt morgen um neun.",
+      "keep": [
+        "Kurs"
+      ],
+      "forbid": [
+        "Cursor"
+      ]
+    },
+    {
+      "id": "en-cursor",
+      "kind": "trap",
+      "lang": "en",
+      "text": "Move the cursor to the end of the line.",
+      "keep": [
+        "cursor"
+      ],
+      "forbid": [
+        "Cursor"
+      ]
+    },
+    {
+      "id": "de-jura",
+      "kind": "trap",
+      "lang": "de",
+      "text": "Sie studiert Jura in Hamburg.",
+      "keep": [
+        "Jura"
+      ],
+      "forbid": [
+        "Jira"
+      ]
+    },
+    {
+      "id": "en-sprint",
+      "kind": "trap",
+      "lang": "en",
+      "text": "He won the sprint at the end of the race.",
+      "keep": [
+        "sprint"
+      ],
+      "forbid": [
+        "Sprint"
+      ]
+    },
+    {
+      "id": "de-paket",
+      "kind": "trap",
+      "lang": "de",
+      "text": "Wir schicken das Paket morgen los.",
+      "keep": [
+        "Paket"
+      ],
+      "forbid": [
+        "Parakeet"
+      ]
+    },
+    {
+      "id": "de-einkaufen",
+      "kind": "neutral",
+      "lang": "de",
+      "text": "Ich gehe heute Abend noch einkaufen."
+    },
+    {
+      "id": "de-unterlagen",
+      "kind": "neutral",
+      "lang": "de",
+      "text": "Kannst du mir die Unterlagen bis Freitag schicken?"
+    },
+    {
+      "id": "en-meeting",
+      "kind": "neutral",
+      "lang": "en",
+      "text": "The meeting got moved to Thursday afternoon."
+    },
+    {
+      "id": "de-danke",
+      "kind": "neutral",
+      "lang": "de",
+      "text": "Danke für deine Hilfe, das war wirklich super."
+    },
+    {
+      "id": "en-lunch",
+      "kind": "neutral",
+      "lang": "en",
+      "text": "I'll call you back after lunch."
+    }
+  ]
+}

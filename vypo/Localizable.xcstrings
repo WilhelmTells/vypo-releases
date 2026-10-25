@@ -1,0 +1,4429 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": ""
+          }
+        }
+      }
+    },
+    "%@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@"
+          }
+        }
+      }
+    },
+    "%@ / %@ words": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ / %@ Wörter"
+          }
+        }
+      }
+    },
+    "%@ Bibles so far.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schon %@-mal die Bibel."
+          }
+        }
+      }
+    },
+    "%@ added": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ hinzugefügt"
+          }
+        }
+      }
+    },
+    "%@ added to your glossary.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ wurde zum Glossar hinzugefügt."
+          }
+        }
+      }
+    },
+    "%@ of Shakespeare’s complete works so far.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schon %@-mal Shakespeares Gesamtwerk."
+          }
+        }
+      }
+    },
+    "%@ of all seven Harry Potter books so far.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schon %@-mal alle sieben Harry-Potter-Bände."
+          }
+        }
+      }
+    },
+    "%@ to go": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "noch %@"
+          }
+        }
+      }
+    },
+    "%@ used": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ belegt"
+          }
+        }
+      }
+    },
+    "%@ words": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ Wörter"
+          }
+        }
+      }
+    },
+    "%@ · %lld words": {
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%1$@ · %2$lld Wort"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%1$@ · %2$lld Wörter"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%1$@ · %2$lld word"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%1$@ · %2$lld words"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%@× as fast as typing": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@× so schnell wie Tippen"
+          }
+        }
+      }
+    },
+    "%lld %%": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld %%"
+          }
+        }
+      }
+    },
+    "%lld days, longest %lld days": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld Tage in Folge, längste Serie %2$lld Tage"
+          }
+        }
+      }
+    },
+    "%lld h %lld min": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld h %2$lld min"
+          }
+        }
+      }
+    },
+    "%lld min": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld min"
+          }
+        }
+      }
+    },
+    "%lld more": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld weitere"
+          }
+        }
+      }
+    },
+    "%lld percent": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld Prozent"
+          }
+        }
+      }
+    },
+    "%lld terms": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld Begriffe"
+          }
+        }
+      }
+    },
+    "%lld-day streak": {
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Tag in Folge"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld Tage in Folge"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld×": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld×"
+          }
+        }
+      }
+    },
+    "(none in the last 24 hours)": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "(keine in den letzten 24 Stunden)"
+          }
+        }
+      }
+    },
+    ", loaded": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": ", geladen"
+          }
+        }
+      }
+    },
+    "30 days": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "30 Tage"
+          }
+        }
+      }
+    },
+    "7 days": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "7 Tage"
+          }
+        }
+      }
+    },
+    "A Christmas Carol": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eine Weihnachtsgeschichte"
+          }
+        }
+      }
+    },
+    "About": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Über vypo"
+          }
+        }
+      }
+    },
+    "About as long as %lld book pages.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "So viel wie %lld Buchseiten."
+          }
+        }
+      }
+    },
+    "About vypo": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Über vypo"
+          }
+        }
+      }
+    },
+    "Accessibility": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bedienungshilfen"
+          }
+        }
+      }
+    },
+    "Acknowledgements": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Danksagungen"
+          }
+        }
+      }
+    },
+    "Add": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hinzufügen"
+          }
+        }
+      }
+    },
+    "Add %@ to your glossary?": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ zum Glossar hinzufügen?"
+          }
+        }
+      }
+    },
+    "Add %lld terms": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld Begriffe hinzufügen"
+          }
+        }
+      }
+    },
+    "Add app…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "App hinzufügen …"
+          }
+        }
+      }
+    },
+    "Add replacement": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ersetzung hinzufügen"
+          }
+        }
+      }
+    },
+    "Add selected word to glossary": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Markiertes Wort zum Glossar"
+          }
+        }
+      }
+    },
+    "Add term": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Begriff hinzufügen"
+          }
+        }
+      }
+    },
+    "Add to glossary": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zum Glossar hinzufügen"
+          }
+        }
+      }
+    },
+    "Added": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hinzugefügt"
+          }
+        }
+      }
+    },
+    "Adds spaces and capital letters so the text fits where your cursor is.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Setzt Leerzeichen und Großbuchstaben so, dass der Text dort passt, wo dein Cursor steht."
+          }
+        }
+      }
+    },
+    "Alice’s Adventures in Wonderland": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alice im Wunderland"
+          }
+        }
+      }
+    },
+    "All": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle"
+          }
+        }
+      }
+    },
+    "All languages": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle Sprachen"
+          }
+        }
+      }
+    },
+    "All sets": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle Sets"
+          }
+        }
+      }
+    },
+    "Allowed": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erlaubt"
+          }
+        }
+      }
+    },
+    "Allow…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erlauben …"
+          }
+        }
+      }
+    },
+    "Always use built-in microphone": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Immer das eingebaute Mikrofon verwenden"
+          }
+        }
+      }
+    },
+    "Animal Farm": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Farm der Tiere"
+          }
+        }
+      }
+    },
+    "Any key with modifiers, e.g. ⌃⌥D. Hold it or double-tap it like a single key.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eine Taste mit Sondertasten, z. B. ⌃⌥D. Halten oder zweimal tippen wie bei einer einzelnen Taste."
+          }
+        }
+      }
+    },
+    "App language": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sprache der App"
+          }
+        }
+      }
+    },
+    "Appearance": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erscheinungsbild"
+          }
+        }
+      }
+    },
+    "Applies to": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gilt für"
+          }
+        }
+      }
+    },
+    "Apps": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apps"
+          }
+        }
+      }
+    },
+    "Automatic": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatisch"
+          }
+        }
+      }
+    },
+    "Automatic follows your Mac’s light or dark mode.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatisch folgt dem hellen oder dunklen Modus deines Macs."
+          }
+        }
+      }
+    },
+    "Back": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zurück"
+          }
+        }
+      }
+    },
+    "Background": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hintergrund"
+          }
+        }
+      }
+    },
+    "Bell": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bell"
+          }
+        }
+      }
+    },
+    "Blue": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blau"
+          }
+        }
+      }
+    },
+    "By moondream, based on NVIDIA Parakeet TDT 0.6B v3 · ": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Von moondream, basierend auf NVIDIA Parakeet TDT 0.6B v3 · "
+          }
+        }
+      }
+    },
+    "Cancel": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abbrechen"
+          }
+        }
+      }
+    },
+    "Careful": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vorsichtig"
+          }
+        }
+      }
+    },
+    "Chancellor": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kanzler"
+          }
+        }
+      }
+    },
+    "Change Input Source": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eingabequelle wechseln"
+          }
+        }
+      }
+    },
+    "Check Now": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jetzt prüfen"
+          }
+        }
+      }
+    },
+    "Check for Updates…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nach Updates suchen …"
+          }
+        }
+      }
+    },
+    "Check for updates automatically": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatisch nach Updates suchen"
+          }
+        }
+      }
+    },
+    "Choose…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auswählen…"
+          }
+        }
+      }
+    },
+    "Chronicler": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chronist"
+          }
+        }
+      }
+    },
+    "Clear": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Löschen"
+          }
+        }
+      }
+    },
+    "Clear all history?": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gesamten Verlauf löschen?"
+          }
+        }
+      }
+    },
+    "Clear history": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verlauf löschen"
+          }
+        }
+      }
+    },
+    "Click the field, hold %@ and say something.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klicke ins Feld, halte %@ gedrückt und sag etwas."
+          }
+        }
+      }
+    },
+    "Clicking the icon opens Settings.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein Klick auf das Symbol öffnet die Einstellungen."
+          }
+        }
+      }
+    },
+    "Close": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schließen"
+          }
+        }
+      }
+    },
+    "Collapsed": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eingeklappt"
+          }
+        }
+      }
+    },
+    "Collect stats": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Statistik erfassen"
+          }
+        }
+      }
+    },
+    "Collecting diagnostics…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diagnose wird erstellt …"
+          }
+        }
+      }
+    },
+    "Color": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Farbe"
+          }
+        }
+      }
+    },
+    "Color the menu bar icon while dictating": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Menüleisten-Symbol beim Diktieren rot färben"
+          }
+        }
+      }
+    },
+    "Compared with typing at 40 words per minute.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verglichen mit Tippen bei 40 Wörtern pro Minute."
+          }
+        }
+      }
+    },
+    "Continue": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weiter"
+          }
+        }
+      }
+    },
+    "Copied": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kopiert"
+          }
+        }
+      }
+    },
+    "Copies a report for a bug mail to the clipboard. It contains no dictated text.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kopiert einen Bericht für eine Fehlermail in die Zwischenablage. Er enthält keinen diktierten Text."
+          }
+        }
+      }
+    },
+    "Copy": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kopieren"
+          }
+        }
+      }
+    },
+    "Copy Address": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adresse kopieren"
+          }
+        }
+      }
+    },
+    "Copy Diagnostics…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diagnose kopieren …"
+          }
+        }
+      }
+    },
+    "Copy last dictation": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Letztes Diktat kopieren"
+          }
+        }
+      }
+    },
+    "Counted from now on. Dictate in a few apps and they show up here.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wird ab jetzt gezählt. Diktiere in ein paar Apps, dann erscheinen sie hier."
+          }
+        }
+      }
+    },
+    "Court coachman": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hofkutscher"
+          }
+        }
+      }
+    },
+    "Custom color": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eigene Farbe"
+          }
+        }
+      }
+    },
+    "Custom shortcut": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eigener Kurzbefehl"
+          }
+        }
+      }
+    },
+    "Cut": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ausschneiden"
+          }
+        }
+      }
+    },
+    "DE": {
+      "extractionState": "stale",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "DE"
+          }
+        }
+      }
+    },
+    "Dark": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dunkel"
+          }
+        }
+      }
+    },
+    "Debug": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Debug"
+          }
+        }
+      }
+    },
+    "Deep": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deep"
+          }
+        }
+      }
+    },
+    "Default": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Standard"
+          }
+        }
+      }
+    },
+    "Delete": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Löschen"
+          }
+        }
+      }
+    },
+    "Delete set": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set löschen"
+          }
+        }
+      }
+    },
+    "Delete “%@” and its %lld terms?": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "„%@“ und seine %lld Begriffe löschen?"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Delete “%1$@” and its %2$lld terms?"
+          }
+        }
+      }
+    },
+    "Diagnostics": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diagnose"
+          }
+        }
+      }
+    },
+    "Dictation": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diktat"
+          }
+        }
+      }
+    },
+    "Dictation key": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diktiertaste"
+          }
+        }
+      }
+    },
+    "Didn’t catch that": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nicht verstanden"
+          }
+        }
+      }
+    },
+    "Do Nothing": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Aktion"
+          }
+        }
+      }
+    },
+    "Dock": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dock"
+          }
+        }
+      }
+    },
+    "Done": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fertig"
+          }
+        }
+      }
+    },
+    "Double-tap for hands-free": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Doppeltippen für freihändig"
+          }
+        }
+      }
+    },
+    "Download · %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Herunterladen · %@"
+          }
+        }
+      }
+    },
+    "Downloading %@… %lld %%": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ wird geladen … %lld %%"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Downloading %1$@… %2$lld %%"
+          }
+        }
+      }
+    },
+    "Drag the pill anywhere. It snaps to screen edges.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zieh die Pill an eine beliebige Stelle. Sie rastet an den Bildschirmrändern ein."
+          }
+        }
+      }
+    },
+    "Duo": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Duo"
+          }
+        }
+      }
+    },
+    "EN": {
+      "extractionState": "stale",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "EN"
+          }
+        }
+      }
+    },
+    "Edit": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bearbeiten"
+          }
+        }
+      }
+    },
+    "Edit…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bearbeiten …"
+          }
+        }
+      }
+    },
+    "English": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Englisch"
+          }
+        }
+      }
+    },
+    "English and German only.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nur Englisch und Deutsch."
+          }
+        }
+      }
+    },
+    "Errand boy": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Laufbursche"
+          }
+        }
+      }
+    },
+    "Error": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fehler"
+          }
+        }
+      }
+    },
+    "Error: %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fehler: %@"
+          }
+        }
+      }
+    },
+    "Errors in the last 24 hours: %lld": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fehler in den letzten 24 Stunden: %lld"
+          }
+        }
+      }
+    },
+    "Everywhere": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Überall"
+          }
+        }
+      }
+    },
+    "Export glossary…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glossar exportieren …"
+          }
+        }
+      }
+    },
+    "Fast and accurate, 20 languages. Runs on this Mac.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schnell und genau, 20 Sprachen. Läuft auf diesem Mac."
+          }
+        }
+      }
+    },
+    "Filler words": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Füllwörter"
+          }
+        }
+      }
+    },
+    "Filler words are removed in English and German.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Füllwörter werden auf Englisch und Deutsch entfernt."
+          }
+        }
+      }
+    },
+    "Fix a text with the pencil. vypo learns from your fixes and suggests glossary terms.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Korrigiere einen Text mit dem Stift. vypo lernt aus deinen Korrekturen und schlägt Glossarbegriffe vor."
+          }
+        }
+      }
+    },
+    "Fixes near misses afterwards, e.g. “tick tock” becomes “TikTok”.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Korrigiert Beinahe-Treffer im Nachhinein, z. B. wird aus „tick tock“ „TikTok“."
+          }
+        }
+      }
+    },
+    "For AI chats, terminals and code editors: no final period, so you can keep typing; can send automatically. Replacements set to “Prompt apps only” work in a sentence here.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Für KI-Chats, Terminals und Code-Editoren: kein Schlusspunkt, damit du weitertippen kannst; kann automatisch senden. Ersetzungen mit „Nur in Prompt-Apps“ wirken hier auch im Satz."
+          }
+        }
+      }
+    },
+    "For documents and notes: say “comma” or “new paragraph”, and quotes become typographic.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Für Dokumente und Notizen: sag „Komma“ oder „neuer Absatz“, und Anführungszeichen werden typografisch."
+          }
+        }
+      }
+    },
+    "Forever": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unbegrenzt"
+          }
+        }
+      }
+    },
+    "Found %lld terms in %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld Begriffe in %@ gefunden"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Found %1$lld terms in %2$@"
+          }
+        }
+      }
+    },
+    "Frankenstein": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Frankenstein"
+          }
+        }
+      }
+    },
+    "Free up the Globe key": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Globus-Taste freigeben"
+          }
+        }
+      }
+    },
+    "General": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allgemein"
+          }
+        }
+      }
+    },
+    "German": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deutsch"
+          }
+        }
+      }
+    },
+    "Get started": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los geht’s"
+          }
+        }
+      }
+    },
+    "Glass": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glas"
+          }
+        }
+      }
+    },
+    "Glide": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glide"
+          }
+        }
+      }
+    },
+    "Glide low": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glide tief"
+          }
+        }
+      }
+    },
+    "Glide short": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glide kurz"
+          }
+        }
+      }
+    },
+    "Globe key in use": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Globus-Taste belegt"
+          }
+        }
+      }
+    },
+    "Glossary": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glossar"
+          }
+        }
+      }
+    },
+    "Glossary helper": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glossar-Helfer"
+          }
+        }
+      }
+    },
+    "Glossary helper (CTC, slower)": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glossar-Helfer (CTC, langsamer)"
+          }
+        }
+      }
+    },
+    "Glossary suggestion": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glossar-Vorschlag"
+          }
+        }
+      }
+    },
+    "Glossary term": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glossar-Begriff"
+          }
+        }
+      }
+    },
+    "Glossary: %lld terms, %lld in active sets": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glossar: %lld Begriffe, %lld in aktiven Sets"
+          }
+        }
+      }
+    },
+    "Green": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grün"
+          }
+        }
+      }
+    },
+    "Group terms, e.g. per project, and turn a group off when you don’t need it.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gruppiere Begriffe, z. B. pro Projekt, und schalte eine Gruppe aus, wenn du sie nicht brauchst."
+          }
+        }
+      }
+    },
+    "Hamlet": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hamlet"
+          }
+        }
+      }
+    },
+    "Hands-free": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Freihändig"
+          }
+        }
+      }
+    },
+    "Hands-free, listening": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Freihändig, hört zu"
+          }
+        }
+      }
+    },
+    "Harry Potter and the Philosopher’s Stone": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Harry Potter und der Stein der Weisen"
+          }
+        }
+      }
+    },
+    "Help": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hilfe"
+          }
+        }
+      }
+    },
+    "Herald": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Herold"
+          }
+        }
+      }
+    },
+    "Hide from screen sharing and screenshots": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bei Bildschirmfreigabe und Bildschirmfotos ausblenden"
+          }
+        }
+      }
+    },
+    "Highest rank": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Höchster Rang"
+          }
+        }
+      }
+    },
+    "History": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verlauf"
+          }
+        }
+      }
+    },
+    "Hold %@ and talk. Double-tap %@ to dictate hands-free.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Halte %1$@ gedrückt und sprich. Tippe zweimal auf %2$@, um freihändig zu diktieren."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Hold %1$@ and talk. Double-tap %2$@ to dictate hands-free."
+          }
+        }
+      }
+    },
+    "Hold the key while you talk. Double-tap it to keep listening until you tap again. Esc cancels a recording.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Halte die Taste gedrückt, während du sprichst. Tippe zweimal, damit vypo weiter zuhört, bis du erneut tippst. Esc bricht eine Aufnahme ab."
+          }
+        }
+      }
+    },
+    "Hold to talk": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zum Sprechen halten"
+          }
+        }
+      }
+    },
+    "How much you’ve dictated. Counted only on this Mac.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wie viel du diktiert hast. Nur auf diesem Mac gezählt."
+          }
+        }
+      }
+    },
+    "How the glossary helps": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "So hilft das Glossar"
+          }
+        }
+      }
+    },
+    "How vypo looks on your Mac.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "So sieht vypo auf deinem Mac aus."
+          }
+        }
+      }
+    },
+    "How vypo starts, pastes and transcribes.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wie vypo startet, einfügt und transkribiert."
+          }
+        }
+      }
+    },
+    "How you start dictating, and what vypo listens with.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wie du das Diktat startest und womit vypo zuhört."
+          }
+        }
+      }
+    },
+    "If a term keeps coming out wrong, edit it and add what vypo wrote instead under “Sounds like”.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wenn ein Begriff immer wieder falsch herauskommt, bearbeite ihn und trag unter „Klingt wie“ ein, was vypo stattdessen geschrieben hat."
+          }
+        }
+      }
+    },
+    "Ignore": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ignorieren"
+          }
+        }
+      }
+    },
+    "Import from document…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aus Dokument importieren …"
+          }
+        }
+      }
+    },
+    "Import glossary…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glossar importieren …"
+          }
+        }
+      }
+    },
+    "In Writing apps": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In Schreib-Apps"
+          }
+        }
+      }
+    },
+    "In a sentence": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Im Satz"
+          }
+        }
+      }
+    },
+    "In sentences: Prompt apps": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Im Satz: Prompt-Apps"
+          }
+        }
+      }
+    },
+    "Input device": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eingabegerät"
+          }
+        }
+      }
+    },
+    "Installed · %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Installiert · %@"
+          }
+        }
+      }
+    },
+    "Keep for": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aufbewahren"
+          }
+        }
+      }
+    },
+    "Keep recordings for benchmark": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aufnahmen für Benchmark behalten"
+          }
+        }
+      }
+    },
+    "Language": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sprache"
+          }
+        }
+      }
+    },
+    "Languages": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sprachen"
+          }
+        }
+      }
+    },
+    "Languages: %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sprachen: %@"
+          }
+        }
+      }
+    },
+    "Last %lld dictation timings:": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Letzte %lld Diktat-Zeiten:"
+          }
+        }
+      }
+    },
+    "Last checked: %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zuletzt geprüft: %@"
+          }
+        }
+      }
+    },
+    "Later": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Später"
+          }
+        }
+      }
+    },
+    "Less": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weniger"
+          }
+        }
+      }
+    },
+    "Level": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pegel"
+          }
+        }
+      }
+    },
+    "Level %lld of %lld": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Level %lld von %lld"
+          }
+        }
+      }
+    },
+    "Level %lld of %lld, %@. %@ words to the next level.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Level %lld von %lld, %@. Noch %@ Wörter bis zum nächsten Level."
+          }
+        }
+      }
+    },
+    "Level %lld of %lld, %@. %@ words.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Level %lld von %lld, %@. %@ Wörter."
+          }
+        }
+      }
+    },
+    "Level %lld: %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Level %lld: %@"
+          }
+        }
+      }
+    },
+    "License texts": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lizenztexte"
+          }
+        }
+      }
+    },
+    "Light": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hell"
+          }
+        }
+      }
+    },
+    "Listen for your terms": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auf deine Begriffe achten"
+          }
+        }
+      }
+    },
+    "Listening": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hört zu"
+          }
+        }
+      }
+    },
+    "Log unavailable: %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Log nicht lesbar: %@"
+          }
+        }
+      }
+    },
+    "Longer than *%@*.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Länger als *%@*."
+          }
+        }
+      }
+    },
+    "Longest: %lld days": {
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Längste: %lld Tag"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Längste: %lld Tage"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Longest: %lld day"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Longest: %lld days"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Mac: %@, %@, %llu GB memory": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac: %@, %@, %llu GB Arbeitsspeicher"
+          }
+        }
+      }
+    },
+    "Made by Wilhelm Tells": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Von Wilhelm Tells"
+          }
+        }
+      }
+    },
+    "Manage sets…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sets verwalten …"
+          }
+        }
+      }
+    },
+    "Mascot": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maskottchen"
+          }
+        }
+      }
+    },
+    "Menu bar": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Menüleiste"
+          }
+        }
+      }
+    },
+    "Messenger": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bote"
+          }
+        }
+      }
+    },
+    "Mic not allowed": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mikrofon nicht erlaubt"
+          }
+        }
+      }
+    },
+    "Microphone": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mikrofon"
+          }
+        }
+      }
+    },
+    "Microphone: %@; Accessibility: %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mikrofon: %@; Bedienungshilfen: %@"
+          }
+        }
+      }
+    },
+    "Moby-Dick": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Moby-Dick"
+          }
+        }
+      }
+    },
+    "Model error": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modellfehler"
+          }
+        }
+      }
+    },
+    "Model missing": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modell fehlt"
+          }
+        }
+      }
+    },
+    "Modes": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modi"
+          }
+        }
+      }
+    },
+    "More": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mehr"
+          }
+        }
+      }
+    },
+    "More languages": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weitere Sprachen"
+          }
+        }
+      }
+    },
+    "More than half of *%@*.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mehr als halb so lang wie *%@*."
+          }
+        }
+      }
+    },
+    "Mute audio while recording": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ton während der Aufnahme stummschalten"
+          }
+        }
+      }
+    },
+    "Mutes other sound while you dictate, so it doesn’t end up in the recording.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schaltet anderen Ton stumm, während du diktierst, damit er nicht in der Aufnahme landet."
+          }
+        }
+      }
+    },
+    "Name": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Name"
+          }
+        }
+      }
+    },
+    "Neutral": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neutral"
+          }
+        }
+      }
+    },
+    "Never (only on its own)": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nie (nur allein)"
+          }
+        }
+      }
+    },
+    "New set…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neues Set …"
+          }
+        }
+      }
+    },
+    "No accessibility": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Bedienungshilfen"
+          }
+        }
+      }
+    },
+    "No apps yet. vypo works the same everywhere until you add one.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noch keine Apps. vypo verhält sich überall gleich, bis du eine hinzufügst."
+          }
+        }
+      }
+    },
+    "No mail app is set up": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kein Mailprogramm eingerichtet"
+          }
+        }
+      }
+    },
+    "No matches.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Treffer."
+          }
+        }
+      }
+    },
+    "No microphone": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kein Mikrofon"
+          }
+        }
+      }
+    },
+    "No new terms found in %@.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine neuen Begriffe in %@ gefunden."
+          }
+        }
+      }
+    },
+    "No recording": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Aufnahme"
+          }
+        }
+      }
+    },
+    "No terms match “%@”.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine Begriffe passen zu „%@“."
+          }
+        }
+      }
+    },
+    "No terms yet. Add names, products or jargon that vypo should always spell right.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noch keine Begriffe. Füge Namen, Produkte oder Fachwörter hinzu, die vypo immer richtig schreiben soll."
+          }
+        }
+      }
+    },
+    "Normal": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Normal"
+          }
+        }
+      }
+    },
+    "Not checked yet": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noch nicht geprüft"
+          }
+        }
+      }
+    },
+    "Not now": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Später"
+          }
+        }
+      }
+    },
+    "Nothing dictated yet.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noch nichts diktiert."
+          }
+        }
+      }
+    },
+    "OK": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        }
+      }
+    },
+    "Off": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aus"
+          }
+        }
+      }
+    },
+    "Off in this app": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In dieser App aus"
+          }
+        }
+      }
+    },
+    "On clipboard": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In der Zwischenablage"
+          }
+        }
+      }
+    },
+    "Once a day vypo asks wilhelmtells.com whether there’s a new version. It sends only vypo’s version number; like any web request, it shows your IP address to the server.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einmal am Tag fragt vypo bei wilhelmtells.com nach, ob es eine neue Version gibt. Es sendet nur die Versionsnummer von vypo; wie bei jeder Webanfrage sieht der Server deine IP-Adresse."
+          }
+        }
+      }
+    },
+    "Only on its own": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nur allein gesagt"
+          }
+        }
+      }
+    },
+    "Only while you dictate.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nur während du diktierst."
+          }
+        }
+      }
+    },
+    "Open Keyboard Settings…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tastatur-Einstellungen öffnen …"
+          }
+        }
+      }
+    },
+    "Open System Settings…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Systemeinstellungen öffnen …"
+          }
+        }
+      }
+    },
+    "Open at login": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bei der Anmeldung öffnen"
+          }
+        }
+      }
+    },
+    "Opens a new mail to Wilhelm Tells with the versions of vypo and macOS, and nothing else.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öffnet eine neue Mail an Wilhelm Tells, nur mit den Versionen von vypo und macOS, sonst nichts."
+          }
+        }
+      }
+    },
+    "Orange": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Orange"
+          }
+        }
+      }
+    },
+    "Other": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Andere"
+          }
+        }
+      }
+    },
+    "Other (%lld apps)": {
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Andere (%lld App)"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Andere (%lld Apps)"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Other (%lld app)"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Other (%lld apps)"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Output": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ausgabe"
+          }
+        }
+      }
+    },
+    "Page": {
+      "comment": "Rank: a young servant at court",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Page"
+          }
+        }
+      }
+    },
+    "Paste": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einsetzen"
+          }
+        }
+      }
+    },
+    "Paste text automatically": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Text automatisch einfügen"
+          }
+        }
+      }
+    },
+    "Pasting": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einfügen"
+          }
+        }
+      }
+    },
+    "Pill": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pill"
+          }
+        }
+      }
+    },
+    "Pill preview": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pill-Vorschau"
+          }
+        }
+      }
+    },
+    "Pink": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pink"
+          }
+        }
+      }
+    },
+    "Plain dictation, as in every app you haven’t added.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Normales Diktat, wie in jeder App, die du nicht hinzugefügt hast."
+          }
+        }
+      }
+    },
+    "Play level-up": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Level-up abspielen"
+          }
+        }
+      }
+    },
+    "Plays when a recording starts and stops.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erklingt, wenn eine Aufnahme startet und endet."
+          }
+        }
+      }
+    },
+    "Poet Laureate": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hofdichter"
+          }
+        }
+      }
+    },
+    "Position": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Position"
+          }
+        }
+      }
+    },
+    "Press Globe key to": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Globus-Taste drücken zum"
+          }
+        }
+      }
+    },
+    "Presses Enter after pasting.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drückt nach dem Einfügen Enter."
+          }
+        }
+      }
+    },
+    "Pride and Prejudice": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stolz und Vorurteil"
+          }
+        }
+      }
+    },
+    "Processing": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verarbeitet"
+          }
+        }
+      }
+    },
+    "Progress": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fortschritt"
+          }
+        }
+      }
+    },
+    "Prompt": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prompt"
+          }
+        }
+      }
+    },
+    "Prompt apps only": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nur in Prompt-Apps"
+          }
+        }
+      }
+    },
+    "Purple": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lila"
+          }
+        }
+      }
+    },
+    "Puts back what was on the clipboard after pasting.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stellt nach dem Einfügen wieder her, was vorher in der Zwischenablage war."
+          }
+        }
+      }
+    },
+    "Quit vypo": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "vypo beenden"
+          }
+        }
+      }
+    },
+    "Ready": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bereit"
+          }
+        }
+      }
+    },
+    "Ready to dictate": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bereit zum Diktieren"
+          }
+        }
+      }
+    },
+    "Recording": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aufnahme"
+          }
+        }
+      }
+    },
+    "Records with the Mac’s own microphone, so AirPods keep playing in full quality. Not used with the lid closed.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nimmt mit dem eingebauten Mikrofon auf, damit AirPods weiter in voller Qualität spielen. Nicht bei geschlossenem Deckel."
+          }
+        }
+      }
+    },
+    "Remove": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entfernen"
+          }
+        }
+      }
+    },
+    "Remove filler words": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Füllwörter entfernen"
+          }
+        }
+      }
+    },
+    "Replace similar-sounding words": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ähnlich klingende Wörter ersetzen"
+          }
+        }
+      }
+    },
+    "Replaced anywhere in a sentence, in every app.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wird überall im Satz ersetzt, in jeder App."
+          }
+        }
+      }
+    },
+    "Replaced in a sentence only in apps set to Prompt.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wird im Satz nur in Apps im Modus Prompt ersetzt."
+          }
+        }
+      }
+    },
+    "Replaced only when it is all you say.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wird nur ersetzt, wenn es alles ist, was du sagst."
+          }
+        }
+      }
+    },
+    "Replacements": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ersetzungen"
+          }
+        }
+      }
+    },
+    "Reset": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zurücksetzen"
+          }
+        }
+      }
+    },
+    "Reset all stats?": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle Statistiken zurücksetzen?"
+          }
+        }
+      }
+    },
+    "Reset position": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Position zurücksetzen"
+          }
+        }
+      }
+    },
+    "Reset preview": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vorschau zurücksetzen"
+          }
+        }
+      }
+    },
+    "Reset stats": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Statistik zurücksetzen"
+          }
+        }
+      }
+    },
+    "Reset to defaults": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auf Standard zurücksetzen"
+          }
+        }
+      }
+    },
+    "Restart now": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jetzt neu starten"
+          }
+        }
+      }
+    },
+    "Restart vypo to change the language?": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "vypo neu starten, um die Sprache zu ändern?"
+          }
+        }
+      }
+    },
+    "Restore clipboard": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zwischenablage wiederherstellen"
+          }
+        }
+      }
+    },
+    "Restore default entries": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Standard-Einträge wiederherstellen"
+          }
+        }
+      }
+    },
+    "Retry download": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erneut laden"
+          }
+        }
+      }
+    },
+    "Right Command": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Befehlstaste rechts"
+          }
+        }
+      }
+    },
+    "Right Control": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Control-Taste rechts"
+          }
+        }
+      }
+    },
+    "Right Option": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wahltaste rechts"
+          }
+        }
+      }
+    },
+    "Save": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sichern"
+          }
+        }
+      }
+    },
+    "Save history": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verlauf sichern"
+          }
+        }
+      }
+    },
+    "Save last recording to Desktop": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Letzte Aufnahme auf dem Schreibtisch sichern"
+          }
+        }
+      }
+    },
+    "Say the phrase on the left and vypo writes the right side. Said on its own, an entry works in every app; in a sentence, as set for the entry.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sag den Ausdruck links, und vypo schreibt die rechte Seite. Allein gesagt wirkt ein Eintrag in jeder App; im Satz so, wie beim Eintrag eingestellt."
+          }
+        }
+      }
+    },
+    "Say “comma” or “Komma” and get “,”; quotes become “curly”.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sag „Komma“ oder „comma“ und erhalte „,“; Anführungszeichen werden „typografisch“."
+          }
+        }
+      }
+    },
+    "Scribe": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schreiber"
+          }
+        }
+      }
+    },
+    "Search history": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verlauf durchsuchen"
+          }
+        }
+      }
+    },
+    "Search history (⌘F)": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verlauf durchsuchen (⌘F)"
+          }
+        }
+      }
+    },
+    "Search terms": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Begriffe suchen"
+          }
+        }
+      }
+    },
+    "Secure input on": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sichere Eingabe aktiv"
+          }
+        }
+      }
+    },
+    "Select All": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alles auswählen"
+          }
+        }
+      }
+    },
+    "Send Feedback…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Feedback senden …"
+          }
+        }
+      }
+    },
+    "Send automatically": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatisch absenden"
+          }
+        }
+      }
+    },
+    "Send feedback": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Feedback senden"
+          }
+        }
+      }
+    },
+    "Separate spellings with commas.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schreibweisen mit Kommas trennen."
+          }
+        }
+      }
+    },
+    "Set": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Set"
+          }
+        }
+      }
+    },
+    "Sets": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sets"
+          }
+        }
+      }
+    },
+    "Settings…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einstellungen …"
+          }
+        }
+      }
+    },
+    "Shakespeare’s complete works": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shakespeares Gesamtwerk"
+          }
+        }
+      }
+    },
+    "Shortcut": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kurzbefehl"
+          }
+        }
+      }
+    },
+    "Show Emoji & Symbols": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Emoji & Symbole anzeigen"
+          }
+        }
+      }
+    },
+    "Show in Finder": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Im Finder zeigen"
+          }
+        }
+      }
+    },
+    "Show level": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Level anzeigen"
+          }
+        }
+      }
+    },
+    "Show more": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mehr anzeigen"
+          }
+        }
+      }
+    },
+    "Show the pill while dictating": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pill beim Diktieren anzeigen"
+          }
+        }
+      }
+    },
+    "Show vypo in the Dock": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "vypo im Dock anzeigen"
+          }
+        }
+      }
+    },
+    "Smart spacing and capitalization": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Intelligente Leerzeichen und Großschreibung"
+          }
+        }
+      }
+    },
+    "Soft": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Soft"
+          }
+        }
+      }
+    },
+    "Sound": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ton"
+          }
+        }
+      }
+    },
+    "Sounds like": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klingt wie"
+          }
+        }
+      }
+    },
+    "Speech model: %@; glossary helper: %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sprachmodell: %@; Glossar-Helfer: %@"
+          }
+        }
+      }
+    },
+    "Speech recognition": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spracherkennung"
+          }
+        }
+      }
+    },
+    "Speech recognition runs entirely on this Mac.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Spracherkennung läuft vollständig auf diesem Mac."
+          }
+        }
+      }
+    },
+    "Spoken": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gesprochen"
+          }
+        }
+      }
+    },
+    "Spoken punctuation": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gesprochene Satzzeichen"
+          }
+        }
+      }
+    },
+    "Start Dictation": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diktat starten"
+          }
+        }
+      }
+    },
+    "Stats": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Statistik"
+          }
+        }
+      }
+    },
+    "Status: %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status: %@"
+          }
+        }
+      }
+    },
+    "Step %lld of %lld": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schritt %1$lld von %2$lld"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Step %1$lld of %2$lld"
+          }
+        }
+      }
+    },
+    "Steward": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hofmeister"
+          }
+        }
+      }
+    },
+    "Stop dictation": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diktat beenden"
+          }
+        }
+      }
+    },
+    "Stop recording": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aufnahme stoppen"
+          }
+        }
+      }
+    },
+    "Storage": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Speicher"
+          }
+        }
+      }
+    },
+    "Streak": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Serie"
+          }
+        }
+      }
+    },
+    "Strong": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stark"
+          }
+        }
+      }
+    },
+    "Style": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stil"
+          }
+        }
+      }
+    },
+    "Suggested: you corrected “%@” %lld×": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vorschlag: Du hast „%1$@“ %2$lld× korrigiert"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "Suggested: you corrected “%1$@” %2$lld×"
+          }
+        }
+      }
+    },
+    "System": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "System"
+          }
+        }
+      }
+    },
+    "System default": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Systemstandard"
+          }
+        }
+      }
+    },
+    "Talk instead of typing, in any app. Transcription runs entirely on your Mac. No cloud, no account.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sprechen statt tippen, in jeder App. Die Transkription läuft komplett auf deinem Mac. Keine Cloud, kein Konto."
+          }
+        }
+      }
+    },
+    "Term": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Begriff"
+          }
+        }
+      }
+    },
+    "That’s *%@*, %lld times over.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das ist %2$lld-mal *%1$@*."
+          }
+        }
+      }
+    },
+    "The Globe key is still assigned in System Settings.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Globus-Taste ist in den Systemeinstellungen noch belegt."
+          }
+        }
+      }
+    },
+    "The Great Gatsby": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der große Gatsby"
+          }
+        }
+      }
+    },
+    "The Hobbit": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Hobbit"
+          }
+        }
+      }
+    },
+    "The Little Prince": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der kleine Prinz"
+          }
+        }
+      }
+    },
+    "The Lord of the Rings": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Herr der Ringe"
+          }
+        }
+      }
+    },
+    "The icon is animated either way.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Animiert ist es in jedem Fall."
+          }
+        }
+      }
+    },
+    "The pill appears only while you dictate.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Pill erscheint nur, während du diktierst."
+          }
+        }
+      }
+    },
+    "This can’t be undone.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das kann nicht widerrufen werden."
+          }
+        }
+      }
+    },
+    "Time saved": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gesparte Zeit"
+          }
+        }
+      }
+    },
+    "To add diagnostics, choose Settings → About → Copy Diagnostics… in vypo and paste them here.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Um die Diagnose anzuhängen, wähle in vypo Einstellungen → Über vypo → Diagnose kopieren … und füge sie hier ein."
+          }
+        }
+      }
+    },
+    "To read the dictation key and paste text.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Um die Diktiertaste zu erkennen und Text einzufügen."
+          }
+        }
+      }
+    },
+    "Today": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Heute"
+          }
+        }
+      }
+    },
+    "Too quiet": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zu leise"
+          }
+        }
+      }
+    },
+    "Transcribing": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transkribiert"
+          }
+        }
+      }
+    },
+    "Try it": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ausprobieren"
+          }
+        }
+      }
+    },
+    "Turn off if the menu bar icon is enough.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ausschalten, wenn dir das Symbol in der Menüleiste reicht."
+          }
+        }
+      }
+    },
+    "Two permissions": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zwei Berechtigungen"
+          }
+        }
+      }
+    },
+    "Typographic quotes": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Typografische Anführungszeichen"
+          }
+        }
+      }
+    },
+    "Undo": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rückgängig"
+          }
+        }
+      }
+    },
+    "Undo last dictation": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Letztes Diktat widerrufen"
+          }
+        }
+      }
+    },
+    "Undone": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Widerrufen"
+          }
+        }
+      }
+    },
+    "Updates": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Updates"
+          }
+        }
+      }
+    },
+    "Use Right Option instead": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stattdessen rechte Wahltaste verwenden"
+          }
+        }
+      }
+    },
+    "Version %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Version %@"
+          }
+        }
+      }
+    },
+    "Version, updates, help, and what vypo is built on.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Version, Updates, Hilfe und woraus vypo gebaut ist."
+          }
+        }
+      }
+    },
+    "Waiting…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warten …"
+          }
+        }
+      }
+    },
+    "War and Peace": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Krieg und Frieden"
+          }
+        }
+      }
+    },
+    "Warning": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warnung"
+          }
+        }
+      }
+    },
+    "Welcome to vypo": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Willkommen bei vypo"
+          }
+        }
+      }
+    },
+    "What’s different in specific apps.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Was in bestimmten Apps anders ist."
+          }
+        }
+      }
+    },
+    "Which words come out: your terms, replacements and filler words.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Welche Wörter herauskommen: deine Begriffe, Ersetzungen und Füllwörter."
+          }
+        }
+      }
+    },
+    "Will download": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wird geladen"
+          }
+        }
+      }
+    },
+    "Window": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fenster"
+          }
+        }
+      }
+    },
+    "Words": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wörter"
+          }
+        }
+      }
+    },
+    "Words dictated": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diktierte Wörter"
+          }
+        }
+      }
+    },
+    "Words per minute": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wörter pro Minute"
+          }
+        }
+      }
+    },
+    "Words, streak, apps, languages and your level go back to zero. This can’t be undone.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wörter, Tage in Folge, Apps, Sprachen und dein Level gehen zurück auf null. Das lässt sich nicht rückgängig machen."
+          }
+        }
+      }
+    },
+    "Write to %@ instead.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schreib stattdessen an %@."
+          }
+        }
+      }
+    },
+    "Writing": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schreiben"
+          }
+        }
+      }
+    },
+    "Yesterday": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gestern"
+          }
+        }
+      }
+    },
+    "You made it.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geschafft."
+          }
+        }
+      }
+    },
+    "You still see the pill; others and recordings don’t.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Du siehst die Pill weiterhin, andere und Aufnahmen nicht."
+          }
+        }
+      }
+    },
+    "Your dictation key": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deine Diktiertaste"
+          }
+        }
+      }
+    },
+    "Your languages": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deine Sprachen"
+          }
+        }
+      }
+    },
+    "Your recent dictations, only on this Mac.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deine letzten Diktate, nur auf diesem Mac."
+          }
+        }
+      }
+    },
+    "Your words appear here.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deine Worte erscheinen hier."
+          }
+        }
+      }
+    },
+    "all seven Harry Potter books": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "alle sieben Harry-Potter-Bände"
+          }
+        }
+      }
+    },
+    "becomes": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "wird zu"
+          }
+        }
+      }
+    },
+    "becomes %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "wird zu %@"
+          }
+        }
+      }
+    },
+    "download failed": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Download fehlgeschlagen"
+          }
+        }
+      }
+    },
+    "downloading %lld %%": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "wird geladen, %lld %%"
+          }
+        }
+      }
+    },
+    "e.g. slash, Schrägstrich": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "z. B. Slash, Schrägstrich"
+          }
+        }
+      }
+    },
+    "e.g. tick tock, tik tok": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "z. B. tick tock, tik tok"
+          }
+        }
+      }
+    },
+    "granted": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "erlaubt"
+          }
+        }
+      }
+    },
+    "installed": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "installiert"
+          }
+        }
+      }
+    },
+    "macOS %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS %@"
+          }
+        }
+      }
+    },
+    "macOS uses the fn/Globe key for its own features. Set it to “Do Nothing” so vypo can use it.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS nutzt die fn-/Globus-Taste für eigene Funktionen. Stell sie auf „Keine Aktion“, damit vypo sie verwenden kann."
+          }
+        }
+      }
+    },
+    "not granted": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "nicht erlaubt"
+          }
+        }
+      }
+    },
+    "not installed": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "nicht installiert"
+          }
+        }
+      }
+    },
+    "queued": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "in der Warteschlange"
+          }
+        }
+      }
+    },
+    "sounds like %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "klingt wie %@"
+          }
+        }
+      }
+    },
+    "the Bible": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "die Bibel"
+          }
+        }
+      }
+    },
+    "um, uh, äh, ähm …": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "äh, ähm, um, uh …"
+          }
+        }
+      }
+    },
+    "vypo": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "vypo"
+          }
+        }
+      }
+    },
+    "vypo %@ (build %@)": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "vypo %@ (Build %@)"
+          }
+        }
+      }
+    },
+    "vypo Settings": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "vypo-Einstellungen"
+          }
+        }
+      }
+    },
+    "vypo always writes a term exactly like this. Tip: select a word in any app and press %@ to add it.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "vypo schreibt einen Begriff immer genau so. Tipp: Markiere ein Wort in einer beliebigen App und drück %@, um es hinzuzufügen."
+          }
+        }
+      }
+    },
+    "vypo diagnostics, %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "vypo-Diagnose, %@"
+          }
+        }
+      }
+    },
+    "vypo doesn’t dictate here, e.g. in apps with confidential content.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "vypo diktiert hier nicht, z. B. in Apps mit vertraulichen Inhalten."
+          }
+        }
+      }
+    },
+    "vypo idle": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "vypo inaktiv"
+          }
+        }
+      }
+    },
+    "vypo needs the microphone to listen and Accessibility to read the dictation key and paste text where your cursor is.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "vypo braucht das Mikrofon zum Zuhören und die Bedienungshilfen, um die Diktiertaste zu erkennen und Text dort einzufügen, wo dein Cursor steht."
+          }
+        }
+      }
+    },
+    "vypo quits and opens again. This takes a second.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "vypo wird beendet und wieder geöffnet. Das dauert eine Sekunde."
+          }
+        }
+      }
+    },
+    "vypo recognizes which of your languages you’re speaking.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "vypo erkennt, welche deiner Sprachen du sprichst."
+          }
+        }
+      }
+    },
+    "vypo recognizes which of your languages you’re speaking. Recognition runs on this Mac.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "vypo erkennt, welche deiner Sprachen du sprichst. Die Erkennung läuft auf diesem Mac."
+          }
+        }
+      }
+    },
+    "vypo recognizes your terms while transcribing, even unusual names.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "vypo erkennt deine Begriffe schon beim Transkribieren, auch ungewöhnliche Namen."
+          }
+        }
+      }
+    },
+    "vypo types the text wherever your cursor is. Your voice and your text never leave this Mac.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "vypo schreibt den Text dort, wo dein Cursor steht. Deine Stimme und dein Text verlassen diesen Mac nie."
+          }
+        }
+      }
+    },
+    "vypo understands English and German and recognizes which one you’re speaking. Everything runs on this Mac.": {
+      "extractionState": "stale",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "vypo versteht Englisch und Deutsch und erkennt, welche Sprache du sprichst. Alles läuft auf diesem Mac."
+          }
+        }
+      }
+    },
+    "vypo understands English and German and recognizes which one you’re speaking. No switching needed.": {
+      "extractionState": "stale",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "vypo versteht Englisch und Deutsch und erkennt, welche Sprache du sprichst. Kein Umschalten nötig."
+          }
+        }
+      }
+    },
+    "vypo, recording": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "vypo, Aufnahme läuft"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

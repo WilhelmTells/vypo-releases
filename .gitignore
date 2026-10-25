@@ -1,0 +1,16 @@
+# Xcode
+*.xcodeproj
+xcuserdata/
+*.xcworkspace
+DerivedData/
+build/
+build.noindex/
+.build/
+*.hmap
+*.ipa
+*.dSYM
+*.dSYM.zip
+# macOS
+.DS_Store
+# Your own signing team
+Config/Local.xcconfig

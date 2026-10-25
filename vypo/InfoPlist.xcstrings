@@ -1,0 +1,23 @@
+{
+  "sourceLanguage": "en",
+  "version": "1.0",
+  "strings": {
+    "NSMicrophoneUsageDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "vypo listens only while you dictate. Audio never leaves this Mac."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "vypo hört nur zu, während du diktierst. Der Ton verlässt diesen Mac nie."
+          }
+        }
+      }
+    }
+  }
+}

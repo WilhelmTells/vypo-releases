@@ -1,0 +1,106 @@
+name: vypo
+options:
+  bundleIdPrefix: com.wilhelmtells
+  deploymentTarget:
+    macOS: "26.0"
+  createIntermediateGroups: true
+  developmentLanguage: en
+configFiles:
+  Debug: Config/Signing.xcconfig
+  Release: Config/Signing.xcconfig
+settings:
+  base:
+    ARCHS: arm64
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    MACOSX_DEPLOYMENT_TARGET: "26.0"
+    CODE_SIGN_STYLE: Automatic
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    DEAD_CODE_STRIPPING: YES
+    SWIFT_EMIT_LOC_STRINGS: YES
+    LOCALIZATION_PREFERS_STRING_CATALOGS: YES
+packages:
+  FluidAudio:
+    url: https://github.com/FluidInference/FluidAudio
+    exactVersion: 0.17.7
+  KeyboardShortcuts:
+    url: https://github.com/sindresorhus/KeyboardShortcuts
+    exactVersion: 3.1.0
+  Sparkle:
+    url: https://github.com/sparkle-project/Sparkle
+    exactVersion: 2.10.0
+targets:
+  vypo:
+    type: application
+    platform: macOS
+    sources:
+      - path: vypo
+      - path: Resources
+        excludes:
+          - "Vypo.icon"
+      - path: Resources/Vypo.icon
+        type: file
+        buildPhase: resources
+      # The one list of what vypo is built on; About vypo shows it (see Notices.swift).
+      - path: THIRD_PARTY_NOTICES.md
+        buildPhase: resources
+    dependencies:
+      - package: FluidAudio
+      - package: KeyboardShortcuts
+      - package: Sparkle
+    entitlements:
+      path: vypo/vypo.entitlements
+      properties:
+        com.apple.security.device.audio-input: true
+    info:
+      path: vypo/Info.plist
+      properties:
+        CFBundleDisplayName: vypo
+        CFBundleName: vypo
+        CFBundleShortVersionString: "0.2.0"
+        CFBundleVersion: "2"
+        # Updates (Sparkle). The feed address stays the same when the files move: the website redirects it.
+        SUFeedURL: "https://wilhelmtells.com/vypo/appcast.xml"
+        SUPublicEDKey: "JZUAtmYxrDDdfgeaCJGxbAZ8Ll+rmgBxuYSL2wKVzJY="
+        SUEnableAutomaticChecks: true
+        SUScheduledCheckInterval: 86400
+        SUEnableSystemProfiling: false
+        LSUIElement: true
+        CFBundleDevelopmentRegion: en
+        CFBundleLocalizations: [en, de]
+        LSApplicationCategoryType: public.app-category.productivity
+        NSMicrophoneUsageDescription: "vypo listens only while you dictate. Audio never leaves this Mac."
+        LSMinimumSystemVersion: "26.0"
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.wilhelmtells.vypo
+        PRODUCT_NAME: vypo
+        ENABLE_HARDENED_RUNTIME: YES
+        ASSETCATALOG_COMPILER_APPICON_NAME: Vypo
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: accent
+        GENERATE_INFOPLIST_FILE: NO
+        COMBINE_HIDPI_IMAGES: YES
+        ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS: NO
+        ASSETCATALOG_COMPILER_GENERATE_ASSET_SYMBOLS: NO
+  vypoTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: vypoTests
+    dependencies:
+      - target: vypo
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.wilhelmtells.vypoTests
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/vypo.app/Contents/MacOS/vypo"
+        BUNDLE_LOADER: "$(TEST_HOST)"
+        GENERATE_INFOPLIST_FILE: YES
+schemes:
+  vypo:
+    build:
+      targets:
+        vypo: all
+        vypoTests: [test]
+    test:
+      targets:
+        - vypoTests
