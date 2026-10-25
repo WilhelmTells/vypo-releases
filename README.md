@@ -1,10 +1,17 @@
+<p align="center">
+  <img src="https://wilhelmtells.com/vypo/img/hero/vypo-icon.webp" width="160" alt="vypo app icon">
+</p>
+<p align="center">
+  <img src="https://wilhelmtells.com/vypo/img/hero/banner-red-2.webp" width="360" alt="Stop chiseling. Start talking.">
+</p>
+
 # vypo
 
 Dictation for your Mac: hold fn, speak, let go, and the text appears wherever your cursor is. Speech recognition runs on your Mac – your voice and your text never leave it.
 
-**Download:** [latest vypo.dmg](https://github.com/WilhelmTells/vypo-releases/releases/latest/download/vypo.dmg) · More at [wilhelmtells.com/vypo](https://wilhelmtells.com/vypo)
+**[Download vypo for Mac](https://wilhelmtells.com/vypo/download)** · [wilhelmtells.com/vypo](https://wilhelmtells.com/vypo) · [All releases](https://github.com/WilhelmTells/vypo-releases/releases)
 
-This repository holds vypo's releases and its update feed.
+vypo is an early version, made by Wilhelm Tells. Bugs can happen – feedback is very welcome.
 
 ## Install
 
@@ -21,3 +28,11 @@ Once installed, vypo checks once a day for a new version and updates itself afte
 ## Feedback
 
 In vypo: menu bar icon → Settings… → About → **Send Feedback…** (a mail with only the versions of vypo and macOS) or **Copy Diagnostics…** (a report without any dictated text, to paste into the mail).
+
+## Source code
+
+The source code of the app will follow in this repository under the GPL-3.0 license.
+
+## Artwork
+
+The vypo icon, the characters, the illustrations and the sounds are © Wilhelm Tells. All rights reserved; they are not covered by any code license.
