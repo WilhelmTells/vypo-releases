@@ -13,6 +13,16 @@ final class LanguageRouterTests: XCTestCase {
         XCTAssertFalse(LanguageRouter.isForeign("Ich habe das Deployment im Kubernetes Cluster neu gestartet.", among: both))
     }
 
+    /// Nothing is lost silently: a dictation the filter keeps out of the field says it is in History
+    /// (and says nothing about a language), unless History is off.
+    @MainActor
+    func testFilteredDictationShowsSavedToHistory() {
+        XCTAssertTrue(LanguageRouter.isForeign("Hello, this is a test of the dictation.", among: [.de]))
+        XCTAssertEqual(AppCoordinator.filteredPillMode(savedToHistory: true), .added(.savedToHistory))
+        XCTAssertEqual(AppCoordinator.filteredPillMode(savedToHistory: false), .error(.notUnderstood))
+        XCTAssertEqual(PillMode.added(.savedToHistory).accessibilityLabel, String(localized: "Saved to History"))
+    }
+
     func testOneOrTwoWordsAreNeverForeign() {
         let both: [Lang] = [.en, .de]
         // The real cases from 2026-10-22: Czech and Catalan to the recognizer.

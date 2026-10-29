@@ -1,5 +1,7 @@
 import Foundation
 
+#if DEBUG
+
 /// Debug: keeps every finished recording for the glossary benchmark (`GlossaryBenchmarkTests`).
 enum BenchmarkRecordings {
     static var directory: URL {
@@ -28,3 +30,4 @@ enum BenchmarkRecordings {
         }
     }
 }
+#endif

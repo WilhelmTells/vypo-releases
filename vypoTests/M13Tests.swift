@@ -83,7 +83,7 @@ final class StatsTests: XCTestCase {
     }
 
     func testSearchMarksEveryMatch() {
-        let marked = HistoryRow.marked("Claus, claus and CLAUS", "claus")
+        let marked = HistoryRow.marked("Klaro, klaro and KLARO", "klaro")
         let runs = marked.runs.filter { $0.backgroundColor != nil }
         XCTAssertEqual(runs.count, 3)
         XCTAssertEqual(HistoryRow.marked("abc", "").runs.filter { $0.backgroundColor != nil }.count, 0)

@@ -1,6 +1,8 @@
 import AVFoundation
 
-/// Reads and writes recordings as 16 kHz mono Float32 audio files.
+#if DEBUG
+/// Reads and writes recordings as 16 kHz mono Float32 audio files. Debug builds and tests only (Debug menu,
+/// benchmark): a Release build has no code that reads or writes audio files.
 enum WAVFile {
     static func write(_ samples: [Float], to url: URL) throws {
         let format = AudioRecorder.targetFormat
@@ -50,3 +52,4 @@ enum WAVFile {
         return samples
     }
 }
+#endif

@@ -52,7 +52,6 @@ final class NoticesTests: XCTestCase {
         let notices = try notices()
         let names = notices.components.map(\.name)
         XCTAssertTrue(names.contains("Parakeet Ultra"))
-        XCTAssertTrue(names.contains("Parakeet CTC 110M"))
         let file = try String(contentsOf: Self.repoRoot.appendingPathComponent("THIRD_PARTY_NOTICES.md"), encoding: .utf8)
         for needle in ["moondream/parakeet-ultra", "nvidia/parakeet-tdt-0.6b-v3", "FluidInference/parakeet-ultra-coreml",
                        "Apache Commons Codec", "Sindre Sorhus"] {
@@ -93,7 +92,7 @@ final class FeedbackTests: XCTestCase {
         XCTAssertEqual(parts.queryItems?.first { $0.name == "subject" }?.value, "vypo feedback")
         let body = try XCTUnwrap(parts.queryItems?.first { $0.name == "body" }?.value)
         XCTAssertTrue(body.hasPrefix("\n\n"), "empty lines to write in come first")
-        XCTAssertTrue(body.contains("vypo 0.2.0 (2) · macOS Version 26.0 · Mac14,5"))
+        XCTAssertTrue(body.contains("vypo 0.2.0 (2), macOS Version 26.0, Mac14,5"))
         XCTAssertEqual(body.components(separatedBy: "\n").count, 5, "nothing else is added")
     }
 }

@@ -71,8 +71,7 @@ struct MascotPose: Equatable {
     static let rest = MascotPose()
 }
 
-/// The resting motion, in steps like paper cut-outs: no springs, no easing. Timing from the motion test
-/// in `mascot-app-pivots.json` (`timeline`), 12 fps, a 9 s loop.
+/// The resting motion, in steps like paper cut-outs: no springs, no easing. Timing: 12 fps, a 9 s loop.
 enum MascotMotion {
     static let fps = 12.0
     static let loop = 9.0

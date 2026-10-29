@@ -1,184 +1,148 @@
 import SwiftUI
 
-/// Onboarding state shared by the steps.
-@MainActor
-@Observable
-final class OnboardingModel {
-    static let stepCount = 6
-
-    var step: Int
-    /// Step 3 is done once the Globe key is free or the user chose Right Option.
-    var usedRightOption = false
-    /// Step 4 choices.
-
-    init(step: Int) {
-        self.step = min(max(step, 0), Self.stepCount - 1)
-    }
-}
-
-/// The first-run window: six steps, dots and Back/Continue (§16).
+/// The first-run window: Welcome, five steps with a path bar, and Done (0.3.0, layout B).
 struct OnboardingView: View {
     @Environment(AppState.self) private var app
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State var model: OnboardingModel
     var finish: () -> Void
 
     var body: some View {
-        VStack(spacing: 0) {
-            VStack(alignment: .leading, spacing: Space.s4) {
-                switch model.step {
-                case 0: WelcomeStep()
-                case 1: PermissionsStep()
-                case 2: GlobeKeyStep(model: model)
-                case 3: LanguagesStep(model: model)
-                case 4: DictationKeyStep()
-                default: TryItStep()
-                }
+        ZStack {
+            Color.vyBgWindow
+            if model.step == 0 {
+                WelcomeStep(download: startDownload)
+                    .transition(welcomeTransition)
+            } else if model.step == OnboardingModel.stepCount - 1 {
+                DoneStep(start: finish)
+                    .transition(.opacity)
+            } else {
+                stepsShell
+                    .transition(shellTransition)
             }
-            .padding(.top, 36)
-            .padding(.horizontal, Space.s6)
-            .frame(maxWidth: .infinity, alignment: .topLeading)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .ignoresSafeArea()
+        .onChange(of: model.step, initial: true) { _, step in
+            // Before Try it the dictation key only shows that it was pressed.
+            app.dictationBlocked = step != OnboardingStep.tryIt.rawValue
+            model.onStepChanged(step)
+        }
+        .onDisappear { app.dictationBlocked = false }
+    }
 
-            Spacer(minLength: Space.s4)
+    /// “Download speech model” starts the download; the window grows into the step window.
+    private func startDownload() {
+        app.models?.download()
+        go(to: 1)
+    }
 
-            HStack {
-                StepDots(current: model.step, count: OnboardingModel.stepCount)
-                Spacer()
-                if model.step > 0 {
-                    Button("Back") { model.step -= 1 }
-                        .controlSize(.large)
+    private func go(to step: Int) {
+        withAnimation(reduceMotion ? .easeOut(duration: 0.15) : .easeInOut(duration: 0.25)) { model.step = step }
+    }
+
+    // MARK: Transitions
+
+    /// Welcome scales up to 118 % and fades (0.25 s ease in); with Reduce motion it only fades.
+    private var welcomeTransition: AnyTransition {
+        reduceMotion ? .opacity : .asymmetric(insertion: .opacity,
+                                              removal: AnyTransition.scale(scale: 1.18).combined(with: .opacity).animation(.easeIn(duration: 0.25)))
+    }
+
+    /// The path bar and step zoom in from 86 % and fade in (0.32 s ease out, from 0.14 s).
+    private var shellTransition: AnyTransition {
+        reduceMotion ? .opacity : .asymmetric(insertion: AnyTransition.scale(scale: 0.86).combined(with: .opacity)
+                                                .animation(.easeOut(duration: 0.32).delay(0.14)), removal: .opacity)
+    }
+
+    // MARK: Steps 2 to 6
+
+    private var stepsShell: some View {
+        let step = model.step
+        return ZStack(alignment: .top) {
+            VStack(spacing: 0) {
+                OnboardingPathBar(model: model)
+                    .frame(height: 28)
+                    .padding(.top, 32)
+                Spacer(minLength: 0)
+                footer
+            }
+            content
+                .id(step)
+                .padding(.top, step == OnboardingStep.tryIt.rawValue ? 92 : 80)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                .transition(stepTransition)
+        }
+    }
+
+    @ViewBuilder private var content: some View {
+        switch OnboardingStep(rawValue: model.step) {
+        case .permissions: PermissionsStep(asked: model.preview.permissionsAsked, details: model.preview.permissionsDetails)
+        case .microphone:
+            MicrophoneStep(model: model, previewLine: model.preview.micLine, previewSilent: model.preview.micSilent,
+                           previewLevel: model.preview.micLevel)
+        case .languages: LanguagesStep(showList: model.preview.languagesListOpen)
+        case .key: DictationKeyStep(pressed: model.preview.keyPressed, detected: model.preview.keyDetected)
+        case .tryIt:
+            TryItStep(model: model, previewOutcome: model.preview.tryOutcome, previewText: model.preview.tryText,
+                      previewFocused: model.preview.tryFocused)
+        default: EmptyView()
+        }
+    }
+
+    /// Content cross-fades and slides 12 pt in the direction of travel (only a cross-fade with Reduce motion).
+    private var stepTransition: AnyTransition {
+        reduceMotion ? .opacity.animation(.easeOut(duration: 0.15))
+            : .asymmetric(insertion: .modifier(active: SlideFade(dx: 12 * CGFloat(model.direction), opacity: 0), identity: SlideFade(dx: 0, opacity: 1)),
+                          removal: .modifier(active: SlideFade(dx: -12 * CGFloat(model.direction), opacity: 0), identity: SlideFade(dx: 0, opacity: 1)))
+    }
+
+    // MARK: Footer
+
+    private var footer: some View {
+        let step = model.step
+        return ZStack {
+            HStack(spacing: 8) {
+                if step >= OnboardingStep.microphone.rawValue {
+                    Button("Back") { go(to: step - 1) }.buttonStyle(.ob(.bordered))
                 }
-                Button(primaryTitle) { next() }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.large)
+                Spacer()
+                if step == OnboardingStep.microphone.rawValue && model.micShowsSkip && !model.micHeard {
+                    Button("Skip") { model.micSkipped = true; go(to: step + 1) }
+                        .buttonStyle(.ob(.bordered))
+                        .transition(reduceMotion ? .identity : .opacity.animation(.easeOut(duration: 0.3)))
+                }
+                Button("Continue") { go(to: step + 1) }
+                    .buttonStyle(.ob(.primary))
                     .keyboardShortcut(.defaultAction)
                     .disabled(!canContinue)
             }
-            .padding(.horizontal, Space.s6)
-            .padding(.top, Space.s4)
-            .padding(.bottom, Space.s5)
+            if step == OnboardingStep.key.rawValue {
+                Text("If macOS Dictation is on, turn it off in Keyboard Settings. Otherwise macOS and vypo listen at the same time.")
+                    .font(OBFont.caption).foregroundStyle(Color.vyLabelTertiary)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: 400)
+            }
         }
-        .frame(width: 680)
-        .frame(minHeight: 460)
-        .background(Color.vyBgWindow)
-        .animation(.easeInOut(duration: 0.2), value: model.step)
-    }
-
-    private var primaryTitle: LocalizedStringKey {
-        switch model.step {
-        case 0: "Get started"
-        case OnboardingModel.stepCount - 1: "Done"
-        default: "Continue"
-        }
+        .padding(.horizontal, 24)
+        .frame(height: 60)
+        .animation(reduceMotion ? nil : .easeOut(duration: 0.3), value: model.micShowsSkip)
     }
 
     private var canContinue: Bool {
-        switch model.step {
-        case 1: app.permissions.micGranted && app.permissions.accessibilityTrusted
-        case 2: app.permissions.globeKeyFree || model.usedRightOption || app.prefs.dictationKey != .fn
-        default: true
-        }
-    }
-
-    private func next() {
-        switch model.step {
-        case 3:
-            LanguagesStep.startDownloads(app: app)
-            model.step += 1
-        case OnboardingModel.stepCount - 1:
-            finish()
-        default:
-            model.step += 1
-        }
+        OnboardingRules.canContinue(step: model.step, micGranted: app.permissions.micGranted,
+                                    accessibilityTrusted: app.permissions.accessibilityTrusted,
+                                    soundHeard: model.micHeard, skipped: model.micSkipped,
+                                    languageCount: app.prefs.languages.count, key: app.prefs.dictationKey,
+                                    globeKeyUsage: app.permissions.globeKeyUsage)
     }
 }
 
-/// 6 px dots; the current step is an 18×6 capsule.
-struct StepDots: View {
-    var current: Int
-    var count: Int
+private struct SlideFade: ViewModifier {
+    var dx: CGFloat
+    var opacity: Double
 
-    var body: some View {
-        HStack(spacing: 6) {
-            ForEach(0..<count, id: \.self) { i in
-                Capsule()
-                    .fill(i == current ? Color.vyLabel : Color.vyFillTrack)
-                    .frame(width: i == current ? 18 : 6, height: 6)
-            }
-        }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Step \(current + 1) of \(count)")
-    }
-}
-
-/// Title and body of a step.
-struct StepHeader: View {
-    var title: LocalizedStringKey
-    var text: LocalizedStringKey
-    var centered = false
-
-    var body: some View {
-        VStack(alignment: centered ? .center : .leading, spacing: Space.s2) {
-            Text(title)
-                .font(.largeTitle.bold())
-                .foregroundStyle(Color.vyLabel)
-                .accessibilityAddTraits(.isHeader)
-            Text(text)
-                .font(.body)
-                .foregroundStyle(Color.vyLabelSecondary)
-                .multilineTextAlignment(centered ? .center : .leading)
-                .frame(maxWidth: centered ? 400 : .infinity, alignment: centered ? .center : .leading)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .frame(maxWidth: .infinity, alignment: centered ? .center : .leading)
-    }
-}
-
-/// A rounded group of rows on bg-group, like a grouped Form section.
-struct OnboardingGroup<Content: View>: View {
-    var title: LocalizedStringKey?
-    var footer: LocalizedStringKey?
-    @ViewBuilder var content: Content
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            if let title {
-                Text(title).font(.headline).foregroundStyle(Color.vyLabel).padding(.horizontal, Space.s3)
-            }
-            VStack(spacing: 0) {
-                Group(subviews: content) { subviews in
-                    ForEach(Array(subviews.enumerated()), id: \.offset) { i, v in
-                        if i > 0 { Divider().overlay(Color.vySeparator).padding(.horizontal, Space.s3) }
-                        v.padding(.horizontal, Space.s3).padding(.vertical, Space.s2).frame(minHeight: 40)
-                    }
-                }
-            }
-            .background(RoundedRectangle(cornerRadius: Radius.md).fill(Color.vyBgGroup))
-            .overlay(RoundedRectangle(cornerRadius: Radius.md).strokeBorder(Color.vySeparator, lineWidth: 0.5))
-            if let footer {
-                Text(footer).font(.callout).foregroundStyle(Color.vyLabelSecondary).padding(.horizontal, Space.s3)
-            }
-        }
-    }
-}
-
-/// Icon tile, label and description on the left; trailing content on the right.
-struct OnboardingRow<Trailing: View>: View {
-    var symbol: String?
-    var title: LocalizedStringKey
-    var description: LocalizedStringKey?
-    /// A model's credit line under the description.
-    var attribution = false
-    @ViewBuilder var trailing: Trailing
-
-    var body: some View {
-        HStack(spacing: Space.s3) {
-            if let symbol { IconTile(symbol: symbol) }
-            VStack(alignment: .leading, spacing: 2) {
-                RowLabel(title: title, description: description)
-                if attribution { ModelAttribution() }
-            }
-            Spacer(minLength: Space.s2)
-            trailing
-        }
+    func body(content: Content) -> some View {
+        content.offset(x: dx).opacity(opacity)
     }
 }

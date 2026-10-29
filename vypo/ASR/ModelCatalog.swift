@@ -1,10 +1,8 @@
 import Foundation
 
-/// The models vypo downloads (§9.1): Parakeet Ultra for every language, and the CTC glossary helper,
-/// which is off by default and only downloaded when turned on (Debug menu).
+/// The model vypo downloads (§9.1): Parakeet Ultra for every language.
 enum ModelID: String, Codable, CaseIterable, Sendable, Identifiable {
     case parakeetUltra = "parakeet-ultra"
-    case ctcVocab = "ctc-vocab"
 
     var id: String { rawValue }
     var info: ModelInfo { ModelCatalog.info(self) }
@@ -28,7 +26,6 @@ enum ModelCatalog {
     static let all: [ModelInfo] = [
         ModelInfo(id: .parakeetUltra, name: "Parakeet Ultra", note: String(localized: "Fast and accurate, 20 languages. Runs on this Mac."),
                   approxBytes: 650_000_000),
-        ModelInfo(id: .ctcVocab, name: "Parakeet CTC 110M", note: "Glossary helper (off by default).", approxBytes: 100_000_000),
     ]
 
     static func info(_ id: ModelID) -> ModelInfo { all.first { $0.id == id }! }

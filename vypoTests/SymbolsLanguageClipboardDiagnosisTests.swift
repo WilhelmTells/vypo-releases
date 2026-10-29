@@ -50,9 +50,9 @@ final class SymbolsLanguageClipboardDiagnosisTests: XCTestCase {
         XCTAssertEqual(GlossaryCorrector.correct("Wort Semikodon weiter", entries: withAlias, language: .de, strength: .normal), "Wort ; weiter")
     }
 
-    /// H3: a typical glossary (Claus, Vypo) doesn't take “Semikolon” before the replacements see it.
+    /// H3: a typical glossary (Klaro, Vypo) doesn't take “Semikolon” before the replacements see it.
     func testOwnersGlossaryLeavesTheSymbolWordsAlone() {
-        let glossary = [GlossaryEntry(term: "Claus", soundsLike: ["Kloot", "Clot", "Klod"]),
+        let glossary = [GlossaryEntry(term: "Klaro", soundsLike: ["Claro", "Klaru", "Klaroh"]),
                         GlossaryEntry(term: "Vypo", soundsLike: ["Waipo", "Viper"])]
         for word in ["Semikolon", "Semicolon", "Doppelpunkt", "Slash", "Dash", "Strich"] {
             XCTAssertEqual(GlossaryCorrector.correct(word, entries: glossary, language: .de, strength: .normal), word)

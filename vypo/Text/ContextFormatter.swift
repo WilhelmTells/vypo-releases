@@ -37,7 +37,10 @@ enum ContextFormatter {
         let firstWord = String(result.prefix { !$0.isWhitespace })
         let atStart = context.before.isEmpty
         if atStart || prev?.isNewline == true || (lastNonSpace.map { ".!?".contains($0) } ?? false) {
-            result = FillerRemover.capitalizedFirst(result)
+            // A term's own spelling wins over the capital at the start of a sentence: “vypo” stays lowercase.
+            if !startsWithLowercaseTerm(firstWord, glossaryTerms: glossaryTerms) {
+                result = FillerRemover.capitalizedFirst(result)
+            }
         } else if let l = lastNonSpace, l.isLetter || l.isNumber || ",;:".contains(l),
                   shouldLowercase(firstWord, language: language, glossaryTerms: glossaryTerms, germanLowercase: germanLowercase) {
             result = lowercasedFirst(result)
@@ -50,6 +53,16 @@ enum ContextFormatter {
             result = " " + result
         }
         return result
+    }
+
+    /// Whether the word (or the part of a hyphen compound before the hyphen) is a glossary term written with a
+    /// lowercase first letter, case-insensitively: “vypo”, “vypo-App”.
+    static func startsWithLowercaseTerm(_ word: String, glossaryTerms: Set<String>) -> Bool {
+        let bare = word.trimmingCharacters(in: .punctuationCharacters.union(.symbols))
+        let head = String(bare.prefix { $0 != "-" })
+        return [bare, head].contains { candidate in
+            glossaryTerms.contains { $0.first?.isLowercase == true && $0.caseInsensitiveCompare(candidate) == .orderedSame }
+        }
     }
 
     private static func shouldLowercase(_ word: String, language: Lang, glossaryTerms: Set<String>, germanLowercase: Set<String>) -> Bool {

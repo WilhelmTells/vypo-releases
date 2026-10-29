@@ -1,0 +1,18 @@
+{
+  "images": [
+    {
+      "idiom": "universal",
+      "filename": "woodcut-stage-dawn-1x.jpg",
+      "scale": "1x"
+    },
+    {
+      "idiom": "universal",
+      "filename": "woodcut-stage-dawn-2x.jpg",
+      "scale": "2x"
+    }
+  ],
+  "info": {
+    "author": "xcode",
+    "version": 1
+  }
+}

@@ -255,7 +255,7 @@ struct HistoryRow: View {
 
     private var meta: String {
         [item.date.formatted(Date.FormatStyle(date: .omitted, time: .shortened).locale(Formatting.uiLocale)),
-         item.appName, item.language.code].compactMap { $0 }.joined(separator: " · ")
+         item.appName, item.language.code].compactMap { $0 }.joined(separator: ", ")
     }
 
     private var shape: RoundedRectangle { RoundedRectangle(cornerRadius: Radius.md + 2, style: .continuous) }

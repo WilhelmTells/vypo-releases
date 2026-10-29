@@ -10,6 +10,7 @@ struct WordsPane: View {
     @State private var editing: TermSheet.Mode?
     @State private var managingSets = false
     @State private var editingFillers = false
+    @State private var editingSpellings = false
     /// nil = All.
     @State private var setFilter: UUID?
     @State private var importResult: ImportTermsSheet.Result?
@@ -62,10 +63,6 @@ struct WordsPane: View {
             }
 
             Section {
-                Toggle(isOn: $prefs.preferGlossaryTerms) {
-                    RowLabel(title: "Listen for your terms",
-                             description: "vypo recognizes your terms while transcribing, even unusual names.")
-                }
                 LabeledContent {
                     Picker("Replace similar-sounding words", selection: $prefs.correctionStrength) {
                         Text("Careful").tag(CorrectionStrength.careful)
@@ -103,6 +100,23 @@ struct WordsPane: View {
             } header: {
                 Text("Filler words")
             }
+
+            Section {
+                LabeledContent {
+                    HStack(spacing: Space.s2) {
+                        Toggle("Fix spellings", isOn: $prefs.spellingsEnabled)
+                            .toggleStyle(.switch)
+                            .labelsHidden()
+                        Button("Edit…") { editingSpellings = true }
+                            .buttonStyle(.plain)
+                            .foregroundStyle(Color.vyAccent)
+                    }
+                } label: {
+                    RowLabel(title: "Fix spellings", description: "PDF, ZIP, macOS …")
+                }
+            } header: {
+                Text("Spellings")
+            }
         }
         .formStyle(.grouped)
         .sheet(item: $editing) { mode in
@@ -110,6 +124,9 @@ struct WordsPane: View {
         }
         .sheet(isPresented: $editingFillers) {
             FillerWordsSheet().environment(app)
+        }
+        .sheet(isPresented: $editingSpellings) {
+            SpellingsSheet().environment(app)
         }
         .sheet(isPresented: $managingSets) {
             SetsSheet().environment(app)
@@ -486,6 +503,46 @@ private struct SetsSheet: View {
         .sheet(item: $editingSet) { mode in
             SetSheet(mode: mode).environment(app)
         }
+    }
+}
+
+/// One spelling per line, the same for every language, with “Reset to defaults”.
+struct SpellingsSheet: View {
+    @Environment(AppState.self) private var app
+    @Environment(\.dismiss) private var dismiss
+    @State private var text = ""
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Space.s4) {
+            Text("One spelling per line. vypo writes each one exactly like this, whatever capitals it heard.")
+                .foregroundStyle(Color.vyLabelSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+            TextEditor(text: $text)
+                .font(.body)
+                .frame(height: 220)
+                .scrollContentBackground(.hidden)
+                .padding(4)
+                .background(RoundedRectangle(cornerRadius: Radius.sm).fill(Color.vyBgGroup))
+                .overlay(RoundedRectangle(cornerRadius: Radius.sm).strokeBorder(Color.vyBorderControl, lineWidth: 1))
+                .accessibilityLabel(Text("Spellings"))
+            HStack {
+                Button("Reset to defaults") {
+                    text = Spellings.defaultList.joined(separator: "\n")
+                }
+                Spacer()
+                Button("Cancel", role: .cancel) { dismiss() }
+                    .keyboardShortcut(.cancelAction)
+                Button("Save") {
+                    app.prefs.setSpellings(FillerWordsSheet.words(text))
+                    dismiss()
+                }
+                .buttonStyle(.borderedProminent)
+                .keyboardShortcut(.defaultAction)
+            }
+        }
+        .padding(Space.s5)
+        .frame(width: 340)
+        .onAppear { text = app.prefs.spellings.joined(separator: "\n") }
     }
 }
 

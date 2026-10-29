@@ -5,9 +5,8 @@ protocol ASREngine: Actor {
     var isLoaded: Bool { get }
     func load() async throws
     func unload() async
-    /// `samples` are 16 kHz mono Float32. `glossary` holds the in-scope entries to bias towards (§11.3).
-    /// `language` is a hint for engines that need one; nil lets the engine work it out.
-    func transcribe(_ samples: [Float], language: Lang?, glossary: [GlossaryEntry]) async throws -> String
+    /// `samples` are 16 kHz mono Float32. `language` is a hint for engines that need one; nil lets the engine work it out.
+    func transcribe(_ samples: [Float], language: Lang?) async throws -> String
     /// How the last `transcribe` spent its time, for the log.
     var lastTiming: TranscriptionTiming? { get }
 }

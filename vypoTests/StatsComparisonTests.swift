@@ -116,7 +116,7 @@ final class ComparisonCatalogTests: XCTestCase {
         XCTAssertEqual(german("That’s *%@*, %lld times over.", in: strings), "Das ist %2$lld-mal *%1$@*.")
         XCTAssertEqual(german("Longer than *%@*.", in: strings), "Länger als *%@*.")
         XCTAssertEqual(german("More than half of *%@*.", in: strings), "Mehr als halb so lang wie *%@*.")
-        XCTAssertEqual(german("%@ Bibles so far.", in: strings), "Schon %@-mal die Bibel.")
+        XCTAssertEqual(german("%@ Bibles so far.", in: strings), "Schon %@ Bibeln.")
         XCTAssertEqual(german("%@ of Shakespeare’s complete works so far.", in: strings), "Schon %@-mal Shakespeares Gesamtwerk.")
         XCTAssertEqual(german("%@ of all seven Harry Potter books so far.", in: strings), "Schon %@-mal alle sieben Harry-Potter-Bände.")
         XCTAssertEqual(german("the Bible", in: strings), "die Bibel")

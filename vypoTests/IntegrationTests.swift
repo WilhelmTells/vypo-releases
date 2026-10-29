@@ -27,34 +27,19 @@ final class IntegrationTests: XCTestCase {
     func testParakeetEndToEnd() async throws {
         guard let dir else { throw XCTSkip("Integration tests are opt-in") }
         let manager = ModelManager(store: Store(directory: dir))
-        manager.includeHelper = true
         try await install(.parakeetUltra, manager)
-        XCTAssertTrue(manager.isInstalled(.ctcVocab))
         let engines = EngineManager(models: manager)
-        engines.helperEnabled = true
         let engine = try XCTUnwrap(engines.engine(for: .parakeetUltra))
 
-        let plain = try await engine.transcribe(try speech("Please deploy the new service on Monday."), language: nil, glossary: [])
+        let plain = try await engine.transcribe(try speech("Please deploy the new service on Monday."), language: nil)
         print("PARAKEET:", plain)
         let lastPlain = await engine.lastTiming
         let plainTiming = try XCTUnwrap(lastPlain)
         XCTAssertGreaterThan(plainTiming.decode, .zero)
-        XCTAssertNil(plainTiming.glossary, "no glossary, no glossary step")
         XCTAssertTrue(plain.lowercased().contains("deploy"), plain)
-        let german = try await engine.transcribe(try speech("Guten Morgen, wie geht es dir heute?", voice: "Anna"), language: nil, glossary: [])
+        let german = try await engine.transcribe(try speech("Guten Morgen, wie geht es dir heute?", voice: "Anna"), language: nil)
         print("PARAKEET DE:", german)
         XCTAssertTrue(german.lowercased().contains("morgen"), german)
-
-        let glossary = [GlossaryEntry(term: "Kubernetes", soundsLike: ["cooper netties"])]
-        let audio = try speech("We run everything on Kubernetes now.")
-        print("PARAKEET (no vocab):", try await engine.transcribe(audio, language: nil, glossary: []))
-        let boosted = try await engine.transcribe(audio, language: nil, glossary: glossary)
-        print("PARAKEET+VOCAB:", boosted)
-        XCTAssertFalse(boosted.isEmpty)
-        let lastBoosted = await engine.lastTiming
-        let steps = try XCTUnwrap(lastBoosted?.glossary)
-        print("GLOSSARY STEP:", steps)
-        XCTAssertGreaterThan(steps.helper, .zero)
         await engines.unload(.parakeetUltra)
     }
 }

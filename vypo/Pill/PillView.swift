@@ -226,6 +226,7 @@ struct PillView: View {
         case .copied: Text("Copied")
         case .onClipboard: Text("On clipboard")
         case .undone: Text("Undone")
+        case .savedToHistory: Text("Saved to History")
         case .collectingDiagnostics: Text("Collecting diagnostics…")
         }
     }

@@ -1,9 +1,9 @@
 import Foundation
 @testable import vypo
 
-/// A: no glossary at all. B: text correction only, no CTC pass. C: both, as the app runs today.
+/// A: no glossary at all. B: the text correction, as the app runs today.
 enum BenchmarkConfig: String, Codable, CaseIterable {
-    case none = "A", textOnly = "B", full = "C"
+    case none = "A", textOnly = "B"
 }
 
 enum BenchmarkScore {
@@ -85,7 +85,7 @@ enum BenchmarkDiff {
     /// Cases in config C that passed in one run and not in the other, as "speaker/caseID", sorted.
     static func flips(previous: [BenchmarkResult], current: [BenchmarkResult]) -> (fixed: [String], broken: [String]) {
         func full(_ results: [BenchmarkResult]) -> [String: Bool] {
-            Dictionary(results.filter { $0.config == .full }.map { ("\($0.speaker)/\($0.caseID)", $0.passed) },
+            Dictionary(results.filter { $0.config == .textOnly }.map { ("\($0.speaker)/\($0.caseID)", $0.passed) },
                        uniquingKeysWith: { _, b in b })
         }
         let before = full(previous), after = full(current)

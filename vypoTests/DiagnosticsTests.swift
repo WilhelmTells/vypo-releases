@@ -14,7 +14,7 @@ final class DiagnosticsTests: XCTestCase {
 
     private let snapshot = DiagnosticsSnapshot(version: "1.0", build: "7", macOS: "Version 27.0 (Build 26A434)", macModel: "Mac15,12",
                                                chip: "Apple M3", memoryBytes: 8 * 1_073_741_824, languages: ["German", "English"],
-                                               speechModel: "installed, loaded", glossaryHelper: "installed", microphone: true,
+                                               speechModel: "installed, loaded", microphone: true,
                                                accessibility: false, glossaryTerms: 2, activeGlossaryTerms: 2)
 
     func testTheLogKeepsOnlyTheAppsOwnTimingsAndErrors() {
@@ -43,10 +43,10 @@ final class DiagnosticsTests: XCTestCase {
     }
 
     func testRedaction() {
-        let words = ["Claus", "Claus Code", "Kloot", "dev.warp.Warp-Stable", "Notes"]
-        XCTAssertEqual(Diagnostics.redact("Import of /home/anna/Claus Code terms.json failed in Notes", words: words, home: "/home/anna"),
+        let words = ["Final", "Final Cut", "Claro", "dev.warp.Warp-Stable", "Notes"]
+        XCTAssertEqual(Diagnostics.redact("Import of /home/anna/Final Cut terms.json failed in Notes", words: words, home: "/home/anna"),
                        "Import of ~/[…] terms.json failed in […]")
-        XCTAssertEqual(Diagnostics.redact("kloot and dev.warp.Warp-Stable", words: words, home: "/h"), "[…] and […]")
+        XCTAssertEqual(Diagnostics.redact("claro and dev.warp.Warp-Stable", words: words, home: "/h"), "[…] and […]")
         // Whole words only.
         XCTAssertEqual(Diagnostics.redact("Footnotes", words: words, home: "/h"), "Footnotes")
         // vypo's own name stays, also as a glossary term.
@@ -58,7 +58,7 @@ final class DiagnosticsTests: XCTestCase {
         let log = DiagnosticsLog(timings: ["t1 Dictation timing: audio 3.0 s"], errors: ["e1 [store] Could not decode glossary for Waipo"])
         let text = Diagnostics.report(snapshot, log: log, redacting: ["Vypo", "Waipo"], now: Date(timeIntervalSince1970: 0), home: "/h")
         for part in ["vypo 1.0 (build 7)", "macOS Version 27.0 (Build 26A434)", "Mac: Mac15,12, Apple M3, 8 GB memory",
-                     "Languages: German, English", "Speech model: installed, loaded; glossary helper: installed",
+                     "Languages: German, English", "Speech model: installed, loaded",
                      "Microphone: granted; Accessibility: not granted", "Glossary: 2 terms, 2 in active sets",
                      "Last 1 dictation timings:", "t1 Dictation timing: audio 3.0 s",
                      "Errors in the last 24 hours: 1", "e1 [store] Could not decode glossary for […]"] {

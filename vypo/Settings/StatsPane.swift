@@ -291,7 +291,7 @@ private struct StreakCard: View {
             Heatmap(weeks: weeks, hovered: $hovered)
             HStack(spacing: Heatmap.gap) {
                 if let hovered {
-                    Text("\(hovered.date.formatted(.dateTime.day().month(.abbreviated).locale(Formatting.uiLocale))) · \(hovered.words) words")
+                    Text("\(hovered.date.formatted(.dateTime.day().month(.abbreviated).locale(Formatting.uiLocale))), \(hovered.words) words")
                         .monospacedDigit()
                 }
                 Spacer()

@@ -30,6 +30,9 @@ extension Color {
     /// vypo's vermilion, straight from the asset: `Color.accentColor` turns system blue in the menu
     /// and pill panels. Window roots also set it as `.tint` for switches and prominent buttons.
     static let vyAccent = Color("accent")
+    /// The fill of the onboarding's primary buttons (white text on it, 4.6:1): #D4421F in light and dark. Fixed, not
+    /// the `accent-fill` asset, whose dark variant is the lighter #F2583A.
+    static let vyAccentFill = Color(.sRGB, red: 0xD4 / 255, green: 0x42 / 255, blue: 0x1F / 255)
 }
 
 extension Color {

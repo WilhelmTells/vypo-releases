@@ -23,7 +23,8 @@ enum BenchmarkFiles {
 
     /// The app's default settings for a dictation in standard mode, filler words removed;
     /// no replacements, so only the glossary changes between configurations.
-    static func context(language: Lang, glossary: [GlossaryEntry]) -> PipelineContext {
-        PipelineContext(language: language, glossary: glossary, strength: .normal, fillers: FillerRemover.defaultWords(language))
+    static func context(language: Lang, glossary: [GlossaryEntry], spellings: [String] = []) -> PipelineContext {
+        PipelineContext(language: language, glossary: glossary, strength: .normal, spellings: spellings,
+                        fillers: FillerRemover.defaultWords(language))
     }
 }

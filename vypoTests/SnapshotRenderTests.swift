@@ -223,35 +223,26 @@ final class SnapshotRenderTests: XCTestCase {
         try png.write(to: dir.appendingPathComponent("menubar-mark-frames.png"))
     }
 
-    func testOnboarding() throws {
-        let app = sampleApp()
-        for step in 0..<OnboardingModel.stepCount {
-            try renderWindow("onboarding-\(step + 1)", size: CGSize(width: 680, height: 520)) {
-                OnboardingView(model: OnboardingModel(step: step), finish: {}).environment(app)
-            }
-        }
-    }
-
     func testLanguagesSheet() throws {
         let app = sampleApp()
         app.prefs.languages = [.en, .de]
         try renderWindow("languages-sheet", size: CGSize(width: 460, height: 420)) {
             LanguagesSheet().environment(app)
         }
-        // Onboarding step 4 with “More languages” open, to check it still fits.
-        try renderWindow("onboarding-languages-open", size: CGSize(width: 680, height: 520)) {
-            VStack(spacing: 0) {
-                VStack(alignment: .leading, spacing: Space.s4) {
-                    LanguagesStep(model: OnboardingModel(step: 3), showMore: true)
-                }
-                .padding(.top, 36)
-                .padding(.horizontal, Space.s6)
-                .frame(maxWidth: .infinity, alignment: .topLeading)
-                Spacer(minLength: Space.s4)
-                // Where Back/Continue sit.
-                Rectangle().fill(.red.opacity(0.3)).frame(height: 72)
-            }
-            .environment(app)
+    }
+
+    /// Words → Spellings: the pane (its last section, under Filler words) and the Edit sheet.
+    func testSpellingsPaneAndSheet() throws {
+        let app = sampleApp()
+        let size = WindowManager.settingsMinSize
+        try renderWindow("spellings-words-pane", size: CGSize(width: size.width, height: 1700)) {
+            WordsPane().environment(app).background(Color.vyBgWindow)
+        }
+        try renderWindow("spellings-sheet", size: CGSize(width: 340, height: 440)) {
+            SpellingsSheet().environment(app)
+        }
+        try renderWindow("filler-sheet", size: CGSize(width: 440, height: 300)) {
+            FillerWordsSheet().environment(app)
         }
     }
 
@@ -363,7 +354,7 @@ final class SnapshotRenderTests: XCTestCase {
     func testPillStates() throws {
         let modes: [PillMode] = [
             .listening, .processing, .handsfree,
-            .error(.modelMissing), .add, .added(.termAdded("TikTok")), .added(.copied), .added(.onClipboard), .added(.collectingDiagnostics),
+            .error(.modelMissing), .add, .added(.termAdded("TikTok")), .added(.copied), .added(.onClipboard), .added(.savedToHistory), .added(.collectingDiagnostics),
         ]
         try render("pill", width: 300) {
             VStack(spacing: 14) {

@@ -4,21 +4,6 @@ import Foundation
 /// How long each part of one transcription took. Only numbers: no dictated text ever goes into the log.
 struct TranscriptionTiming: Sendable, Equatable {
     var decode: Duration = .zero
-    /// The glossary step; nil when it didn't run (empty glossary, no token timings).
-    var glossary: GlossaryTiming?
-}
-
-/// The glossary step, split up.
-struct GlossaryTiming: Sendable, Equatable {
-    /// Building or reusing the vocabulary session, including loading the helper.
-    var session: Duration = .zero
-    /// The helper's CTC pass over the whole audio, plus FluidAudio's rescoring.
-    var helper: Duration = .zero
-    /// The spell checker for the replaced words, on the main thread.
-    var spelling: Duration = .zero
-    var merge: Duration = .zero
-
-    var total: Duration { session + helper + spelling + merge }
 }
 
 /// The Mac's memory when a dictation is processed.
@@ -78,21 +63,15 @@ struct MemorySnapshot: Sendable, Equatable {
 /// The one log line per dictation (notice level, kept by macOS), with numbers only.
 enum DictationTimingLog {
     static func line(audio: TimeInterval, pause: TimeInterval?, transcribe: Duration, asr: TranscriptionTiming?,
-                     text: Duration, ready: Duration, memory: MemorySnapshot, helper: String) -> String {
+                     text: Duration, ready: Duration, memory: MemorySnapshot) -> String {
         var parts = ["audio \(String(format: "%.1f", audio)) s",
                      pause.map(Self.pause) ?? "first since launch"]
         var steps = "transcribe \(transcribe.milliseconds) ms"
         if let asr {
             steps += " (decode \(asr.decode.milliseconds) ms"
-            if let g = asr.glossary {
-                steps += ", glossary \(g.total.milliseconds) ms: session \(g.session.milliseconds), helper \(g.helper.milliseconds), spelling \(g.spelling.milliseconds), merge \(g.merge.milliseconds)"
-            } else {
-                steps += ", no glossary step"
-            }
             steps += ")"
         }
         parts.append(steps)
-        parts.append("glossary helper \(helper)")
         parts.append("text \(text.milliseconds) ms")
         parts.append("ready \(ready.milliseconds) ms")
         parts.append("memory free \(memory.freePercent) %, pressure \(memory.pressure), compressed \(gigabytes(memory.compressedBytes)) GB, vypo \(memory.footprintBytes / 1_048_576) MB")

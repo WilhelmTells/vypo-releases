@@ -2,7 +2,7 @@ import XCTest
 @testable import vypo
 
 /// Runs the benchmark sentences through the real pipeline in three configurations. Opt-in: `TEST_RUNNER_VYPO_BENCHMARK=1`.
-/// Uses the installed Parakeet Ultra and CTC helper; recordings come from Debug → Keep recordings for benchmark.
+/// Uses the installed Parakeet Ultra; recordings come from Debug → Keep recordings for benchmark (Debug builds only).
 /// Never fails on scores, only on errors.
 @MainActor
 final class GlossaryBenchmarkTests: XCTestCase {
@@ -19,8 +19,8 @@ final class GlossaryBenchmarkTests: XCTestCase {
     }
     /// The report, also written to `root/last-report.txt`: FluidAudio's logs interleave with stdout.
     private var lines: [String] = []
-    /// Per speaker and take: audio seconds, the transcription without the CTC pass, and with it (decode + glossary step).
-    private var timings: [String: [(audio: Double, plain: Duration, full: Duration, helper: Duration)]] = [:]
+    /// Per speaker and take: audio seconds and the transcription time.
+    private var timings: [String: [(audio: Double, decode: Duration)]] = [:]
     private var speaker = ""
 
     private func log(_ line: String) {
@@ -31,12 +31,10 @@ final class GlossaryBenchmarkTests: XCTestCase {
     func testGlossaryBenchmark() async throws {
         guard ProcessInfo.processInfo.environment["VYPO_BENCHMARK"] != nil else { throw XCTSkip("Benchmark is opt-in") }
         let models = ModelManager(store: .shared)
-        guard models.isInstalled(.parakeetUltra), models.isInstalled(.ctcVocab) else {
+        guard models.isInstalled(.parakeetUltra) else {
             throw XCTSkip("Install Parakeet Ultra in vypo first; the benchmark uses the installed model")
         }
         let engines = EngineManager(models: models)
-        // Configuration C is the CTC pass: on here, whatever the app's switch says.
-        engines.helperEnabled = true
         let engine = try XCTUnwrap(engines.engine(for: .parakeetUltra))
         try await engine.load()
         let set = try BenchmarkSet.load()
@@ -79,29 +77,24 @@ final class GlossaryBenchmarkTests: XCTestCase {
         ProcessInfo.processInfo.environment["VYPO_BENCHMARK_HINT"] != nil ? LanguageRouter.scriptHint(for: languages) : nil
     }
 
-    /// Mirrors `AppCoordinator.transcribeAndInsert`: padding, CTC biasing, language detection, `TextPipeline`
+    /// Mirrors `AppCoordinator.transcribeAndInsert`: padding, language detection, `TextPipeline`
     /// with the default filler words. Not mirrored: the foreign-language guard, the previous dictation's language
-    /// as fallback (the sentence's own is used), replacements and smart spacing. A and B share the transcript without the CTC pass.
+    /// as fallback (the sentence's own is used), replacements and smart spacing. A and B share one transcript.
     private func outputs(_ samples: [Float], lang: Lang, entries: [GlossaryEntry],
                          engine: any ASREngine) async throws -> [BenchmarkConfig: String] {
         let padded = AudioPadding.padded(samples)
-        let plain = try await engine.transcribe(padded, language: hint, glossary: [])
-        let plainTiming = await engine.lastTiming
-        let biased = try await engine.transcribe(padded, language: hint, glossary: entries)
-        let fullTiming = await engine.lastTiming
-        if let plainTiming, let fullTiming {
-            let helper = fullTiming.glossary?.total ?? .zero
-            timings[speaker, default: []].append((Double(padded.count) / AudioRecorder.sampleRate, plainTiming.decode,
-                                                  fullTiming.decode + helper, helper))
+        let plain = try await engine.transcribe(padded, language: hint)
+        if let timing = await engine.lastTiming {
+            timings[speaker, default: []].append((Double(padded.count) / AudioRecorder.sampleRate, timing.decode))
         }
         return [.none: process(plain, fallback: lang, glossary: []),
-                .textOnly: process(plain, fallback: lang, glossary: entries),
-                .full: process(biased, fallback: lang, glossary: entries)]
+                .textOnly: process(plain, fallback: lang, glossary: entries)]
     }
 
     private func process(_ raw: String, fallback: Lang, glossary: [GlossaryEntry]) -> String {
         let language = LanguageRouter.detect(raw, among: languages, fallback: fallback)
-        let ctx = BenchmarkFiles.context(language: language, glossary: glossary)
+        // Configuration A has no glossary and no spellings; B has both, as the app runs.
+        let ctx = BenchmarkFiles.context(language: language, glossary: glossary, spellings: glossary.isEmpty ? [] : Spellings.defaultList)
         return TextPipeline.process(raw, ctx) { word in MainActor.assumeIsolated { !TermExtractor.spellCheckerUnknown(word) } }
     }
 
@@ -176,7 +169,7 @@ final class GlossaryBenchmarkTests: XCTestCase {
             log(label.padding(toLength: 20, withPad: " ", startingAt: 0)
                   + BenchmarkConfig.allCases.map { value($0).padding(toLength: 10, withPad: " ", startingAt: 0) }.joined())
         }
-        log("\n" + speaker.padding(toLength: 20, withPad: " ", startingAt: 0) + "A none    B text    C full")
+        log("\n" + speaker.padding(toLength: 20, withPad: " ", startingAt: 0) + "A none    B text")
         line("terms right DE") { cell($0, .de, .hit) }
         line("terms right EN") { cell($0, .en, .hit) }
         line("traps spared") { cell($0, nil, .trap) }
@@ -193,13 +186,10 @@ final class GlossaryBenchmarkTests: XCTestCase {
                 return "mean \(v.reduce(0, +) / v.count) ms, median \(v[v.count / 2]) ms"
             }
             let audio = t.map(\.audio).reduce(0, +) / Double(t.count)
-            let perSecond = t.map { Double($0.helper.milliseconds) / $0.audio }.reduce(0, +) / Double(t.count)
             log(String(format: "time per take (%d takes, audio mean %.1f s):", t.count, audio))
-            log("  without CTC (B)   " + ms(t.map(\.plain)))
-            log("  with CTC (C)      " + ms(t.map(\.full)))
-            log("  CTC step alone    " + ms(t.map(\.helper)) + String(format: ", %.0f ms per s of audio", perSecond))
+            log("  transcription     " + ms(t.map(\.decode)))
         }
-        for r in mine where r.config == .full && !r.passed {
+        for r in mine where r.config == .textOnly && !r.passed {
             log("  ✗ \(r.caseID)  expected: \(byID[r.caseID]!.text)  got: \(r.output)")
         }
     }

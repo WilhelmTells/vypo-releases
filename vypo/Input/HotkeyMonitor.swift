@@ -12,6 +12,8 @@ final class HotkeyMonitor {
     var onEscape: () -> Bool = { false }
     /// The dictation key went down (used to close the pill's glossary field first).
     var onKeyPress: () -> Void = {}
+    /// The dictation key went down (true) or up (false), also while `enabled` is off.
+    var onKeyChange: (Bool) -> Void = { _ in }
     /// You pressed ⌘V (vypo's own ⌘V doesn't count); `ClipboardKeeper` restores the clipboard after it.
     var onPaste: () -> Void = {}
 
@@ -92,6 +94,7 @@ final class HotkeyMonitor {
             guard let down = isDictationKeyDown(flags: flags, keyCode: keyCode) else { return false }
             guard down != keyIsDown else { return false }
             keyIsDown = down
+            onKeyChange(down)
             guard enabled else { return false }
             if down { onKeyPress() }
             let now = ProcessInfo.processInfo.systemUptime
@@ -108,6 +111,7 @@ final class HotkeyMonitor {
             if isCustomShortcut(flags: flags, keyCode: keyCode) || (swallowingCustom && keyCode == customKeyCode) {
                 if isRepeat || keyIsDown { return swallowingCustom }
                 keyIsDown = true
+                onKeyChange(true)
                 guard enabled else { return false }
                 swallowingCustom = true
                 onKeyPress()
@@ -121,6 +125,7 @@ final class HotkeyMonitor {
         case .keyUp:
             guard key == .custom, keyIsDown, keyCode == customKeyCode else { return false }
             keyIsDown = false
+            onKeyChange(false)
             let swallowed = swallowingCustom
             swallowingCustom = false
             if swallowed { run(machine.keyUp(at: ProcessInfo.processInfo.systemUptime)) }

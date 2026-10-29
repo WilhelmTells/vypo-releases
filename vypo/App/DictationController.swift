@@ -213,6 +213,7 @@ final class DictationController {
             Log.audio.notice("Discarded recording (\(String(describing: verdict), privacy: .public)): \(seconds, format: .fixed(precision: 2)) s, peak \(peak, format: .fixed(precision: 1)) dBFS")
             phase = .idle
             if verdict == .tooQuiet { app.showError(.tooQuiet) } else { app.setPill(.ready) }
+            app.report(.nothingHeard)
             return
         }
         Log.audio.notice("Recorded \(seconds, format: .fixed(precision: 2)) s, peak \(peak, format: .fixed(precision: 1)) dBFS")

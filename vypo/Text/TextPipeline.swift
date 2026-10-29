@@ -6,6 +6,8 @@ struct PipelineContext: Sendable {
     var glossary: [GlossaryEntry] = []
     var strength: CorrectionStrength = .normal
     var replacements: [Replacement] = []
+    /// The spellings to apply (`Spellings`); empty when the switch is off.
+    var spellings: [String] = []
     /// Filler words to remove; empty when "Remove filler words" is off.
     var fillers: [String] = []
     var mode: AppMode = .standard
@@ -24,6 +26,8 @@ enum TextPipeline {
             guard !text.isEmpty else { return "" }
         }
         text = GlossaryCorrector.correct(text, entries: ctx.glossary, language: ctx.language, strength: ctx.strength, isWord: isWord)
+        // After the glossary (the user's own terms win over a built-in spelling), before the replacements.
+        text = Spellings.apply(text, list: ctx.spellings, glossary: ctx.glossary, language: ctx.language)
         text = Replacements.apply(ctx.replacements, to: text, mode: ctx.mode)
         guard !text.isEmpty else { return "" }
         if ctx.mode == .writing {

@@ -48,7 +48,7 @@ final class LanguageRoundTripTests: XCTestCase {
             guard let voice = TestSpeech.voice(for: lang), let sentence = Self.sentences[lang] else {
                 failures.append("\(lang.code): no voice or sentence"); continue
             }
-            let text = try await engine.transcribe(AudioPadding.padded(try TestSpeech.say(sentence, voice: voice)), language: nil, glossary: [])
+            let text = try await engine.transcribe(AudioPadding.padded(try TestSpeech.say(sentence, voice: voice)), language: nil)
             let detected = LanguageRouter.detect(text, among: Lang.allCases, fallback: .en)
             let foreignAmongAll = LanguageRouter.isForeign(text, among: Lang.allCases)
             let foreignAlone = LanguageRouter.isForeign(text, among: [lang])
@@ -58,7 +58,7 @@ final class LanguageRoundTripTests: XCTestCase {
         }
 
         // English alone: a German sentence is blocked.
-        let german = try await engine.transcribe(AudioPadding.padded(try TestSpeech.say(Self.sentences[.de]!, voice: "Anna")), language: nil, glossary: [])
+        let german = try await engine.transcribe(AudioPadding.padded(try TestSpeech.say(Self.sentences[.de]!, voice: "Anna")), language: nil)
         let blocked = LanguageRouter.isForeign(german, among: [.en])
         print("TRIP EN-only + German: blocked=\(blocked) | \(german)")
         if !blocked { failures.append("EN alone didn't block German: \(german)") }

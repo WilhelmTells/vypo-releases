@@ -97,7 +97,7 @@ struct ModelAttribution: View {
     static let license = URL(string: "https://creativecommons.org/licenses/by/4.0/")!
 
     var body: some View {
-        (Text("By moondream, based on NVIDIA Parakeet TDT 0.6B v3 · ") + Text(link))
+        (Text("By moondream, based on NVIDIA Parakeet TDT 0.6B v3, ") + Text(link))
             .font(.caption)
             .foregroundStyle(Color.vyLabelSecondary)
             .tint(Color.vyLabelSecondary)
@@ -193,7 +193,7 @@ struct SuggestionBanner: View {
                     HStack(spacing: 4) {
                         Text(s.heard).strikethrough()
                         Image(systemName: "arrow.right").font(.system(size: 9)).accessibilityLabel("becomes")
-                        Text(s.term + (s.count > 1 ? " · fixed \(s.count)×" : ""))
+                        Text(s.term + (s.count > 1 ? ", fixed \(s.count)×" : ""))
                     }
                     .font(.callout)
                     .foregroundStyle(Color.vyLabelSecondary)

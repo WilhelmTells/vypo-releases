@@ -29,8 +29,10 @@ echo 'DEVELOPMENT_TEAM = ABCDE12345' > Config/Local.xcconfig
 
 ## Official builds
 
-Official builds come from [wilhelmtells.com/vypo](https://wilhelmtells.com/vypo). Build this source yourself
-if you want to read, check or change what runs on your Mac.
+Official builds come from [wilhelmtells.com/vypo](https://wilhelmtells.com/vypo). Every release of
+[vypo-releases](https://github.com/WilhelmTells/vypo-releases/releases) is tagged at the source code of exactly
+that version (tag `v0.2.1` = the code of 0.2.1). Build it yourself if you want to read, check or change what
+runs on your Mac.
 
 ## Forks
 

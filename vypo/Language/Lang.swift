@@ -37,6 +37,26 @@ enum Lang: String, Codable, CaseIterable, Sendable, Identifiable {
         return name.prefix(1).uppercased(with: locale) + name.dropFirst()
     }
 
+    /// The name in the language itself ("Deutsch", "Español"), for the language tiles.
+    var nativeName: String {
+        let locale = Locale(identifier: rawValue)
+        let name = locale.localizedString(forLanguageCode: rawValue) ?? rawValue
+        return name.prefix(1).uppercased(with: locale) + name.dropFirst()
+    }
+
+    /// The English name ("German"), shown on the right in the language list.
+    var englishName: String {
+        Locale(identifier: "en").localizedString(forLanguageCode: rawValue) ?? rawValue
+    }
+
+    /// The first of the Mac's languages that vypo offers, or nil if the Mac speaks none of them.
+    static func macLanguage(preferred: [String] = Locale.preferredLanguages) -> Lang? {
+        for id in preferred {
+            if let code = Locale(identifier: id).language.languageCode?.identifier, let lang = Lang(rawValue: code) { return lang }
+        }
+        return nil
+    }
+
     /// "EN" / "DE"
     var code: String { rawValue.uppercased() }
 
@@ -73,6 +93,13 @@ enum Lang: String, Codable, CaseIterable, Sendable, Identifiable {
             result.append(lang)
         }
         return result.isEmpty ? [.en] : result
+    }
+
+    /// The languages chosen on a first run: the Mac's languages that vypo offers, plus English, so a first
+    /// English test sentence on a German Mac isn't filtered out. Existing installs keep what they saved.
+    static func firstRunSelection(preferred: [String]) -> [Lang] {
+        let mac = preselection(preferred: preferred)
+        return mac.contains(.en) ? mac : mac + [.en]
     }
 
     /// Close languages the recognizer confuses on short sentences (Russian read as Ukrainian, 2026-10-23).

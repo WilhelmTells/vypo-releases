@@ -151,12 +151,9 @@ struct MenuSeparator: View {
 /// Debug submenu, shown when the menu is opened with ⌥ held (M1).
 struct DebugMenu: View {
     @Environment(AppState.self) private var app
-    /// The glossary helper's state when the menu bar panel opened.
-    @State private var helper: GlossaryHelperStatus?
 
     var body: some View {
         @Bindable var app = app
-        @Bindable var prefs = app.prefs
         Menu {
             Button("Collapsed") { app.setPill(.collapsed) }
             Button("Ready") { app.setPill(.ready) }
@@ -166,14 +163,12 @@ struct DebugMenu: View {
             Button("Error") { app.setPill(.error(.noMicrophone)) }
             Button("Add") { MenuDismiss.close(); app.beginAdd(prefill: "TikTok") }
             Button("Added") { app.showNotice(.termAdded("TikTok")) }
+            #if DEBUG
+            // The only two places that write audio to disk. Not in a Release build: vypo never stores audio.
             Divider()
             Button("Save last recording to Desktop") { MenuDismiss.close(); app.onSaveLastRecording() }
             Toggle("Keep recordings for benchmark", isOn: $app.keepBenchmarkRecordings)
-            Section("Glossary helper") {
-                // Off by default: neither downloaded nor loaded. On downloads it if needed, then loads it.
-                Toggle("Glossary helper (CTC, slower)", isOn: $prefs.glossaryHelper)
-                if let helper { Text("Status: \(helper.description)") }
-            }
+            #endif
             Section("Mascot") {
                 Button("Play level-up") {
                     MenuDismiss.close()
@@ -195,7 +190,6 @@ struct DebugMenu: View {
         } label: {
             MenuRowLabel(title: "Debug", chevron: true)
         }
-        .task { helper = await app.models?.helperStatus() }
         .menuStyle(.button)
         .buttonStyle(MenuRowButtonStyle())
         .menuIndicator(.hidden)

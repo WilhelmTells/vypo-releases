@@ -11,7 +11,6 @@ struct DiagnosticsSnapshot: Equatable {
     var memoryBytes: UInt64
     var languages: [String]
     var speechModel: String
-    var glossaryHelper: String
     var microphone: Bool
     var accessibility: Bool
     var glossaryTerms: Int
@@ -99,7 +98,7 @@ enum Diagnostics {
         // vypo's own name isn't private, even when it's a glossary term (“vypo 112 MB” in the timings).
         let words = Set(words.map { $0.trimmingCharacters(in: .whitespaces) })
             .filter { $0.count >= 2 && $0.lowercased() != "vypo" }
-        // Longest first, so “Claus Code” goes before “Claus”.
+        // Longest first, so “Final Cut” goes before “Final”.
         for word in words.sorted(by: { $0.count > $1.count }) {
             let pattern = "(?i)(?<![\\p{L}\\p{N}])" + NSRegularExpression.escapedPattern(for: word) + "(?![\\p{L}\\p{N}])"
             line = line.replacingOccurrences(of: pattern, with: "[…]", options: .regularExpression)
@@ -118,7 +117,7 @@ enum Diagnostics {
             String(localized: "macOS \(s.macOS)"),
             String(localized: "Mac: \(s.macModel), \(s.chip), \(memory) GB memory"),
             String(localized: "Languages: \(s.languages.joined(separator: ", "))"),
-            String(localized: "Speech model: \(s.speechModel); glossary helper: \(s.glossaryHelper)"),
+            String(localized: "Speech model: \(s.speechModel)"),
             String(localized: "Microphone: \(yes(s.microphone)); Accessibility: \(yes(s.accessibility))"),
             String(localized: "Glossary: \(s.glossaryTerms) terms, \(s.activeGlossaryTerms) in active sets"),
             "",

@@ -8,7 +8,7 @@ final class GlossaryScopeTests: XCTestCase {
 
     /// `glossary.json` as written before the language choice.
     func testOldScopesDecode() throws {
-        let json = "[\(entry("Claus", scope: "all")),\(entry("Kubernetes", scope: "en")),\(entry("Bahn", scope: "de"))]"
+        let json = "[\(entry("Klaro", scope: "all")),\(entry("Kubernetes", scope: "en")),\(entry("Bahn", scope: "de"))]"
         let entries = try Store.decoder.decode([GlossaryEntry].self, from: Data(json.utf8))
         XCTAssertEqual(entries.map(\.scope), [.all, .only(.en), .only(.de)])
         let written = String(decoding: try Store.encoder.encode(entries[1]), as: UTF8.self)

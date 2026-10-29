@@ -15,10 +15,18 @@ enum RunEnvironment {
     static let testDirectory: URL = FileManager.default.temporaryDirectory
         .appendingPathComponent("vypo-tests-\(ProcessInfo.processInfo.processIdentifier)", isDirectory: true)
 
-    /// The real folder, `~/Library/Application Support/vypo/`.
+    /// The bundle ID of the separate onboarding test build (`scripts/onboarding-test.sh`). It has its own
+    /// preferences (a different bundle ID), its own permissions, and its own data folder, so a fresh-state run
+    /// never touches the installed vypo.
+    static let onboardingTestBundleID = "com.wilhelmtells.vypo.onboardingtest"
+
+    /// Whether this is the separate onboarding test build.
+    static var isOnboardingTestBuild: Bool { Bundle.main.bundleIdentifier == onboardingTestBundleID }
+
+    /// The real folder, `~/Library/Application Support/vypo/`; the test build's is `vypo-onboardingtest/`.
     static var realDirectory: URL {
         FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("vypo", isDirectory: true)
+            .appendingPathComponent(isOnboardingTestBuild ? "vypo-onboardingtest" : "vypo", isDirectory: true)
     }
 }
 

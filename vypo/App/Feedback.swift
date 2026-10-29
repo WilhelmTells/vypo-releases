@@ -13,7 +13,7 @@ enum Feedback {
 
 
             –
-            vypo \(version) · macOS \(macOS) · \(macModel)
+            vypo \(version), macOS \(macOS), \(macModel)
             \(String(localized: "To add diagnostics, choose Settings → About → Copy Diagnostics… in vypo and paste them here."))
             """
         var components = URLComponents()

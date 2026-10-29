@@ -39,6 +39,8 @@ enum PillNotice: Equatable, Sendable {
     /// Pasted where there was no text field: the text stays on the clipboard.
     case onClipboard
     case undone
+    /// The language filter kept a transcript out of the field; it is in History.
+    case savedToHistory
     /// “Copy Diagnostics…” is reading the log (a few seconds); “Copied” follows.
     case collectingDiagnostics
 }
@@ -69,6 +71,7 @@ enum PillMode: Equatable, Sendable {
         case .added(.copied): String(localized: "Copied")
         case .added(.onClipboard): String(localized: "On clipboard")
         case .added(.undone): String(localized: "Undone")
+        case .added(.savedToHistory): String(localized: "Saved to History")
         case .added(.collectingDiagnostics): String(localized: "Collecting diagnostics…")
         }
     }
@@ -93,7 +96,7 @@ enum PillVisibility {
             }
         // The user just asked for the diagnostics and waits a few seconds: shown even with the pill off.
         case .add, .added(.onClipboard), .added(.collectingDiagnostics): true
-        case .collapsed, .ready, .listening, .handsfree, .processing, .added(.termAdded), .added(.copied), .added(.undone): false
+        case .collapsed, .ready, .listening, .handsfree, .processing, .added(.termAdded), .added(.copied), .added(.undone), .added(.savedToHistory): false
         }
     }
 }
@@ -125,6 +128,7 @@ enum PillMetrics {
         case .copied: textWidth(String(localized: "Copied"), noticeFont)
         case .onClipboard: textWidth(String(localized: "On clipboard"), noticeFont)
         case .undone: textWidth(String(localized: "Undone"), noticeFont)
+        case .savedToHistory: textWidth(String(localized: "Saved to History"), noticeFont)
         case .collectingDiagnostics: textWidth(String(localized: "Collecting diagnostics…"), noticeFont)
         }
     }

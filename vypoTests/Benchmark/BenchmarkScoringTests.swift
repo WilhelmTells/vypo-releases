@@ -3,11 +3,11 @@ import XCTest
 
 final class BenchmarkScoringTests: XCTestCase {
     func testTermMatchingIsWholeWordAndCaseSensitive() {
-        XCTAssertTrue(BenchmarkScore.contains("Ich hab das mit Claus Code gebaut.", term: "Claus Code"))
+        XCTAssertTrue(BenchmarkScore.contains("Ich hab das mit Final Cut gebaut.", term: "Final Cut"))
         XCTAssertTrue(BenchmarkScore.contains("Das Stand-up ist um zehn.", term: "Stand-up"))
-        XCTAssertFalse(BenchmarkScore.contains("Claudia kommt später.", term: "Claus"))
+        XCTAssertFalse(BenchmarkScore.contains("Clara kommt später.", term: "Klaro"))
         XCTAssertFalse(BenchmarkScore.contains("move the cursor", term: "Cursor"))
-        XCTAssertTrue(BenchmarkScore.contains("Claus  Code", term: "Claus Code"))
+        XCTAssertTrue(BenchmarkScore.contains("Final  Cut", term: "Final Cut"))
     }
 
     func testTermsRightCountsEachTerm() {
@@ -15,8 +15,8 @@ final class BenchmarkScoringTests: XCTestCase {
     }
 
     func testTrapSpared() {
-        XCTAssertTrue(BenchmarkScore.trapSpared("Ich glaube, das klappt.", keep: ["glaube"], forbid: ["Claus"]))
-        XCTAssertFalse(BenchmarkScore.trapSpared("Ich Claus, das klappt.", keep: ["glaube"], forbid: ["Claus"]))
+        XCTAssertTrue(BenchmarkScore.trapSpared("Ich glaube, das klappt.", keep: ["glaube"], forbid: ["Klaro"]))
+        XCTAssertFalse(BenchmarkScore.trapSpared("Ich Klaro, das klappt.", keep: ["glaube"], forbid: ["Klaro"]))
         XCTAssertFalse(BenchmarkScore.trapSpared("Move the Cursor to the end.", keep: ["cursor"], forbid: ["Cursor"]))
     }
 
@@ -46,10 +46,10 @@ final class BenchmarkScoringTests: XCTestCase {
     }
 
     func testDiffListsFixedAndBroken() {
-        let prev = [BenchmarkResult(speaker: "owner", caseID: "a", config: .full, output: "", passed: false),
-                    BenchmarkResult(speaker: "owner", caseID: "b", config: .full, output: "", passed: true)]
-        let cur = [BenchmarkResult(speaker: "owner", caseID: "a", config: .full, output: "", passed: true),
-                   BenchmarkResult(speaker: "owner", caseID: "b", config: .full, output: "", passed: false),
+        let prev = [BenchmarkResult(speaker: "owner", caseID: "a", config: .textOnly, output: "", passed: false),
+                    BenchmarkResult(speaker: "owner", caseID: "b", config: .textOnly, output: "", passed: true)]
+        let cur = [BenchmarkResult(speaker: "owner", caseID: "a", config: .textOnly, output: "", passed: true),
+                   BenchmarkResult(speaker: "owner", caseID: "b", config: .textOnly, output: "", passed: false),
                    BenchmarkResult(speaker: "owner", caseID: "b", config: .none, output: "", passed: true)]
         let d = BenchmarkDiff.flips(previous: prev, current: cur)
         XCTAssertEqual(d.fixed, ["owner/a"])
@@ -57,7 +57,7 @@ final class BenchmarkScoringTests: XCTestCase {
     }
 
     func testDiffWithoutPreviousIsEmpty() {
-        let d = BenchmarkDiff.flips(previous: [], current: [BenchmarkResult(speaker: "owner", caseID: "a", config: .full, output: "", passed: true)])
+        let d = BenchmarkDiff.flips(previous: [], current: [BenchmarkResult(speaker: "owner", caseID: "a", config: .textOnly, output: "", passed: true)])
         XCTAssertTrue(d.fixed.isEmpty && d.broken.isEmpty)
     }
 }

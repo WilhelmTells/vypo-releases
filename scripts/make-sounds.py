@@ -63,8 +63,12 @@ SOUNDS = {
     "bell": (tone(659, 0.02, 0.04, BELL), tone(494, 0.02, 0.045, BELL)),
 }
 
+# Onboarding: plays once when the voice was clearly measured (a rising pair, in the style of the start sounds).
+CONFIRM = mix(tone(523, 0.03, 0.03, WARM, glide=0.1), tone(784, 0.04, 0.05, WARM, glide=0.1, delay=0.08))
+
 if __name__ == "__main__":
     os.makedirs(OUT, exist_ok=True)
+    write(os.path.join(OUT, "confirm.wav"), CONFIRM)
     for name, (start, stop) in SOUNDS.items():
         write(os.path.join(OUT, f"{name}-start.wav"), start)
         write(os.path.join(OUT, f"{name}-stop.wav"), stop)

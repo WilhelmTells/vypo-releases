@@ -100,14 +100,14 @@ enum DefaultsKey {
     /// switches before that (`spokenSymbols`, `spokenSymbolsAlone`) are read by that move once and then removed.
     static let symbolsAreReplacements = "symbolsAreReplacements"
     static let replacementVariantsSplit = "replacementVariantsSplit"
-    static let preferGlossaryTerms = "preferGlossaryTerms"
-    static let glossaryHelper = "glossaryHelper"
     static let correctionStrength = "correctionStrength"
     static let saveHistory = "saveHistory"
     static let historyRetention = "historyRetention"
     // §23.11
     static let smartSpacing = "smartSpacing"
     static let removeFillers = "removeFillers"
+    static let spellingsEnabled = "spellingsEnabled"
+    static let spellingsList = "spellings.list"
     static let fillerWordsEN = "fillerWords.en"
     static let fillerWordsDE = "fillerWords.de"
     static let spokenPunctuation = "spokenPunctuation"
@@ -135,7 +135,7 @@ enum DefaultsKey {
 final class Preferences {
     @ObservationIgnored let defaults: UserDefaults
 
-    init(defaults: UserDefaults = AppDefaults.standard) {
+    init(defaults: UserDefaults = AppDefaults.standard, preferredLanguages: [String] = Locale.preferredLanguages) {
         self.defaults = defaults
         defaults.register(defaults: [
             DefaultsKey.onboardingCompleted: false,
@@ -147,13 +147,12 @@ final class Preferences {
             DefaultsKey.muteWhileRecording: true,
             DefaultsKey.pasteAutomatically: true,
             DefaultsKey.restoreClipboard: true,
-            DefaultsKey.preferGlossaryTerms: true,
-            DefaultsKey.glossaryHelper: false,
             DefaultsKey.correctionStrength: CorrectionStrength.normal.rawValue,
             DefaultsKey.saveHistory: true,
             DefaultsKey.historyRetention: HistoryRetention.days30.rawValue,
             DefaultsKey.smartSpacing: true,
             DefaultsKey.removeFillers: true,
+            DefaultsKey.spellingsEnabled: true,
             DefaultsKey.fillerWordsEN: FillerRemover.defaultWords(.en),
             DefaultsKey.fillerWordsDE: FillerRemover.defaultWords(.de),
             DefaultsKey.spokenPunctuation: true,
@@ -177,13 +176,14 @@ final class Preferences {
         muteWhileRecording = defaults.bool(forKey: DefaultsKey.muteWhileRecording)
         pasteAutomatically = defaults.bool(forKey: DefaultsKey.pasteAutomatically)
         restoreClipboard = defaults.bool(forKey: DefaultsKey.restoreClipboard)
-        preferGlossaryTerms = defaults.bool(forKey: DefaultsKey.preferGlossaryTerms)
-        glossaryHelper = defaults.bool(forKey: DefaultsKey.glossaryHelper)
         correctionStrength = CorrectionStrength(rawValue: defaults.string(forKey: DefaultsKey.correctionStrength) ?? "") ?? .normal
         saveHistory = defaults.bool(forKey: DefaultsKey.saveHistory)
         historyRetention = HistoryRetention(rawValue: defaults.string(forKey: DefaultsKey.historyRetention) ?? "") ?? .days30
         smartSpacing = defaults.bool(forKey: DefaultsKey.smartSpacing)
         removeFillers = defaults.bool(forKey: DefaultsKey.removeFillers)
+        spellingsEnabled = defaults.bool(forKey: DefaultsKey.spellingsEnabled)
+        // Only a user's own edit is stored; nil means the built-in list (`Spellings.defaultList`).
+        spellingsEdited = defaults.stringArray(forKey: DefaultsKey.spellingsList)
         fillerWordsEN = defaults.stringArray(forKey: DefaultsKey.fillerWordsEN) ?? FillerRemover.defaultWords(.en)
         fillerWordsDE = defaults.stringArray(forKey: DefaultsKey.fillerWordsDE) ?? FillerRemover.defaultWords(.de)
         spokenPunctuation = defaults.bool(forKey: DefaultsKey.spokenPunctuation)
@@ -194,7 +194,8 @@ final class Preferences {
         let storedColor = defaults.string(forKey: DefaultsKey.pillColor)
         pillColor = storedColor == "accent" ? .orange : PillColor(rawValue: storedColor ?? "") ?? .white
         pillCustomColor = defaults.string(forKey: DefaultsKey.pillCustomColor) ?? Self.defaultCustomColor
-        pillBackground = PillBackground(rawValue: defaults.string(forKey: DefaultsKey.pillBackground) ?? "") ?? .dark
+        // Glass for everyone who hasn't chosen a pill background (0.3.0); a stored choice stays.
+        pillBackground = PillBackground(rawValue: defaults.string(forKey: DefaultsKey.pillBackground) ?? "") ?? .glass
         windowStyle = WindowStyle(rawValue: defaults.string(forKey: DefaultsKey.windowStyle) ?? "") ?? .automatic
         collectStats = defaults.bool(forKey: DefaultsKey.collectStats)
         showLevel = defaults.bool(forKey: DefaultsKey.showLevel)
@@ -204,7 +205,7 @@ final class Preferences {
         // Before the choice existed, vypo spoke English and German.
         let stored = (defaults.stringArray(forKey: DefaultsKey.languages) ?? []).compactMap(Lang.init(rawValue:))
         languages = !stored.isEmpty ? stored
-            : defaults.bool(forKey: DefaultsKey.onboardingCompleted) ? [.en, .de] : Lang.preselection(preferred: Locale.preferredLanguages)
+            : defaults.bool(forKey: DefaultsKey.onboardingCompleted) ? [.en, .de] : Lang.firstRunSelection(preferred: preferredLanguages)
         // didSet doesn't run in init: store the starting choice, or a kept preselection would read as
         // English + German once onboarding is done.
         defaults.set(languages.map(\.rawValue), forKey: DefaultsKey.languages)
@@ -220,15 +221,27 @@ final class Preferences {
     var muteWhileRecording: Bool { didSet { defaults.set(muteWhileRecording, forKey: DefaultsKey.muteWhileRecording) } }
     var pasteAutomatically: Bool { didSet { defaults.set(pasteAutomatically, forKey: DefaultsKey.pasteAutomatically) } }
     var restoreClipboard: Bool { didSet { defaults.set(restoreClipboard, forKey: DefaultsKey.restoreClipboard) } }
-    var preferGlossaryTerms: Bool { didSet { defaults.set(preferGlossaryTerms, forKey: DefaultsKey.preferGlossaryTerms) } }
-    /// The CTC glossary helper (Parakeet CTC 110M): off by default, only in the Debug menu. Off, it is
-    /// neither downloaded nor loaded; the text correction runs as always.
-    var glossaryHelper: Bool { didSet { defaults.set(glossaryHelper, forKey: DefaultsKey.glossaryHelper) } }
     var correctionStrength: CorrectionStrength { didSet { defaults.set(correctionStrength.rawValue, forKey: DefaultsKey.correctionStrength) } }
     var saveHistory: Bool { didSet { defaults.set(saveHistory, forKey: DefaultsKey.saveHistory) } }
     var historyRetention: HistoryRetention { didSet { defaults.set(historyRetention.rawValue, forKey: DefaultsKey.historyRetention) } }
     var smartSpacing: Bool { didSet { defaults.set(smartSpacing, forKey: DefaultsKey.smartSpacing) } }
     var removeFillers: Bool { didSet { defaults.set(removeFillers, forKey: DefaultsKey.removeFillers) } }
+    var spellingsEnabled: Bool { didSet { defaults.set(spellingsEnabled, forKey: DefaultsKey.spellingsEnabled) } }
+    /// The user's edited spellings; nil while the list is the built-in one, which is never stored.
+    private(set) var spellingsEdited: [String]?
+    var spellings: [String] { spellingsEdited ?? Spellings.defaultList }
+
+    /// Saves an edited list. The built-in list (also after “Reset to defaults”) is not stored, so the app's own list can
+    /// grow in an update; a list that is only different is stored as it is.
+    func setSpellings(_ words: [String]) {
+        if words == Spellings.defaultList {
+            spellingsEdited = nil
+            defaults.removeObject(forKey: DefaultsKey.spellingsList)
+        } else {
+            spellingsEdited = words
+            defaults.set(words, forKey: DefaultsKey.spellingsList)
+        }
+    }
     var fillerWordsEN: [String] { didSet { defaults.set(fillerWordsEN, forKey: DefaultsKey.fillerWordsEN) } }
     var fillerWordsDE: [String] { didSet { defaults.set(fillerWordsDE, forKey: DefaultsKey.fillerWordsDE) } }
     var spokenPunctuation: Bool { didSet { defaults.set(spokenPunctuation, forKey: DefaultsKey.spokenPunctuation) } }

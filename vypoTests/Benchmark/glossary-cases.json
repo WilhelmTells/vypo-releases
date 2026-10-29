@@ -1,15 +1,18 @@
 {
   "glossary": [
     {
-      "term": "Claus",
+      "term": "Klaro",
       "soundsLike": [
-        "Kloot",
-        "Clot",
-        "Klod"
+        "Claro",
+        "Klaru",
+        "Klaroh"
       ]
     },
     {
-      "term": "Claus Code"
+      "term": "Final Cut",
+      "soundsLike": [
+        "final cat"
+      ]
     },
     {
       "term": "Cursor"
@@ -69,7 +72,7 @@
       "term": "Stakeholder"
     },
     {
-      "term": "Vypo",
+      "term": "vypo",
       "soundsLike": [
         "vipo",
         "viper"
@@ -77,16 +80,22 @@
     },
     {
       "term": "Parakeet"
+    },
+    {
+      "term": "Logic Pro",
+      "soundsLike": [
+        "logic bro"
+      ]
     }
   ],
   "cases": [
     {
-      "id": "de-claus-code",
+      "id": "de-final-cut",
       "kind": "hit",
       "lang": "de",
-      "text": "Ich hab das gestern mit Claus Code gebaut.",
+      "text": "Ich hab das gestern mit Final Cut geschnitten.",
       "terms": [
-        "Claus Code"
+        "Final Cut"
       ]
     },
     {
@@ -193,21 +202,21 @@
       ]
     },
     {
-      "id": "de-claus",
+      "id": "de-klaro",
       "kind": "hit",
       "lang": "de",
-      "text": "Frag mal Claus, ob das so passt.",
+      "text": "Frag mal Klaro, ob das so passt.",
       "terms": [
-        "Claus"
+        "Klaro"
       ]
     },
     {
       "id": "de-vypo-parakeet",
       "kind": "hit",
       "lang": "de",
-      "text": "Vypo nutzt Parakeet für die Spracherkennung.",
+      "text": "vypo nutzt Parakeet für die Spracherkennung.",
       "terms": [
-        "Vypo",
+        "vypo",
         "Parakeet"
       ]
     },
@@ -221,12 +230,12 @@
       ]
     },
     {
-      "id": "en-claus",
+      "id": "en-klaro",
       "kind": "hit",
       "lang": "en",
-      "text": "Just ask Claus to refactor this function.",
+      "text": "Just ask Klaro to refactor this function.",
       "terms": [
-        "Claus"
+        "Klaro"
       ]
     },
     {
@@ -293,13 +302,13 @@
       ]
     },
     {
-      "id": "en-cursor-claus-code",
+      "id": "en-cursor-final-cut",
       "kind": "hit",
       "lang": "en",
-      "text": "Cursor and Claus Code both edited the same file.",
+      "text": "Cursor and Final Cut both have the same file open.",
       "terms": [
         "Cursor",
-        "Claus Code"
+        "Final Cut"
       ]
     },
     {
@@ -312,63 +321,222 @@
       ]
     },
     {
-      "id": "de-glaube",
-      "kind": "trap",
+      "id": "de-vypo-app",
+      "kind": "hit",
       "lang": "de",
-      "text": "Ich glaube, das klappt heute nicht mehr.",
-      "keep": [
-        "glaube"
-      ],
-      "forbid": [
-        "Claus"
+      "text": "Ich habe die vypo-App geöffnet.",
+      "terms": [
+        "vypo"
       ]
     },
     {
-      "id": "de-cloud",
-      "kind": "trap",
+      "id": "de-final-cut-session",
+      "kind": "hit",
       "lang": "de",
-      "text": "Wir speichern die Fotos in der Cloud.",
-      "keep": [
-        "Cloud"
-      ],
-      "forbid": [
-        "Claus"
+      "text": "Die andere Final Cut-Session läuft noch.",
+      "terms": [
+        "Final Cut"
       ]
     },
     {
-      "id": "en-cloud",
+      "id": "de-logic-pro-session",
+      "kind": "hit",
+      "lang": "de",
+      "text": "Ich starte eine Logic Pro-Session.",
+      "terms": [
+        "Logic Pro"
+      ]
+    },
+    {
+      "id": "de-vypo-downloadseite",
+      "kind": "hit",
+      "lang": "de",
+      "text": "Das ist die Downloadseite vom vypo.",
+      "terms": [
+        "vypo"
+      ]
+    },
+    {
+      "id": "de-vypo-laeuft",
+      "kind": "hit",
+      "lang": "de",
+      "text": "vypo läuft.",
+      "terms": [
+        "vypo"
+      ]
+    },
+    {
+      "id": "de-zip-datei",
+      "kind": "hit",
+      "lang": "de",
+      "text": "Schick mir die ZIP-Datei.",
+      "terms": [
+        "ZIP"
+      ]
+    },
+    {
+      "id": "de-pdf-export",
+      "kind": "hit",
+      "lang": "de",
+      "text": "Ich exportiere das als PDF.",
+      "terms": [
+        "PDF"
+      ]
+    },
+    {
+      "id": "de-macos",
+      "kind": "hit",
+      "lang": "de",
+      "text": "Läuft das auf macOS?",
+      "terms": [
+        "macOS"
+      ]
+    },
+    {
+      "id": "de-fn-taste",
+      "kind": "hit",
+      "lang": "de",
+      "text": "Drück die fn-Taste.",
+      "terms": [
+        "fn"
+      ]
+    },
+    {
+      "id": "de-api-url",
+      "kind": "hit",
+      "lang": "de",
+      "text": "Die API liefert eine URL zurück.",
+      "terms": [
+        "API",
+        "URL"
+      ]
+    },
+    {
+      "id": "de-github-iphone",
+      "kind": "hit",
+      "lang": "de",
+      "text": "Ich habe das auf GitHub und auf dem iPhone getestet.",
+      "terms": [
+        "GitHub",
+        "iPhone"
+      ]
+    },
+    {
+      "id": "de-png-jpg",
+      "kind": "hit",
+      "lang": "de",
+      "text": "Speichere das Bild als PNG oder JPG.",
+      "terms": [
+        "PNG",
+        "JPG"
+      ]
+    },
+    {
+      "id": "en-json-csv",
+      "kind": "hit",
+      "lang": "en",
+      "text": "Please send the JSON and the CSV.",
+      "terms": [
+        "JSON",
+        "CSV"
+      ]
+    },
+    {
+      "id": "en-url",
+      "kind": "hit",
+      "lang": "en",
+      "text": "Open the URL in the browser.",
+      "terms": [
+        "URL"
+      ]
+    },
+    {
+      "id": "en-macos",
+      "kind": "hit",
+      "lang": "en",
+      "text": "Does it run on macOS?",
+      "terms": [
+        "macOS"
+      ]
+    },
+    {
+      "id": "en-pdf-zip",
+      "kind": "hit",
+      "lang": "en",
+      "text": "Attach the PDF and the ZIP file.",
+      "terms": [
+        "PDF",
+        "ZIP"
+      ]
+    },
+    {
+      "id": "en-ssd-usb",
+      "kind": "hit",
+      "lang": "en",
+      "text": "Plug the SSD into the USB port.",
+      "terms": [
+        "SSD",
+        "USB"
+      ]
+    },
+    {
+      "id": "de-klar",
+      "kind": "trap",
+      "lang": "de",
+      "text": "Das ist doch völlig klar.",
+      "keep": [
+        "klar"
+      ],
+      "forbid": [
+        "Klaro"
+      ]
+    },
+    {
+      "id": "de-cat",
+      "kind": "trap",
+      "lang": "de",
+      "text": "Das Cat-Video hat tausend Likes.",
+      "keep": [
+        "Cat"
+      ],
+      "forbid": [
+        "Final Cut"
+      ]
+    },
+    {
+      "id": "en-cat",
       "kind": "trap",
       "lang": "en",
-      "text": "The files are stored in the cloud.",
+      "text": "The cat sat on the mat all day.",
       "keep": [
-        "cloud"
+        "cat"
       ],
       "forbid": [
-        "Claus"
+        "Final Cut"
       ]
     },
     {
-      "id": "de-claudia",
+      "id": "de-clara",
       "kind": "trap",
       "lang": "de",
-      "text": "Claudia kommt heute etwas später.",
+      "text": "Clara kommt heute etwas später.",
       "keep": [
-        "Claudia"
+        "Clara"
       ],
       "forbid": [
-        "Claus"
+        "Klaro"
       ]
     },
     {
-      "id": "de-code",
+      "id": "de-bro",
       "kind": "trap",
       "lang": "de",
-      "text": "Schick mir den Code bitte nochmal.",
+      "text": "Mein Bro schickt mir das gleich nochmal.",
       "keep": [
-        "Code"
+        "Bro"
       ],
       "forbid": [
-        "Claus"
+        "Logic Pro"
       ]
     },
     {
@@ -429,6 +597,102 @@
       ],
       "forbid": [
         "Parakeet"
+      ]
+    },
+    {
+      "id": "de-bro-session",
+      "kind": "trap",
+      "lang": "de",
+      "text": "Das war eine Bro-Session.",
+      "keep": [
+        "Bro"
+      ],
+      "forbid": [
+        "Logic Pro"
+      ]
+    },
+    {
+      "id": "de-bro-bett",
+      "kind": "trap",
+      "lang": "de",
+      "text": "Mein Bro liegt noch im Bett.",
+      "keep": [
+        "Bro"
+      ],
+      "forbid": [
+        "Logic Pro"
+      ]
+    },
+    {
+      "id": "de-vibe",
+      "kind": "trap",
+      "lang": "de",
+      "text": "Das ist ein guter Vibe.",
+      "keep": [
+        "Vibe"
+      ],
+      "forbid": [
+        "vypo"
+      ]
+    },
+    {
+      "id": "en-zip-jacket",
+      "kind": "trap",
+      "lang": "en",
+      "text": "Zip your jacket.",
+      "keep": [
+        "Zip"
+      ],
+      "forbid": [
+        "ZIP"
+      ]
+    },
+    {
+      "id": "en-ram-door",
+      "kind": "trap",
+      "lang": "en",
+      "text": "Don't ram the door.",
+      "keep": [
+        "ram"
+      ],
+      "forbid": [
+        "RAM"
+      ]
+    },
+    {
+      "id": "de-ui-schoen",
+      "kind": "trap",
+      "lang": "de",
+      "text": "Ui, das ist schön.",
+      "keep": [
+        "Ui"
+      ],
+      "forbid": [
+        "UI"
+      ]
+    },
+    {
+      "id": "en-pin-wall",
+      "kind": "trap",
+      "lang": "en",
+      "text": "Pin it to the wall.",
+      "keep": [
+        "Pin"
+      ],
+      "forbid": [
+        "PIN"
+      ]
+    },
+    {
+      "id": "en-mac-bought",
+      "kind": "trap",
+      "lang": "en",
+      "text": "I bought a Mac yesterday.",
+      "keep": [
+        "Mac"
+      ],
+      "forbid": [
+        "macOS"
       ]
     },
     {

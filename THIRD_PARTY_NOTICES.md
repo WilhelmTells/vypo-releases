@@ -170,18 +170,6 @@ The chain:
 
 vypo uses (3) without further changes.
 
-### Parakeet CTC 110M
-- Author: NVIDIA
-- License: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)
-- Source: https://huggingface.co/FluidInference/parakeet-ctc-110m-coreml
-- Use: the glossary helper, off by default; downloaded only when it is turned on.
-
-The chain:
-1. "parakeet-tdt_ctc-110m" by NVIDIA, https://huggingface.co/nvidia/parakeet-tdt_ctc-110m, CC BY 4.0.
-2. "parakeet-ctc-110m-coreml" by FluidInference, https://huggingface.co/FluidInference/parakeet-ctc-110m-coreml.
-   Changed: converted from (1) to Core ML. Its metadata says CC BY 4.0 (its text says Apache 2.0); vypo
-   follows the stricter of the two, the original's CC BY 4.0.
-
 ## License texts
 
 ### Apache License 2.0

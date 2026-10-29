@@ -50,9 +50,24 @@ final class AppState {
     @ObservationIgnored var onCopyLast: () -> Void = {}
     @ObservationIgnored var onCopyDiagnostics: () -> Void = {}
     @ObservationIgnored var onUndo: () -> Void = {}
+    #if DEBUG
+    // Debug builds only: the two places that write audio to disk (Debug menu). A Release build has neither.
     @ObservationIgnored var onSaveLastRecording: () -> Void = {}
     /// Debug: also write every recording to Benchmark/recordings. Not saved, so it is off after a relaunch.
     var keepBenchmarkRecordings = false
+    #endif
+
+    /// How the last dictation ended, with a counter so the same outcome twice still changes (the onboarding's Try it
+    /// step reports it).
+    private(set) var lastOutcome: (id: Int, outcome: DictationOutcome)?
+    /// While onboarding is on a step before Try it, the dictation key only shows that it was pressed.
+    var dictationBlocked = false
+    /// The dictation key went down or up (step 5 of onboarding shows the press), whatever `dictationBlocked` says.
+    @ObservationIgnored var onKeyChange: (Bool) -> Void = { _ in }
+
+    func report(_ outcome: DictationOutcome) {
+        lastOutcome = ((lastOutcome?.id ?? 0) + 1, outcome)
+    }
 
     @ObservationIgnored var onOpenSettings: (SettingsPane?) -> Void = { _ in }
     @ObservationIgnored var onOpenOnboarding: (Int?) -> Void = { _ in }

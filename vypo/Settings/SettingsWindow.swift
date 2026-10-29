@@ -90,7 +90,8 @@ final class WindowManager: NSObject, NSWindowDelegate {
         MenuDismiss.close()
         if onboarding == nil {
             let host = NSHostingController(rootView: makeOnboarding(step))
-            host.sizingOptions = [.preferredContentSize]
+            // The window has the fixed size of its step (Welcome is small); it is set below and animated on a step change.
+            host.sizingOptions = []
             let window = NSWindow(contentViewController: host)
             window.styleMask = [.titled, .closable, .fullSizeContentView]
             window.titleVisibility = .hidden
@@ -98,12 +99,38 @@ final class WindowManager: NSObject, NSWindowDelegate {
             window.isMovableByWindowBackground = true
             window.isReleasedWhenClosed = false
             window.delegate = self
+            // The frame is the step's size: the title bar is transparent and the content runs under it.
+            window.setFrame(NSRect(origin: .zero, size: OnboardingRules.windowSize(step: step)), display: false)
             window.center()
             onboarding = window
         }
         updatePresence(opening: true)
         NSApp.activate()
         onboarding?.makeKeyAndOrderFront(nil)
+    }
+
+    /// Grows or shrinks the onboarding window around its centre to the size of `step`: Welcome 400 x 370, the rest
+    /// 780 x 520. The zoom is 0.42 s with a fast start and a soft landing; with Reduce motion it is one step.
+    func resizeOnboarding(forStep step: Int) {
+        guard let window = onboarding else { return }
+        let size = OnboardingRules.windowSize(step: step)
+        guard window.frame.size != size else { return }
+        var frame = NSRect(origin: .zero, size: size)
+        let old = window.frame
+        frame.origin = NSPoint(x: old.midX - frame.width / 2, y: old.midY - frame.height / 2)
+        if let visible = (window.screen ?? NSScreen.main)?.visibleFrame {
+            frame.origin.x = min(max(frame.origin.x, visible.minX), max(visible.minX, visible.maxX - frame.width))
+            frame.origin.y = min(max(frame.origin.y, visible.minY), max(visible.minY, visible.maxY - frame.height))
+        }
+        guard window.isVisible, !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion else {
+            window.setFrame(frame, display: true)
+            return
+        }
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.42
+            context.timingFunction = CAMediaTimingFunction(controlPoints: 0.2, 0, 0, 1)
+            window.animator().setFrame(frame, display: true)
+        }
     }
 
     func closeOnboarding() {

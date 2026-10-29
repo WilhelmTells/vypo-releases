@@ -14,27 +14,9 @@ final class EngineManager {
     func engine(for id: ModelID) -> (any ASREngine)? {
         if let e = engines[id] { return e }
         guard id == ModelCatalog.speech, let record = models.records[id] else { return nil }
-        let engine = ParakeetEngine(directory: URL(fileURLWithPath: record.path), helperDirectory: helperDirectory)
+        let engine = ParakeetEngine(directory: URL(fileURLWithPath: record.path))
         engines[id] = engine
         return engine
-    }
-
-    /// The glossary helper (Debug menu, off by default): on and installed, the engine gets its folder.
-    var helperEnabled = false {
-        didSet { applyHelper() }
-    }
-
-    /// The helper's folder while it's on and installed.
-    var helperDirectory: URL? {
-        guard helperEnabled else { return nil }
-        return models.url(for: .ctcVocab)
-    }
-
-    /// Hands the engine the helper's folder, or nil to unload it; after a toggle and after its download.
-    func applyHelper() {
-        guard let engine = engines[ModelCatalog.speech] as? ParakeetEngine else { return }
-        let dir = helperDirectory
-        Task { await engine.setHelper(dir) }
     }
 
     func load(_ id: ModelID) async throws {

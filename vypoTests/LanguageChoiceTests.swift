@@ -12,6 +12,26 @@ final class LanguageChoiceTests: XCTestCase {
         XCTAssertEqual(Lang.preselection(preferred: ["sl-SI", "pt-BR"]), [.pt])
     }
 
+    func testFirstRunIsTheMacLanguagesPlusEnglish() {
+        XCTAssertEqual(Preferences(defaults: defaults(), preferredLanguages: ["de-DE"]).languages, [.de, .en])
+        XCTAssertEqual(Preferences(defaults: defaults(), preferredLanguages: ["en-US"]).languages, [.en])
+        XCTAssertEqual(Preferences(defaults: defaults(), preferredLanguages: ["tr-TR"]).languages, [.en])
+        XCTAssertEqual(Preferences(defaults: defaults(), preferredLanguages: ["fr-FR", "en-GB", "de-DE"]).languages, [.fr, .en, .de])
+    }
+
+    func testFirstRunChoiceIsKeptWhenItIsLaterRead() {
+        let d = defaults()
+        _ = Preferences(defaults: d, preferredLanguages: ["de-DE"])
+        // A later start with another Mac language list reads what was stored.
+        XCTAssertEqual(Preferences(defaults: d, preferredLanguages: ["fr-FR"]).languages, [.de, .en])
+    }
+
+    func testSavedLanguagesAreNotChangedByTheNewDefault() {
+        let d = defaults()
+        d.set(["de"], forKey: DefaultsKey.languages)
+        XCTAssertEqual(Preferences(defaults: d, preferredLanguages: ["de-DE"]).languages, [.de])
+    }
+
     func testExistingInstallKeepsEnglishAndGerman() {
         let d = defaults()
         d.set(true, forKey: DefaultsKey.onboardingCompleted)

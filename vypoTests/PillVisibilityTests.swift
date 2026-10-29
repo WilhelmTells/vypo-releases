@@ -3,7 +3,7 @@ import XCTest
 
 /// Which states show the pill when it's turned off (Settings → Appearance → Pill).
 final class PillVisibilityTests: XCTestCase {
-    private static let notices: [PillNotice] = [.termAdded("TikTok"), .copied, .onClipboard, .undone, .collectingDiagnostics]
+    private static let notices: [PillNotice] = [.termAdded("TikTok"), .copied, .onClipboard, .undone, .savedToHistory, .collectingDiagnostics]
     private static let modes: [PillMode] = [.collapsed, .ready, .listening, .handsfree, .processing, .add]
         + PillError.allCases.map { .error($0) } + notices.map { .added($0) }
 

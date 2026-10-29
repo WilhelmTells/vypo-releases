@@ -106,7 +106,8 @@ enum LoginItem {
     /// Default on: registered once, on first launch.
     static func applyDefaultOnce(_ defaults: UserDefaults = AppDefaults.standard) {
         let key = "openAtLoginConfigured"
-        guard !defaults.bool(forKey: key) else { return }
+        // The onboarding test build must never register itself as a login item.
+        guard !defaults.bool(forKey: key), !RunEnvironment.isOnboardingTestBuild else { return }
         defaults.set(true, forKey: key)
         set(true)
     }
@@ -154,7 +155,7 @@ struct SpeechModelRow: View {
         LabeledContent {
             switch models?.state ?? .notInstalled {
             case .installed:
-                Text("Installed · \(Formatting.bytes(models?.manager.sizeOnDisk(info.id) ?? info.approxBytes))")
+                Text("Installed (\(Formatting.bytes(models?.manager.sizeOnDisk(info.id) ?? info.approxBytes)))")
                     .foregroundStyle(Color.vyLabelSecondary)
             case .queued:
                 Text("Waiting…").foregroundStyle(Color.vyLabelSecondary)
@@ -165,7 +166,7 @@ struct SpeechModelRow: View {
                     Button("Cancel") { models?.cancelDownload() }
                 }
             case .notInstalled:
-                Button("Download · \(info.approxSizeText)") { models?.download() }
+                Button("Download (\(info.approxSizeText))") { models?.download() }
             case .failed:
                 Button("Retry download") { models?.download() }
             }

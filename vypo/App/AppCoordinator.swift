@@ -62,6 +62,7 @@ final class AppCoordinator {
         recorder = AudioRecorder(meter: app.levelMeter)
         hotkey = HotkeyMonitor()
         hotkey.onPaste = { [weak self] in self?.clipboard.userPasted() }
+        hotkey.onKeyChange = { [weak self] down in self?.app.onKeyChange(down) }
         dictation = DictationController(app: app, recorder: recorder, muter: muter, hotkey: hotkey)
         dictation.inputDevice = { [prefs = app.prefs] in
             AudioDevices.resolveInputDevice(selectedUID: prefs.inputDeviceUID, preferBuiltIn: prefs.preferBuiltInMic)
@@ -90,7 +91,7 @@ final class AppCoordinator {
             guard let self else { return }
             let prefs = self.app.prefs
             self.hotkey.key = prefs.dictationKey
-            self.hotkey.enabled = prefs.dictationEnabled
+            self.hotkey.enabled = prefs.dictationEnabled && !self.app.dictationBlocked
             self.hotkey.holdToTalk = prefs.holdToTalk
             self.hotkey.doubleTapHandsFree = prefs.doubleTapHandsFree
         }
@@ -109,13 +110,7 @@ final class AppCoordinator {
             }
         }
 
-        // The glossary helper is off unless turned on in the Debug menu; it follows the switch from here on.
-        models.setGlossaryHelper(app.prefs.glossaryHelper)
-        observeChanges { [weak self] in
-            guard let self else { return }
-            let on = self.app.prefs.glossaryHelper
-            Task { @MainActor in self.models.setGlossaryHelper(on) }
-        }
+        RetiredGlossaryHelper.runAtLaunch()
         models.preload()
         app.onOpenSettings = { [weak self] pane in self?.windows.showSettings(pane) }
         app.onCopyLast = { [weak self] in self?.copyLastDictation() }
@@ -133,7 +128,9 @@ final class AppCoordinator {
             self?.undoLast()
         }
         app.onUndo = { [weak self] in self?.undoLast() }
+        #if DEBUG
         app.onSaveLastRecording = { [weak self] in self?.saveLastRecording() }
+        #endif
 
         // Samples and the last insertion live for 5 minutes, and never across sleep or quit.
         memoryTimer = Timer.scheduledTimer(withTimeInterval: 15, repeats: true) { [weak self] _ in
@@ -167,10 +164,15 @@ final class AppCoordinator {
     private func transcribeAndPaste(_ samples: [Float], _ ctx: RecordingContext) async {
         guard let modelID = models.effectiveModel else {
             app.showError(.modelMissing)
+            app.report(.modelFailed)
             return
         }
+        #if DEBUG
+        // Debug builds only: the samples stay in memory for 5 minutes (Save last recording) or go to disk (benchmark).
+        // A Release build keeps no audio once it is transcribed.
         memory.store(samples: samples)
         if app.keepBenchmarkRecordings { BenchmarkRecordings.keep(samples) }
+        #endif
         guard let result = await transcribeAndInsert(samples, ctx, modelID: modelID) else { return }
         var historyID: UUID?
         if app.prefs.saveHistory {
@@ -198,13 +200,12 @@ final class AppCoordinator {
         defer { lastProcessed = Date() }
         let raw: String
         do {
-            // The language isn't known yet: bias towards the terms of every chosen language.
-            let bias = prefs.preferGlossaryTerms ? Array(Set(languages.flatMap { app.glossary.entries(for: $0) })) : []
-            raw = try await models.transcribe(AudioPadding.padded(samples), with: modelID, hint: LanguageRouter.scriptHint(for: languages), glossary: bias)
+            raw = try await models.transcribe(AudioPadding.padded(samples), with: modelID, hint: LanguageRouter.scriptHint(for: languages))
         } catch {
             guard !Task.isCancelled else { return nil }
             Log.asr.error("Transcription failed: \(error.localizedDescription, privacy: .public)")
             app.showError(.modelError)
+            app.report(.modelFailed)
             return nil
         }
         guard !Task.isCancelled else { return nil }
@@ -219,7 +220,10 @@ final class AppCoordinator {
                 app.history.add(HistoryItem(date: Date(), text: raw, rawText: raw, appBundleID: ctx.bundleID,
                                             appName: ctx.appName, language: fallback, modelID: modelID.rawValue))
             }
-            app.showError(.notUnderstood)
+            // “Didn’t catch that” would read as “nothing heard”; the text is in History, so say that.
+            // No claim about the language: the detection can be wrong.
+            app.showTransient(Self.filteredPillMode(savedToHistory: prefs.saveHistory), for: 4)
+            app.report(.notInYourLanguages(heard: raw))
             return nil
         }
         let language = LanguageRouter.detect(raw, among: languages, fallback: fallback)
@@ -227,6 +231,7 @@ final class AppCoordinator {
         let glossary = app.glossary.entries(for: language)
         let pipeline = PipelineContext(language: language, glossary: glossary,
                                        strength: prefs.correctionStrength, replacements: app.replacements.items,
+                                       spellings: prefs.spellingsEnabled ? prefs.spellings : [],
                                        fillers: prefs.removeFillers ? prefs.fillerWords(for: language) : [],
                                        mode: ctx.mode, spokenPunctuation: prefs.spokenPunctuation,
                                        typographicQuotes: prefs.typographicQuotes)
@@ -235,22 +240,21 @@ final class AppCoordinator {
         }
         guard !text.isEmpty else {
             Log.asr.notice("Nothing to insert: the transcript was \(raw.isEmpty ? "empty" : "removed by cleanup", privacy: .public)")
+            app.report(.nothingHeard)
             return nil
         }
         // Smart spacing and capitalization, right before pasting (§23.1).
         if prefs.smartSpacing && prefs.pasteAutomatically {
             let context = if let read = ctx.insertion { await read.value } else { ContextReader.insertionContext() }
             text = ContextFormatter.format(text, context: context, language: language,
-                                           glossaryTerms: Set(glossary.map(\.term)))
+                                           glossaryTerms: Set(glossary.map(\.term)).union(prefs.spellingsEnabled ? prefs.spellings : []))
         }
         guard !Task.isCancelled else { return nil }
         let ready = clock.now
         Log.output.notice("Ready to paste \((ready - start).milliseconds) ms after recording ended (\(modelID.rawValue, privacy: .public), \(language.code, privacy: .public))")
         let asrTiming = await models.lastTiming(for: modelID)
-        let helper = await models.helperStatus()
         let timing = DictationTimingLog.line(audio: ctx.duration, pause: pause, transcribe: transcribed - start, asr: asrTiming,
-                                             text: ready - transcribed, ready: ready - start, memory: memoryAtEnd,
-                                             helper: helper.description)
+                                             text: ready - transcribed, ready: ready - start, memory: memoryAtEnd)
         Log.asr.notice("\(timing, privacy: .public)")
         app.lastDictation = text
         if prefs.pasteAutomatically {
@@ -277,6 +281,7 @@ final class AppCoordinator {
             }
             Log.output.notice("Focus \(String(describing: focus), privacy: .public) in \(frontApp ?? "no app", privacy: .public) (\(probeTime) ms): \(String(describing: output), privacy: .public)")
             app.didInsertText()
+            app.report(inTextField ? .pasted(text) : .clipboardOnly(text))
             if !inTextField { app.showNotice(.onClipboard) }
             // Prompt apps: Return 80 ms after the paste, if enabled.
             // Never after a lone symbol: "Slash" by itself must not send "/".
@@ -289,9 +294,16 @@ final class AppCoordinator {
             clipboard.settle()
             Paster.copy(text)
             app.didInsertText()
+            app.report(.clipboardOnly(text))
             app.showNotice(.copied)
         }
         return (raw, text, language)
+    }
+
+    /// What the pill says when the language filter keeps a transcript out of the field. Without History
+    /// nothing was kept, so it stays the plain error.
+    static func filteredPillMode(savedToHistory: Bool) -> PillMode {
+        savedToHistory ? .added(.savedToHistory) : .error(.notUnderstood)
     }
 
     static func wordCount(_ text: String) -> Int {
@@ -317,6 +329,7 @@ final class AppCoordinator {
         app.uncount(last)
     }
 
+    #if DEBUG
     /// Debug: writes the last recording (kept for 5 minutes) to the Desktop as a WAV.
     private func saveLastRecording() {
         guard let samples = memory.samples, !samples.isEmpty else {
@@ -332,6 +345,7 @@ final class AppCoordinator {
             Log.audio.error("Saving the last recording failed: \(error.localizedDescription, privacy: .public)")
         }
     }
+    #endif
 
     /// The app's profile mode (§23.5).
     private func mode(for bundleID: String?) -> AppMode { app.profiles.mode(for: bundleID) }
@@ -343,21 +357,32 @@ final class AppCoordinator {
     // MARK: Onboarding (§16)
 
     private var onboarding: OnboardingModel?
+    private(set) lazy var backPanel = BackToVypoPanel(app: app)
 
     private func setUpOnboarding() {
         windows.makeOnboarding = { [weak self] step in
             guard let self else { return AnyView(EmptyView()) }
             let model = OnboardingModel(step: step)
+            model.onStepChanged = { [weak self] step in self?.windows.resizeOnboarding(forStep: step) }
             self.onboarding = model
             return AnyView(OnboardingView(model: model, finish: { [weak self] in self?.finishOnboarding() }).environment(self.app).tint(.vyAccent))
         }
         windows.onOnboardingClosed = { [weak self] in
             self?.onboarding = nil
             self?.app.pillVisible = true
+            self?.app.dictationBlocked = false
+            self?.backPanel.stop()
         }
         app.onOpenOnboarding = { [weak self] step in self?.showOnboarding(step: step ?? 0) }
 
         let prefs = app.prefs
+        #if DEBUG
+        // For screenshots of the live window: `-VYPOOnboardingStep 3` opens onboarding on that step (0 to 6).
+        if let value = UserDefaults.standard.string(forKey: "VYPOOnboardingStep"), let step = Int(value) {
+            showOnboarding(step: step)
+            return
+        }
+        #endif
         if !prefs.onboardingCompleted {
             showOnboarding(step: 0)
         } else if !Permissions.micGranted || !Permissions.accessibilityTrusted {
@@ -368,6 +393,9 @@ final class AppCoordinator {
 
     func showOnboarding(step: Int) {
         app.pillVisible = false
+        // The floating “Back to vypo” panel waits next to System Settings while step 2 asks for Accessibility.
+        backPanel.isOnPermissionsStep = { [weak self] in self?.onboarding?.step == OnboardingStep.permissions.rawValue }
+        backPanel.start()
         onboarding?.step = step
         windows.showOnboarding(step: step)
     }
@@ -376,6 +404,8 @@ final class AppCoordinator {
         app.prefs.onboardingCompleted = true
         windows.closeOnboarding()
         app.pillVisible = true
+        app.dictationBlocked = false
+        backPanel.stop()
     }
 
     /// ⌃⌥G: the pill opens with the selected word (§11.6).
@@ -404,8 +434,6 @@ final class AppCoordinator {
             guard let self else { return }
             var snapshot = snapshot
             if let speech, await speech.isLoaded { snapshot.speechModel += String(localized: ", loaded") }
-            // The same words as in the timing lines: “off”, “off (installed)”, “on”, “loading”, …
-            snapshot.glossaryHelper = await models.helperStatus().description
             let log = await DiagnosticsLog.read(appPath: Bundle.main.bundlePath)
             let text = Diagnostics.report(snapshot, log: log, redacting: words, now: Date())
             clipboard.settle()
@@ -435,7 +463,6 @@ final class AppCoordinator {
             memoryBytes: ProcessInfo.processInfo.physicalMemory,
             languages: app.prefs.languages.map(\.name),
             speechModel: state(ModelCatalog.speech),
-            glossaryHelper: "",  // the helper status, filled in with the log
             microphone: Permissions.micGranted,
             accessibility: Permissions.accessibilityTrusted,
             glossaryTerms: app.glossary.entries.count,

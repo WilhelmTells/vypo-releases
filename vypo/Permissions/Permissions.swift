@@ -15,12 +15,19 @@ enum Permissions {
 
     static var accessibilityTrusted: Bool { AXIsProcessTrusted() }
 
-    /// Shows the system prompt and opens the Accessibility pane.
-    static func requestAccessibility() {
-        let options = ["AXTrustedCheckOptionPrompt": true] as CFDictionary
-        _ = AXIsProcessTrustedWithOptions(options)
-        NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!)
+    /// Where URLs open; a test replaces it to see that nothing opens.
+    nonisolated(unsafe) static var openURL: (URL) -> Void = { NSWorkspace.shared.open($0) }
+
+    static let accessibilityPane = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!
+
+    /// Shows the system prompt and nothing else: its own “Open System Settings” button opens the pane. Opening the
+    /// pane as well put System Settings over the prompt, and the prompt stayed after access was granted.
+    static func requestAccessibility(prompt: (CFDictionary) -> Void = { _ = AXIsProcessTrustedWithOptions($0) }) {
+        prompt(["AXTrustedCheckOptionPrompt": true] as CFDictionary)
     }
+
+    /// The Accessibility pane itself, for the fallback buttons (never together with the prompt).
+    static func openAccessibilitySettings() { openURL(accessibilityPane) }
 
     static func openKeyboardSettings() {
         NSWorkspace.shared.open(URL(string: "x-apple.systempreferences:com.apple.Keyboard-Settings.extension")!)
@@ -50,10 +57,11 @@ enum Permissions {
 @MainActor
 @Observable
 final class PermissionMonitor {
-    private(set) var micGranted = Permissions.micGranted
-    private(set) var micDenied = Permissions.micDenied
-    private(set) var accessibilityTrusted = Permissions.accessibilityTrusted
-    private(set) var globeKeyUsage = Permissions.globeKeyUsage
+    // Settable inside the module so snapshots and tests can show every state; `poll()` is what sets them in the app.
+    var micGranted = Permissions.micGranted
+    var micDenied = Permissions.micDenied
+    var accessibilityTrusted = Permissions.accessibilityTrusted
+    var globeKeyUsage = Permissions.globeKeyUsage
 
     @ObservationIgnored private var timer: Timer?
 

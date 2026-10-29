@@ -54,7 +54,7 @@ struct BenchmarkSet: Codable {
         return try JSONDecoder().decode(BenchmarkSet.self, from: Data(contentsOf: url))
     }
 
-    /// Fixed, distinct creation dates in file order, so the CTC pass sees the terms in the same order every run.
+    /// Fixed, distinct creation dates in file order, so the terms come in the same order every run.
     var entries: [GlossaryEntry] {
         glossary.enumerated().map { i, t in
             GlossaryEntry(term: t.term, soundsLike: t.soundsLike, createdAt: Date(timeIntervalSince1970: Double(1_000 - i)))

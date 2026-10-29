@@ -121,7 +121,7 @@ struct AboutPane: View {
             Text("Version \(Updates.versionText)").font(.callout).foregroundStyle(Color.vyLabelSecondary)
             Text("Made by Wilhelm Tells").padding(.top, Space.s2)
             Link(destination: Notices.homepage) { Text(verbatim: "wilhelmtells.com/vypo") }
-            Text("Speech recognition runs entirely on this Mac.")
+            Text("Your voice and your text never leave your Mac.")
                 .font(.callout).foregroundStyle(Color.vyLabelSecondary)
         }
         .padding(.vertical, Space.s2)
