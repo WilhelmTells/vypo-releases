@@ -106,8 +106,8 @@ enum LoginItem {
     /// Default on: registered once, on first launch.
     static func applyDefaultOnce(_ defaults: UserDefaults = AppDefaults.standard) {
         let key = "openAtLoginConfigured"
-        // The onboarding test build must never register itself as a login item.
-        guard !defaults.bool(forKey: key), !RunEnvironment.isOnboardingTestBuild else { return }
+        // The test app and a test host must never register themselves: the login item would point at them.
+        guard !defaults.bool(forKey: key), !RunEnvironment.isTestApp, !RunEnvironment.isTesting else { return }
         defaults.set(true, forKey: key)
         set(true)
     }

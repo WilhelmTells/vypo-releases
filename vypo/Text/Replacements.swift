@@ -120,8 +120,9 @@ enum Replacements {
     /// Said on its own, an enabled entry works in every app. In a sentence: as set per entry
     /// (`inSentence`; “Prompt apps only” in `mode == .prompt`). Case-insensitive, whole words, also with a trailing
     /// "." or "," the model added. Longest first. Outputs of `, ; : . ? !` attach to the word before, outputs of
-    /// `/ \ _ ~ -` join the words around them.
-    static func apply(_ replacements: [Replacement], to text: String, mode: AppMode = .standard) -> String {
+    /// `/ \ _ ~ -` join the words around them. A line break right after an article or possessive stays words
+    /// (“Die neue Zeile gefällt mir”); `language` adds that language's articles (`SpokenPunctuation.isDeterminer`).
+    static func apply(_ replacements: [Replacement], to text: String, mode: AppMode = .standard, language: Lang? = nil) -> String {
         let active = replacements.filter { $0.enabled && $0.spoken.contains { !normalized($0).isEmpty } }
         if let phrase = alonePhrase(text),
            let hit = active.first(where: { $0.spoken.contains { normalized($0) == phrase } }) {
@@ -142,8 +143,12 @@ enum Replacements {
                 ? ",?[ \\t]*(?<![\\p{L}\\p{N}])\(phrase)[.,]?(?![\\p{L}\\p{N}])[ \\t]*"
                 : "(?<![\\p{L}\\p{N}])\(phrase)[.,]?(?![\\p{L}\\p{N}])"
             guard let re = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) else { continue }
-            let template = NSRegularExpression.escapedTemplate(for: r.output)
-            result = re.stringByReplacingMatches(in: result, range: NSRange(result.startIndex..., in: result), withTemplate: template)
+            // Backwards, so the ranges before a replacement stay valid.
+            for m in re.matches(in: result, range: NSRange(result.startIndex..., in: result)).reversed() {
+                guard let range = Range(m.range, in: result) else { continue }
+                if newline && followsDeterminer(result[..<range.lowerBound], match: result[range], language: language) { continue }
+                result.replaceSubrange(range, with: r.output)
+            }
         }
         let symbols = pairs.compactMap { p -> (words: [String], char: String, join: Join)? in
             guard let j = join(for: p.entry.output) else { return nil }
@@ -152,6 +157,16 @@ enum Replacements {
         guard !symbols.isEmpty else { return result }
         // Line breaks (a spoken "new line" became one) stay: each line on its own.
         return result.components(separatedBy: "\n").map { applySymbols($0, symbols) }.joined(separator: "\n")
+    }
+
+    /// “die neue Zeile”, “ein neuer Absatz”, “the new line”: an article or possessive, nothing but a space between.
+    /// Only the word right before: “the code new line” is still a break.
+    private static func followsDeterminer(_ before: Substring, match: Substring, language: Lang?) -> Bool {
+        guard !match.hasPrefix(",") else { return false }
+        let word = before.reversed().prefix { !$0.isWhitespace }
+        guard !word.isEmpty else { return false }
+        let w = TextWord(Substring(String(word.reversed())))
+        return w.lead.isEmpty && w.trail.isEmpty && SpokenPunctuation.isDeterminer(w.core, language: language)
     }
 
     private enum Item {
@@ -268,12 +283,22 @@ enum Replacements {
 @MainActor
 @Observable
 final class ReplacementStore {
+    nonisolated static let file = "replacements.json"
+
     private(set) var items: [Replacement]
     @ObservationIgnored private let store: Store
+    /// A new entry of the user's own (Add replacement); not an edit, not “Restore default entries” (Swap Artist).
+    @ObservationIgnored var onNewEntry: () -> Void = {}
 
-    init(store: Store = .shared, defaults: UserDefaults = AppDefaults.standard) {
+    /// `spokenCharacters` (a new installation): the list starts empty and belongs to the user; the characters are
+    /// in `SpokenCharacterStore`. `legacy`: the default entries and the one-time move as before.
+    init(store: Store = .shared, defaults: UserDefaults = AppDefaults.standard, layout: WordsLayout = .legacy) {
         self.store = store
-        items = store.load([Replacement].self, from: "replacements.json") ?? Replacements.defaults
+        guard layout == .legacy else {
+            items = store.load([Replacement].self, from: Self.file) ?? []
+            return
+        }
+        items = store.load([Replacement].self, from: Self.file) ?? Replacements.defaults
         // Once: the symbol words become entries of this list (and the two old switches for them go).
         if !defaults.bool(forKey: DefaultsKey.symbolsAreReplacements) {
             defaults.set(true, forKey: DefaultsKey.symbolsAreReplacements)
@@ -288,8 +313,10 @@ final class ReplacementStore {
     }
 
     func upsert(_ r: Replacement) {
+        let isNew = !items.contains { $0.id == r.id }
         if let i = items.firstIndex(where: { $0.id == r.id }) { items[i] = r } else { items.append(r) }
         save()
+        if isNew { onNewEntry() }
     }
 
     func delete(_ id: UUID) {
@@ -312,5 +339,5 @@ final class ReplacementStore {
         return missing.count
     }
 
-    private func save() { store.save(items, to: "replacements.json") }
+    private func save() { store.save(items, to: Self.file) }
 }

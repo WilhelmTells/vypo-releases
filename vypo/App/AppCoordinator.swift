@@ -83,8 +83,8 @@ final class AppCoordinator {
             guard let self else { return nil }
             return self.models.effectiveModel == nil ? .modelMissing : nil
         }
-        dictation.process = { [weak self] samples, ctx in
-            await self?.transcribeAndPaste(samples, ctx)
+        dictation.process = { [weak self] samples, ctx, job in
+            await self?.transcribeAndPaste(samples, ctx, job)
         }
 
         observeChanges { [weak self] in
@@ -160,8 +160,8 @@ final class AppCoordinator {
         hotkey.start()
     }
 
-    /// Transcribe → clean up → paste → history (§8).
-    private func transcribeAndPaste(_ samples: [Float], _ ctx: RecordingContext) async {
+    /// Transcribe → clean up → paste → history (§8). A leftover only gets as far as History.
+    private func transcribeAndPaste(_ samples: [Float], _ ctx: RecordingContext, _ job: DictationJob) async {
         guard let modelID = models.effectiveModel else {
             app.showError(.modelMissing)
             app.report(.modelFailed)
@@ -173,7 +173,7 @@ final class AppCoordinator {
         memory.store(samples: samples)
         if app.keepBenchmarkRecordings { BenchmarkRecordings.keep(samples) }
         #endif
-        guard let result = await transcribeAndInsert(samples, ctx, modelID: modelID) else { return }
+        guard let result = await transcribeAndInsert(samples, ctx, job, modelID: modelID) else { return }
         var historyID: UUID?
         if app.prefs.saveHistory {
             let item = HistoryItem(date: Date(), text: result.text, rawText: result.raw, appBundleID: ctx.bundleID,
@@ -181,15 +181,21 @@ final class AppCoordinator {
             app.history.add(item)
             historyID = item.id
         }
+        if job.isLeftover {
+            let saved = app.prefs.saveHistory
+            Log.asr.notice("The dictation in the background is finished: \(saved ? "in History" : "dropped, History is off", privacy: .public)")
+            return
+        }
         remember(LastInsertion(text: result.text, pid: ctx.pid, date: Date(), language: result.language,
                                historyID: historyID, words: Self.wordCount(result.text), recordingSeconds: ctx.duration,
-                               bundleID: ctx.bundleID))
+                               bundleID: ctx.bundleID, handsFree: ctx.handsFree))
         if let last = memory.last { app.count(last) }
     }
 
     /// Transcribes with `modelID`, detects the language, runs the text pipeline and inserts the result.
-    /// Returns nil when nothing was inserted.
-    private func transcribeAndInsert(_ samples: [Float], _ ctx: RecordingContext, modelID: ModelID)
+    /// Returns nil when nothing was inserted. A leftover returns its text without inserting it, and never touches
+    /// the pill, the clipboard or the field: those belong to the dictation that replaced it.
+    private func transcribeAndInsert(_ samples: [Float], _ ctx: RecordingContext, _ job: DictationJob, modelID: ModelID)
         async -> (raw: String, text: String, language: Lang)? {
         let prefs = app.prefs
         let languages = prefs.languages
@@ -204,6 +210,7 @@ final class AppCoordinator {
         } catch {
             guard !Task.isCancelled else { return nil }
             Log.asr.error("Transcription failed: \(error.localizedDescription, privacy: .public)")
+            guard !job.isLeftover else { return nil }
             app.showError(.modelError)
             app.report(.modelFailed)
             return nil
@@ -220,6 +227,7 @@ final class AppCoordinator {
                 app.history.add(HistoryItem(date: Date(), text: raw, rawText: raw, appBundleID: ctx.bundleID,
                                             appName: ctx.appName, language: fallback, modelID: modelID.rawValue))
             }
+            guard !job.isLeftover else { return nil }
             // “Didn’t catch that” would read as “nothing heard”; the text is in History, so say that.
             // No claim about the language: the detection can be wrong.
             app.showTransient(Self.filteredPillMode(savedToHistory: prefs.saveHistory), for: 4)
@@ -233,14 +241,16 @@ final class AppCoordinator {
                                        strength: prefs.correctionStrength, replacements: app.replacements.items,
                                        spellings: prefs.spellingsEnabled ? prefs.spellings : [],
                                        fillers: prefs.removeFillers ? prefs.fillerWords(for: language) : [],
-                                       mode: ctx.mode, spokenPunctuation: prefs.spokenPunctuation,
+                                       mode: ctx.mode,
+                                       spokenCharacters: app.spokenCharacters.map { prefs.spokenCharacters ? $0.items : [] },
+                                       spokenPunctuation: prefs.spokenPunctuation,
                                        typographicQuotes: prefs.typographicQuotes)
         var text = TextPipeline.process(raw, pipeline) { word in
             MainActor.assumeIsolated { !TermExtractor.spellCheckerUnknown(word) }
         }
         guard !text.isEmpty else {
             Log.asr.notice("Nothing to insert: the transcript was \(raw.isEmpty ? "empty" : "removed by cleanup", privacy: .public)")
-            app.report(.nothingHeard)
+            if !job.isLeftover { app.report(.nothingHeard) }
             return nil
         }
         // Smart spacing and capitalization, right before pasting (§23.1).
@@ -250,6 +260,7 @@ final class AppCoordinator {
                                            glossaryTerms: Set(glossary.map(\.term)).union(prefs.spellingsEnabled ? prefs.spellings : []))
         }
         guard !Task.isCancelled else { return nil }
+        if job.isLeftover { return (raw, text, language) }
         let ready = clock.now
         Log.output.notice("Ready to paste \((ready - start).milliseconds) ms after recording ended (\(modelID.rawValue, privacy: .public), \(language.code, privacy: .public))")
         let asrTiming = await models.lastTiming(for: modelID)
@@ -268,6 +279,10 @@ final class AppCoordinator {
                 return TextFieldProbe.focus()
             }
             let focus = await probe.value
+            // The probe takes a moment, and a new dictation may have started meanwhile.
+            guard !Task.isCancelled else { return nil }
+            if job.isLeftover { return (raw, text, language) }
+            job.inserted = true
             let probeTime = (clock.now - probeStart).milliseconds
             let frontApp = front?.bundleIdentifier
             let output = TextFieldProbe.output(for: focus, app: frontApp)
@@ -291,6 +306,7 @@ final class AppCoordinator {
                 Paster.postKey(kVK_Return)
             }
         } else {
+            job.inserted = true
             clipboard.settle()
             Paster.copy(text)
             app.didInsertText()

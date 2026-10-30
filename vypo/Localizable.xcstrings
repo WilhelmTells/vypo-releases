@@ -419,6 +419,16 @@
         }
       }
     },
+    "Achievements": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erfolge"
+          }
+        }
+      }
+    },
     "Acknowledgements": {
       "localizations": {
         "de": {
@@ -465,6 +475,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "App hinzufügen …"
+          }
+        }
+      }
+    },
+    "Add character": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zeichen hinzufügen"
           }
         }
       }
@@ -1365,6 +1385,26 @@
         }
       }
     },
+    "e.g. comma, Komma": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "z. B. Komma, comma"
+          }
+        }
+      }
+    },
+    "e.g. my email, meine Mail": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "z. B. meine Mail, my email"
+          }
+        }
+      }
+    },
     "Early version": {
       "localizations": {
         "de": {
@@ -1551,6 +1591,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Für KI-Chats, Terminals und Code-Editoren: kein Schlusspunkt, damit du weitertippen kannst; kann automatisch senden. Ersetzungen mit „Nur in Prompt-Apps“ wirken hier auch im Satz."
+          }
+        }
+      }
+    },
+    "For AI chats, terminals and code editors: no final period, so you can keep typing; can send automatically. Spoken characters set for Prompt, such as “slash”, work in a sentence here.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Für KI-Chats, Terminals und Code-Editoren: kein Schlusspunkt, damit du weitertippen kannst; kann automatisch senden. Gesprochene Zeichen, die für Prompt eingestellt sind, etwa „Slash“, wirken hier auch im Satz."
           }
         }
       }
@@ -1987,6 +2037,16 @@
         }
       }
     },
+    "In sentences: %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Im Satz: %@"
+          }
+        }
+      }
+    },
     "In Writing apps": {
       "localizations": {
         "de": {
@@ -2073,6 +2133,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Taste"
+          }
+        }
+      }
+    },
+    "comma, period, slash, new line …": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Komma, Punkt, Slash, neue Zeile …"
           }
         }
       }
@@ -2797,6 +2867,16 @@
         }
       }
     },
+    "Nothing ready": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nichts bereit"
+          }
+        }
+      }
+    },
     "Nothing vypo sees is saved or sent. vypo doesn’t record your screen.": {
       "localizations": {
         "de": {
@@ -3278,6 +3358,26 @@
         }
       }
     },
+    "Quotes become “curly”, spoken ones too. Which words become characters is set in Words → Spoken characters.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anführungszeichen werden „typografisch“, auch gesprochene. Welche Wörter zu Zeichen werden, stellst du unter Wörter → Gesprochene Zeichen ein."
+          }
+        }
+      }
+    },
+    "Reach next tier": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nächste Stufe erreichen"
+          }
+        }
+      }
+    },
     "Ready": {
       "localizations": {
         "de": {
@@ -3478,6 +3578,16 @@
         }
       }
     },
+    "Restore default characters": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Standard-Zeichen wiederherstellen"
+          }
+        }
+      }
+    },
     "Restore default entries": {
       "localizations": {
         "de": {
@@ -3524,6 +3634,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Wahltaste rechts"
+          }
+        }
+      }
+    },
+    "Said on its own, it works in every app. In a sentence, only in apps with a mode switched on here.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allein gesagt wirkt es in jeder App. Im Satz nur in Apps mit einem Modus, der hier eingeschaltet ist."
           }
         }
       }
@@ -3588,12 +3708,32 @@
         }
       }
     },
+    "Say the word and vypo writes the character. Said on its own, it works in every app; in a sentence, in the modes set for it.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sag das Wort, und vypo schreibt das Zeichen. Allein gesagt wirkt es in jeder App, im Satz in den Modi, die dafür eingestellt sind."
+          }
+        }
+      }
+    },
     "Say “comma” or “Komma” and get “,”; quotes become “curly”.": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Sag „Komma“ oder „comma“ und erhalte „,“; Anführungszeichen werden „typografisch“."
+          }
+        }
+      }
+    },
+    "Say “comma” or “slash” and vypo writes “,” or “/”. Under Edit… you set where each one works in a sentence.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sag „Komma“ oder „Slash“, und vypo schreibt „,“ oder „/“. Unter „Bearbeiten …“ legst du fest, wo jedes im Satz wirkt."
           }
         }
       }
@@ -3938,12 +4078,32 @@
         }
       }
     },
+    "Spoken characters": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gesprochene Zeichen"
+          }
+        }
+      }
+    },
     "Spoken punctuation": {
       "localizations": {
         "de": {
           "stringUnit": {
             "state": "translated",
             "value": "Gesprochene Satzzeichen"
+          }
+        }
+      }
+    },
+    "Stamp": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stempeln"
           }
         }
       }
@@ -3974,6 +4134,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Statistik"
+          }
+        }
+      }
+    },
+    "Status": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status"
           }
         }
       }
@@ -4594,6 +4764,16 @@
         }
       }
     },
+    "Write spoken characters": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gesprochene Zeichen schreiben"
+          }
+        }
+      }
+    },
     "Write to %@ instead.": {
       "localizations": {
         "de": {
@@ -4650,6 +4830,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Deine Diktiertaste"
+          }
+        }
+      }
+    },
+    "Your own words and what vypo writes for them, e.g. “my email” becomes name@example.com.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deine eigenen Wörter und was vypo dafür schreibt, z. B. wird „meine Mail“ zu name@example.com."
           }
         }
       }
@@ -5090,6 +5280,846 @@
           "stringUnit": {
             "state": "translated",
             "value": "Stelle „Beim Drücken der 🌐︎-Taste“ bzw. „Beim Drücken der fn-Taste“ auf „Keine Aktion“."
+          }
+        }
+      }
+    },
+    "%@ dictations in one day.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ Diktate an einem Tag."
+          }
+        }
+      }
+    },
+    "%@ dictations.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ Diktate."
+          }
+        }
+      }
+    },
+    "%@ saved by dictating instead of typing.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ durch Diktieren statt Tippen gespart."
+          }
+        }
+      }
+    },
+    "%@ to go.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noch %@."
+          }
+        }
+      }
+    },
+    "%@ words in the glossary.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ Wörter im Glossar."
+          }
+        }
+      }
+    },
+    "%@, locked.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@, gesperrt."
+          }
+        }
+      }
+    },
+    "%@, ready to stamp. Click to stamp.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@, bereit zum Stempeln. Zum Stempeln klicken."
+          }
+        }
+      }
+    },
+    "%@, stamped, tier %lld of %lld.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@, gestempelt, Stufe %lld von %lld."
+          }
+        }
+      }
+    },
+    "%@, stamped.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@, gestempelt."
+          }
+        }
+      }
+    },
+    "%lld of %lld": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld von %lld"
+          }
+        }
+      }
+    },
+    "A dictation between 4 and 6 a.m.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein Diktat zwischen 4 und 6 Uhr morgens."
+          }
+        }
+      }
+    },
+    "A dictation between midnight and 4 a.m.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein Diktat zwischen Mitternacht und 4 Uhr."
+          }
+        }
+      }
+    },
+    "A dictation undone.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein Diktat rückgängig gemacht."
+          }
+        }
+      }
+    },
+    "A first dictation.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein erstes Diktat."
+          }
+        }
+      }
+    },
+    "A first word in the glossary.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein erstes Wort im Glossar."
+          }
+        }
+      }
+    },
+    "A hands-free dictation.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein freihändiges Diktat."
+          }
+        }
+      }
+    },
+    "A replacement of your own.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eine eigene Ersetzung."
+          }
+        }
+      }
+    },
+    "An app set to Prompt or Writing.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eine App auf Prompt oder Schreiben gestellt."
+          }
+        }
+      }
+    },
+    "As many words as %@.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "So viele Wörter wie %@."
+          }
+        }
+      }
+    },
+    "Clear all stamps": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle Stempel löschen"
+          }
+        }
+      }
+    },
+    "Dictated in %@ different apps.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In %@ verschiedenen Apps diktiert."
+          }
+        }
+      }
+    },
+    "Dictated on %@ different days.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An %@ verschiedenen Tagen diktiert."
+          }
+        }
+      }
+    },
+    "Dictations in two languages.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diktate in zwei Sprachen."
+          }
+        }
+      }
+    },
+    "Glossary words taken from a document.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Glossarwörter aus einem Dokument übernommen."
+          }
+        }
+      }
+    },
+    "Longest so far: %@.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bisher längstes: %@."
+          }
+        }
+      }
+    },
+    "Next tier at %@ apps, %@ to go.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nächste Stufe bei %@ Apps, noch %@."
+          }
+        }
+      }
+    },
+    "Next tier at %@ days, %@ to go.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nächste Stufe bei %@ Tagen, noch %@."
+          }
+        }
+      }
+    },
+    "Next tier at %@ dictations in one day. Record so far: %@.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nächste Stufe bei %@ Diktaten an einem Tag. Rekord bisher: %@."
+          }
+        }
+      }
+    },
+    "Next tier at %@ dictations, %@ to go.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nächste Stufe bei %@ Diktaten, noch %@."
+          }
+        }
+      }
+    },
+    "Next tier at %@ glossary words, %@ to go.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nächste Stufe bei %@ Wörtern im Glossar, noch %@."
+          }
+        }
+      }
+    },
+    "Next tier at %@, %@ to go.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nächste Stufe bei %@, noch %@."
+          }
+        }
+      }
+    },
+    "Next tier at one dictation over %@. Longest so far: %@.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nächste Stufe bei einem Diktat über %@. Bisher längstes: %@."
+          }
+        }
+      }
+    },
+    "One dictation over %@.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein Diktat über %@."
+          }
+        }
+      }
+    },
+    "Ready to stamp.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bereit zum Stempeln."
+          }
+        }
+      }
+    },
+    "Stamped %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gestempelt am %@"
+          }
+        }
+      }
+    },
+    "Three languages in one day.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drei Sprachen an einem Tag."
+          }
+        }
+      }
+    },
+    "Tier %lld of %lld": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stufe %lld von %lld"
+          }
+        }
+      }
+    },
+    "Tier %lld of %lld, %@": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stufe %lld von %lld, %@"
+          }
+        }
+      }
+    },
+    "bronze": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bronze"
+          }
+        }
+      }
+    },
+    "gold": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gold"
+          }
+        }
+      }
+    },
+    "ink": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tinte"
+          }
+        }
+      }
+    },
+    "silver": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Silber"
+          }
+        }
+      }
+    },
+    "“vypo” in a dictation.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "„vypo“ in einem Diktat."
+          }
+        }
+      }
+    },
+    "Bookshelf": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bookshelf"
+          }
+        }
+      }
+    },
+    "Bookworm": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bookworm"
+          }
+        }
+      }
+    },
+    "Chatterbox": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chatterbox"
+          }
+        }
+      }
+    },
+    "Early Bird": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Early Bird"
+          }
+        }
+      }
+    },
+    "Familiar Voice": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Familiar Voice"
+          }
+        }
+      }
+    },
+    "First Words": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "First Words"
+          }
+        }
+      }
+    },
+    "Hands Free": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hands Free"
+          }
+        }
+      }
+    },
+    "Long Breath": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Long Breath"
+          }
+        }
+      }
+    },
+    "Night Owl": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Night Owl"
+          }
+        }
+      }
+    },
+    "Old Friend": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Old Friend"
+          }
+        }
+      }
+    },
+    "Polyglot": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Polyglot"
+          }
+        }
+      }
+    },
+    "Regular": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Regular"
+          }
+        }
+      }
+    },
+    "Right Tool": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Right Tool"
+          }
+        }
+      }
+    },
+    "Say My Name": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Say My Name"
+          }
+        }
+      }
+    },
+    "Second Thoughts": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Second Thoughts"
+          }
+        }
+      }
+    },
+    "Swap Artist": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Swap Artist"
+          }
+        }
+      }
+    },
+    "Tales": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tales"
+          }
+        }
+      }
+    },
+    "Three Tongues": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Three Tongues"
+          }
+        }
+      }
+    },
+    "Time Back": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Time Back"
+          }
+        }
+      }
+    },
+    "Well Travelled": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Well Travelled"
+          }
+        }
+      }
+    },
+    "Word Collector": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Word Collector"
+          }
+        }
+      }
+    },
+    "Word Keeper": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Word Keeper"
+          }
+        }
+      }
+    },
+    "%lld secrets left": {
+      "localizations": {
+        "de": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Noch %lld Geheimnis"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Noch %lld Geheimnisse"
+                }
+              }
+            }
+          }
+        },
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld secret left"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld secrets left"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld s": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld s"
+          }
+        }
+      }
+    },
+    "%lld min %lld s": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld min %2$lld s"
+          }
+        }
+      }
+    },
+    "%@ apps": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ Apps"
+          }
+        }
+      }
+    },
+    "%@ days": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ Tage"
+          }
+        }
+      }
+    },
+    "%@ dictations": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ Diktate"
+          }
+        }
+      }
+    },
+    "%lld ready to stamp": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld bereit zum Stempeln"
+          }
+        }
+      }
+    },
+    "1 app": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 App"
+          }
+        }
+      }
+    },
+    "1 day": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 Tag"
+          }
+        }
+      }
+    },
+    "1 dictation": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 Diktat"
+          }
+        }
+      }
+    },
+    "1 word": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 Wort"
+          }
+        }
+      }
+    },
+    "Collapses the achievements.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klappt die Erfolge zu."
+          }
+        }
+      }
+    },
+    "Expands the achievements.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klappt die Erfolge auf."
+          }
+        }
+      }
+    },
+    "Next tier: as many words as %@. %@ to go.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nächste Stufe: so viele Wörter wie %@. Noch %@."
+          }
+        }
+      }
+    },
+    "collapsed": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "zugeklappt"
+          }
+        }
+      }
+    },
+    "expanded": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "aufgeklappt"
           }
         }
       }

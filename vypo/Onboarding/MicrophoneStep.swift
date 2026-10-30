@@ -21,8 +21,13 @@ struct MicrophoneStep: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let model: OnboardingModel
     @State private var devices: [AudioInputDevice] = []
+    /// The name of the device “System default” resolves to; read off the main thread with the list.
+    @State private var defaultName: String?
     @State private var meter = LevelMeter()
     @State private var recorder: AudioRecorder?
+    /// Counts starts: a start that finishes after the step was left, or after another device was chosen, is stopped.
+    @State private var meterGeneration = 0
+    @State private var metering = false
     @State private var detector = MicHeardDetector(now: ProcessInfo.processInfo.systemUptime)
     @State private var line: String?
     @State private var silentLong: Bool
@@ -72,9 +77,12 @@ struct MicrophoneStep: View {
         }
         .frame(width: 460)
         .animation(reduceMotion ? .easeOut(duration: 0.15) : .easeOut(duration: 0.2), value: statusText)
-        .onAppear { devices = AudioDevices.inputDevices() }
+        .task { await loadDevices() }
         .task { await meterLoop() }
-        .onDisappear { stopMetering() }
+        .onDisappear {
+            metering = false
+            stopMetering()
+        }
         .onChange(of: app.prefs.inputDeviceUID) {
             stopMetering()
             startMetering()
@@ -89,11 +97,10 @@ struct MicrophoneStep: View {
         return String(localized: "Listening…")
     }
 
+    /// From the list read when the step opened: the body never asks CoreAudio itself.
     private var deviceName: String {
         if let uid = app.prefs.inputDeviceUID, let d = devices.first(where: { $0.uid == uid }) { return d.name }
-        if let id = AudioDevices.resolveInputDevice(selectedUID: nil, preferBuiltIn: app.prefs.preferBuiltInMic),
-           let name = AudioDevices.name(of: id) { return name }
-        return String(localized: "System default")
+        return defaultName ?? String(localized: "System default")
     }
 
     private var devicePicker: some View {
@@ -118,16 +125,41 @@ struct MicrophoneStep: View {
 
     // MARK: Metering
 
-    /// Starts the level meter after the step has drawn, then reads the level 30 times a second.
+    /// When the meter starts: after the step's 0.25 s transition, so opening the microphone never competes with it.
+    static let meterDelay: Duration = .milliseconds(300)
+    /// A tick of the level loop this much later than due means the main thread was blocked; it is logged.
+    static let hangThreshold = 0.1
+
+    /// Reads the input devices off the main thread: the first CoreAudio query in a process took 50–110 ms (2026-10-29).
+    private func loadDevices() async {
+        guard previewLevel == nil else { return }
+        let preferBuiltIn = app.prefs.preferBuiltInMic
+        let began = ContinuousClock.now
+        let (list, name) = await Task.detached(priority: .userInitiated) {
+            (AudioDevices.inputDevices(),
+             AudioDevices.resolveInputDevice(selectedUID: nil, preferBuiltIn: preferBuiltIn).flatMap(AudioDevices.name(of:)))
+        }.value
+        devices = list
+        defaultName = name
+        Log.audio.notice("Microphone step: \(list.count) input devices read in \((ContinuousClock.now - began).milliseconds) ms (off the main thread)")
+    }
+
+    /// Starts the level meter after the transition, then reads the level 30 times a second.
     private func meterLoop() async {
         guard previewLevel == nil else { return }
-        try? await Task.sleep(for: .milliseconds(150))
+        try? await Task.sleep(for: Self.meterDelay)
         guard !Task.isCancelled else { return }
+        metering = true
         startMetering()
         detector = MicHeardDetector(now: ProcessInfo.processInfo.systemUptime)
+        var due = ProcessInfo.processInfo.systemUptime + 0.033
         while !Task.isCancelled {
             try? await Task.sleep(for: .milliseconds(33))
             let now = ProcessInfo.processInfo.systemUptime
+            if now - due > Self.hangThreshold {
+                Log.audio.notice("Microphone step: the main thread was blocked for about \(Int((now - due) * 1000)) ms")
+            }
+            due = now + 0.033
             if let event = detector.feed(level: meter.level, now: now) {
                 guard case .phrase(let number) = event else { continue }
                 if number == 1 { ConfirmSound.play() }
@@ -141,20 +173,37 @@ struct MicrophoneStep: View {
         }
     }
 
-    /// Runs an engine for the meter only; it never mutes.
+    /// Runs a capture session for the meter only; it never mutes. Finding the device and building the session took
+    /// 60–130 ms on the main thread the first time (2026-10-29), so that happens off it; the session starts on its own
+    /// queue as always.
     private func startMetering() {
-        guard Permissions.micGranted, recorder == nil, previewLevel == nil else { return }
+        guard metering, Permissions.micGranted, recorder == nil, previewLevel == nil else { return }
+        meterGeneration += 1
+        let generation = meterGeneration
         let r = AudioRecorder(meter: meter)
-        let device = AudioDevices.resolveInputDevice(selectedUID: app.prefs.inputDeviceUID, preferBuiltIn: app.prefs.preferBuiltInMic)
-        do {
-            try r.start(device: device, keepSamples: false)
+        let uid = app.prefs.inputDeviceUID, preferBuiltIn = app.prefs.preferBuiltInMic
+        let began = ContinuousClock.now
+        Task {
+            let failure: String? = await Task.detached(priority: .userInitiated) {
+                do {
+                    try r.start(device: AudioDevices.resolveInputDevice(selectedUID: uid, preferBuiltIn: preferBuiltIn), keepSamples: false)
+                    return nil
+                } catch {
+                    return String(describing: error)
+                }
+            }.value
+            if let failure {
+                return Log.audio.error("Level metering failed: \(failure, privacy: .public)")
+            }
+            Log.audio.notice("Microphone step: level meter set up in \((ContinuousClock.now - began).milliseconds) ms (off the main thread)")
+            // Left, or another device chosen, while it started.
+            guard generation == meterGeneration, metering else { return _ = r.stop() }
             recorder = r
-        } catch {
-            Log.audio.error("Level metering failed: \(String(describing: error), privacy: .public)")
         }
     }
 
     private func stopMetering() {
+        meterGeneration += 1
         _ = recorder?.stop()
         recorder = nil
     }

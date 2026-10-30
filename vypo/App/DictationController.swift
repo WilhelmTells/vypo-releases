@@ -11,9 +11,20 @@ struct RecordingContext: Sendable {
     var duration: TimeInterval = 0
     /// The app's profile mode when the recording started (§23.5).
     var mode: AppMode = .standard
+    /// Started with a double tap (Hands Free achievement).
+    var handsFree = false
     /// The text around the cursor, read off the main thread while the user talks (§23.1).
     /// nil when smart spacing is off.
     var insertion: Task<InsertionContext?, Never>?
+}
+
+/// One dictation on its way through processing.
+@MainActor
+final class DictationJob {
+    /// A newer dictation started: this one goes on for History only, nothing is pasted or counted.
+    fileprivate(set) var isLeftover = false
+    /// The paste has begun. Set right before it; from then on the job can't become a leftover.
+    var inserted = false
 }
 
 /// Runs a dictation: hotkey effects → recording → processing → back to ready (§7, §8).
@@ -36,14 +47,17 @@ final class DictationController {
     var modeForApp: (String?) -> AppMode = { _ in .standard }
     /// Called when a recording starts (pill screen, model preload).
     var onRecordingStarted: (RecordingContext) -> Void = { _ in }
-    /// Transcribes, cleans up and pastes. Must check for cancellation before pasting.
-    var process: ([Float], RecordingContext) async -> Void = { _, _ in }
+    /// Transcribes, cleans up and pastes. Must check for cancellation and `DictationJob.isLeftover` before pasting.
+    var process: ([Float], RecordingContext, DictationJob) async -> Void = { _, _, _ in }
     /// The input device to record from.
     var inputDevice: () -> AudioDeviceID? = { AudioDevices.defaultInputDevice() }
 
     private(set) var phase: Phase = .idle
     private var context: RecordingContext?
     private var processingTask: Task<Void, Never>?
+    private var processingJob: DictationJob?
+    /// The dictation a newer one sent to the background. Only one at a time.
+    private var leftover: (job: DictationJob, task: Task<Void, Never>)?
     private var handsFreeTimer: Timer?
     private var muteWork: DispatchWorkItem?
     /// The capture session started on key-down (`prepare`), and the one kept after a short tap.
@@ -129,8 +143,9 @@ final class DictationController {
 
     private func begin(handsFree: Bool) {
         guard phase == .idle else {
-            // A new recording during processing: the old result is dropped.
-            if phase == .processing { cancel() } else { return }
+            // A new recording during processing: the old dictation finishes in the background.
+            guard phase == .processing else { return }
+            moveProcessingToBackground()
             return begin(handsFree: handsFree)
         }
         if app.pillBase == .add { app.cancelAdd() }
@@ -139,6 +154,7 @@ final class DictationController {
         var ctx = RecordingContext(bundleID: front?.bundleIdentifier, appName: front?.localizedName,
                                    pid: front?.processIdentifier, startedAt: Date())
         ctx.mode = modeForApp(ctx.bundleID)
+        ctx.handsFree = handsFree
         if ctx.mode == .excluded {
             fail(.offInThisApp)
             return
@@ -217,16 +233,50 @@ final class DictationController {
             return
         }
         Log.audio.notice("Recorded \(seconds, format: .fixed(precision: 2)) s, peak \(peak, format: .fixed(precision: 1)) dBFS")
+        startProcessing(samples, ctx)
+    }
+
+    func startProcessing(_ samples: [Float], _ ctx: RecordingContext) {
         phase = .processing
         app.setPill(.processing)
         let process = self.process
+        let job = DictationJob()
+        processingJob = job
         processingTask = Task { [weak self] in
-            await process(samples, ctx)
-            guard let self, !Task.isCancelled else { return }
+            await process(samples, ctx, job)
+            guard let self else { return }
+            if self.leftover?.job === job { self.leftover = nil }
+            guard self.processingJob === job else { return }
             self.phase = .idle
             if self.app.pillBase == .processing { self.app.setPill(.ready) }
+            self.processingJob = nil
             self.processingTask = nil
         }
+    }
+
+    /// A new dictation takes over from the one in processing, which is never lost silently: it finishes for History.
+    func moveProcessingToBackground() {
+        guard phase == .processing, let job = processingJob, let task = processingTask else { return }
+        // Already pasted: only its History entry and count are left, and they finish by themselves.
+        if !job.inserted {
+            if app.prefs.saveHistory {
+                if let oldest = leftover {
+                    oldest.task.cancel()
+                    Log.asr.notice("Cancelled the dictation in the background: a third one started")
+                }
+                job.isLeftover = true
+                leftover = (job, task)
+                Log.asr.notice("A new dictation started: the one in processing finishes in the background, for History only")
+            } else {
+                task.cancel()
+                Log.asr.notice("A new dictation started: the one in processing is dropped, History is off")
+            }
+        }
+        processingJob = nil
+        processingTask = nil
+        phase = .idle
+        hotkey.resetGesture()
+        app.setPill(.ready)
     }
 
     /// Discards the recording or transcription; nothing is pasted.
@@ -242,6 +292,7 @@ final class DictationController {
         case .processing:
             processingTask?.cancel()
             processingTask = nil
+            processingJob = nil
         }
         phase = .idle
         hotkey.resetGesture()

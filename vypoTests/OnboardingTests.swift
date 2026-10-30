@@ -296,9 +296,9 @@ final class OnboardingTests: XCTestCase {
     // MARK: Test build isolation
 
     func testTheTestBuildHasItsOwnIdentity() {
-        XCTAssertNotEqual(RunEnvironment.onboardingTestBundleID, "com.wilhelmtells.vypo")
+        XCTAssertNotEqual(RunEnvironment.testAppBundleID, "com.wilhelmtells.vypo")
         // Under XCTest the host is the real bundle, so the real folder is used for models only.
-        XCTAssertFalse(RunEnvironment.isOnboardingTestBuild)
+        XCTAssertFalse(RunEnvironment.isTestApp)
         XCTAssertEqual(RunEnvironment.realDirectory.lastPathComponent, "vypo")
     }
 

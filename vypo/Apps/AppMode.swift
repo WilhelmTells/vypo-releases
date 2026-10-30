@@ -25,10 +25,12 @@ enum AppMode: String, Codable, CaseIterable, Sendable {
         }
     }
 
-    /// What the mode does and where it fits, for Settings → Apps.
-    var explanation: String {
+    /// What the mode does and where it fits, for Settings → Apps. Prompt points to where its characters are set.
+    func explanation(_ layout: WordsLayout) -> String {
         switch self {
         case .standard: String(localized: "Plain dictation, as in every app you haven’t added.")
+        case .prompt where layout == .spokenCharacters:
+            String(localized: "For AI chats, terminals and code editors: no final period, so you can keep typing; can send automatically. Spoken characters set for Prompt, such as “slash”, work in a sentence here.")
         case .prompt: String(localized: "For AI chats, terminals and code editors: no final period, so you can keep typing; can send automatically. Replacements set to “Prompt apps only” work in a sentence here.")
         case .writing: String(localized: "For documents and notes: say “comma” or “new paragraph”, and quotes become typographic.")
         case .excluded: String(localized: "vypo doesn’t dictate here, e.g. in apps with confidential content.")

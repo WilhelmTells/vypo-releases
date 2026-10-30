@@ -334,7 +334,7 @@ final class SymbolPolishTests: XCTestCase {
         XCTAssertEqual(run("Erste Zeile, neue Zeile, zweite Zeile."), "Erste Zeile\nzweite Zeile")
         XCTAssertEqual(run("Erste Zeile,neue Zeile zweite Zeile", .standard), "Erste Zeile\nzweite Zeile")
         XCTAssertEqual(run("one, new paragraph, two", .standard, language: .en), "one\n\ntwo")
-        XCTAssertEqual(run("Erste Zeile, neuer Absatz zweite Zeile", .writing), "Erste Zeile\n\nzweite Zeile")
+        XCTAssertEqual(run("Erste Zeile, neuer Absatz zweite Zeile", .writing), "Erste Zeile\n\nZweite Zeile")   // Writing: a capital after a break
     }
 
     func testAPeriodQuestionOrExclamationMarkBeforeALineBreakStays() {

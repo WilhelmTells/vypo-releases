@@ -161,14 +161,13 @@ struct DebugMenu: View {
             Button("Hands-free") { app.setPill(.handsfree) }
             Button("Processing") { app.setPill(.processing) }
             Button("Error") { app.setPill(.error(.noMicrophone)) }
+            #if DEBUG
             Button("Add") { MenuDismiss.close(); app.beginAdd(prefill: "TikTok") }
             Button("Added") { app.showNotice(.termAdded("TikTok")) }
-            #if DEBUG
             // The only two places that write audio to disk. Not in a Release build: vypo never stores audio.
             Divider()
             Button("Save last recording to Desktop") { MenuDismiss.close(); app.onSaveLastRecording() }
             Toggle("Keep recordings for benchmark", isOn: $app.keepBenchmarkRecordings)
-            #endif
             Section("Mascot") {
                 Button("Play level-up") {
                     MenuDismiss.close()
@@ -187,6 +186,30 @@ struct DebugMenu: View {
                 }
                 Button("Reset preview") { app.levelPreview.reset() }
             }
+            // See, stamp and reach achievements by hand, for trying the card on the Stats pane. Debug builds only.
+            Section("Achievements") {
+                Menu("Status") {
+                    ForEach(app.achievements.all, id: \.id) { a in
+                        Button {} label: { Text(verbatim: Self.line(a)) }.disabled(true)
+                    }
+                    Divider()
+                    Text(verbatim: "stamped \(app.achievements.stampedCount)/\(AchievementID.allCases.count), ready \(app.achievements.readyCount), secrets left \(app.achievements.hiddenCuriousLeft)")
+                }
+                Menu("Stamp") {
+                    let ready = app.achievements.all.filter(\.isReady)
+                    if ready.isEmpty { Text("Nothing ready") }
+                    ForEach(ready, id: \.id) { a in
+                        Button { app.achievements.stamp(a.id) } label: { Text(verbatim: "\(a.id.rawValue) \(a.level)/\(a.tiers)") }
+                    }
+                }
+                Menu("Reach next tier") {
+                    ForEach(app.achievements.all.filter { $0.level < $0.tiers }, id: \.id) { a in
+                        Button { app.achievements.debugReach(a.id) } label: { Text(verbatim: "\(a.id.rawValue) → \(a.level + 1)/\(a.tiers)") }
+                    }
+                }
+                Button("Clear all stamps") { app.achievements.debugClearStamps() }
+            }
+            #endif
         } label: {
             MenuRowLabel(title: "Debug", chevron: true)
         }
@@ -194,4 +217,14 @@ struct DebugMenu: View {
         .buttonStyle(MenuRowButtonStyle())
         .menuIndicator(.hidden)
     }
+
+    #if DEBUG
+    /// “tales: ready 2/4 (1 stamped 2026-10-30), 143 of 1000”, for the Status menu.
+    private static func line(_ a: AchievementStatus) -> String {
+        let state = a.isLocked ? "locked" : a.isReady ? "ready" : "stamped"
+        let stamped = a.isStamped ? " (\(a.stampedLevel) stamped \(a.stampedOn ?? ""))" : ""
+        let next = a.next.map { ", \(Int(a.value)) of \(Int($0))" } ?? ""
+        return "\(a.id.rawValue): \(state) \(a.level)/\(a.tiers)\(stamped)\(next)\(a.isHidden ? " [hidden]" : "")"
+    }
+    #endif
 }

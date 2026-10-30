@@ -28,7 +28,7 @@ struct AppsPane: View {
                 ForEach(AppMode.allCases, id: \.self) { mode in
                     HStack(alignment: .top, spacing: Space.s3) {
                         IconTile(symbol: mode.symbol)
-                        RowLabel(title: "\(mode.title)", description: "\(mode.explanation)")
+                        RowLabel(title: "\(mode.title)", description: "\(mode.explanation(app.wordsLayout))")
                     }
                 }
             } header: {
@@ -36,14 +36,21 @@ struct AppsPane: View {
             }
 
             Section {
-                Toggle(isOn: $prefs.spokenPunctuation) {
-                    RowLabel(title: "Spoken punctuation", description: "English and German only.")
+                // A new installation sets every spoken character in Words → Spoken characters, with its modes.
+                if app.wordsLayout == .legacy {
+                    Toggle(isOn: $prefs.spokenPunctuation) {
+                        RowLabel(title: "Spoken punctuation", description: "English and German only.")
+                    }
                 }
                 Toggle("Typographic quotes", isOn: $prefs.typographicQuotes)
             } header: {
                 Text("In Writing apps")
             } footer: {
-                Text("Say “comma” or “Komma” and get “,”; quotes become “curly”.")
+                if app.wordsLayout == .legacy {
+                    Text("Say “comma” or “Komma” and get “,”; quotes become “curly”.")
+                } else {
+                    Text("Quotes become “curly”, spoken ones too. Which words become characters is set in Words → Spoken characters.")
+                }
             }
         }
         .formStyle(.grouped)

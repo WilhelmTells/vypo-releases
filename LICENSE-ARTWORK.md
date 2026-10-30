@@ -6,6 +6,8 @@ The following are © Wilhelm Tells. **All rights reserved.**
 
 - `Resources/Assets.xcassets/Mascot` (the boy and the raven)
 - `Resources/Assets.xcassets/LevelScene` (the level scene)
+- `Resources/Assets.xcassets/Achievements` (the achievement stamps)
+- `Resources/Assets.xcassets/Onboarding` (the pictures of the first start)
 - `Resources/Assets.xcassets/AppIconImage.imageset` (the app icon image)
 - `Resources/Vypo.icon` (the app icon)
 - the name and the logo “vypo”

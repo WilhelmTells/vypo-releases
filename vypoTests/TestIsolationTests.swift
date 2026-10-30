@@ -38,4 +38,11 @@ final class TestIsolationTests: XCTestCase {
         let real = RunEnvironment.realDirectory.appendingPathComponent("replacements.json")
         XCTAssertFalse((try? String(contentsOf: real, encoding: .utf8))?.contains("isolation") ?? false)
     }
+
+    /// `AppCoordinator.start()` under a test must not turn the test host into the user's login item.
+    func testATestHostIsNeverRegisteredAsALoginItem() {
+        let defaults = UserDefaults(suiteName: "vypo.tests.\(UUID().uuidString)")!
+        LoginItem.applyDefaultOnce(defaults)
+        XCTAssertFalse(defaults.bool(forKey: "openAtLoginConfigured"))
+    }
 }

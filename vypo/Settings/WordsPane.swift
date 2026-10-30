@@ -11,6 +11,7 @@ struct WordsPane: View {
     @State private var managingSets = false
     @State private var editingFillers = false
     @State private var editingSpellings = false
+    @State private var editingCharacters = false
     /// nil = All.
     @State private var setFilter: UUID?
     @State private var importResult: ImportTermsSheet.Result?
@@ -82,7 +83,29 @@ struct WordsPane: View {
                 Text("If a term keeps coming out wrong, edit it and add what vypo wrote instead under “Sounds like”.")
             }
 
+            // New layout: the own list first, then the three built-in lists with a switch and “Edit…” together.
             ReplacementsSection()
+
+            if app.wordsLayout == .spokenCharacters {
+                Section {
+                    LabeledContent {
+                        HStack(spacing: Space.s2) {
+                            Toggle("Write spoken characters", isOn: $prefs.spokenCharacters)
+                                .toggleStyle(.switch)
+                                .labelsHidden()
+                            Button("Edit…") { editingCharacters = true }
+                                .buttonStyle(.plain)
+                                .foregroundStyle(Color.vyAccent)
+                        }
+                    } label: {
+                        RowLabel(title: "Write spoken characters", description: "comma, period, slash, new line …")
+                    }
+                } header: {
+                    Text("Spoken characters")
+                } footer: {
+                    Text("Say “comma” or “slash” and vypo writes “,” or “/”. Under Edit… you set where each one works in a sentence.")
+                }
+            }
 
             Section {
                 LabeledContent {
@@ -127,6 +150,9 @@ struct WordsPane: View {
         }
         .sheet(isPresented: $editingSpellings) {
             SpellingsSheet().environment(app)
+        }
+        .sheet(isPresented: $editingCharacters) {
+            SpokenCharactersSheet().environment(app)
         }
         .sheet(isPresented: $managingSets) {
             SetsSheet().environment(app)
@@ -313,6 +339,11 @@ struct ReplacementsSection: View {
 
     var body: some View {
         Section {
+            if app.wordsLayout == .spokenCharacters && app.replacements.items.isEmpty {
+                // A plain String: as a LocalizedStringKey the address would become a link.
+                Text(String(localized: "Your own words and what vypo writes for them, e.g. “my email” becomes name@example.com."))
+                    .foregroundStyle(Color.vyLabelSecondary)
+            }
             ForEach(app.replacements.items) { r in
                 HStack(spacing: Space.s3) {
                     VStack(alignment: .leading, spacing: 2) {
@@ -336,10 +367,13 @@ struct ReplacementsSection: View {
                     .buttonStyle(.plain)
                     .foregroundStyle(Color.vyAccent)
                 Spacer()
-                Button("Restore default entries") { app.replacements.restoreDefaults() }
-                    .buttonStyle(.plain)
-                    .font(.callout)
-                    .foregroundStyle(Color.vyLabelSecondary)
+                // A new installation has no default replacements: its characters are under Spoken characters.
+                if app.wordsLayout == .legacy {
+                    Button("Restore default entries") { app.replacements.restoreDefaults() }
+                        .buttonStyle(.plain)
+                        .font(.callout)
+                        .foregroundStyle(Color.vyLabelSecondary)
+                }
             }
         } header: {
             Text("Replacements")
@@ -394,7 +428,11 @@ struct ReplacementSheet: View {
         VStack(alignment: .leading, spacing: Space.s4) {
             Form {
                 Section {
-                    TextField("Spoken", text: $spoken, prompt: Text("e.g. slash, Schrägstrich"))
+                    if app.wordsLayout == .legacy {
+                        TextField("Spoken", text: $spoken, prompt: Text("e.g. slash, Schrägstrich"))
+                    } else {
+                        TextField("Spoken", text: $spoken, prompt: Text("e.g. my email, meine Mail"))
+                    }
                     TextField("Output", text: $output)
                 } footer: {
                     Text("Separate spellings with commas.")
@@ -438,6 +476,130 @@ struct ReplacementSheet: View {
             spoken = replacement.spokenText
             output = Replacements.display(replacement.output)
             inSentence = replacement.inSentence
+        }
+    }
+}
+
+/// Words → Spoken characters → Edit…: every entry, with on/off, Edit, Add and “Restore default characters”.
+struct SpokenCharactersSheet: View {
+    @Environment(AppState.self) private var app
+    @Environment(\.dismiss) private var dismiss
+    @State private var editing: SpokenCharacter?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Space.s3) {
+            Text("Spoken characters").font(.title3.weight(.semibold))
+            Text("Say the word and vypo writes the character. Said on its own, it works in every app; in a sentence, in the modes set for it.")
+                .font(.callout)
+                .foregroundStyle(Color.vyLabelSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+            Form {
+                ForEach(app.spokenCharacters?.items ?? []) { c in
+                    HStack(spacing: Space.s3) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("\(c.summary)").foregroundStyle(Color.vyLabel)
+                            Text("becomes \(Replacements.display(c.output))")
+                                .font(.callout).foregroundStyle(Color.vyLabelSecondary)
+                            Text(SpokenCharacters.listNote(c.inSentence)).font(.caption).foregroundStyle(Color.vyLabelSecondary)
+                        }
+                        Spacer()
+                        Toggle("\(c.summary)", isOn: Binding(get: { c.enabled }, set: { app.spokenCharacters?.setEnabled(c.id, $0) }))
+                            .labelsHidden()
+                        Button("Edit") { editing = c }
+                            .buttonStyle(.plain)
+                            .foregroundStyle(Color.vyAccent)
+                    }
+                }
+            }
+            .formStyle(.grouped)
+            .frame(height: 380)
+            HStack {
+                Button("Add character") { editing = SpokenCharacter(spoken: [], output: "", inSentence: [.writing]) }
+                Button("Restore default characters") { app.spokenCharacters?.restoreDefaults() }
+                Spacer()
+                Button("Done") { dismiss() }
+                    .keyboardShortcut(.defaultAction)
+            }
+        }
+        .padding(Space.s5)
+        .frame(width: 540)
+        .sheet(item: $editing) { c in
+            SpokenCharacterSheet(character: c).environment(app)
+        }
+    }
+}
+
+extension SpokenCharacters {
+    /// The small line under an entry: the modes it works in, in a sentence.
+    static func listNote(_ modes: Set<AppMode>) -> String {
+        let names = Self.modes.filter(modes.contains).map(\.title)
+        guard !names.isEmpty else { return String(localized: "Only on its own") }
+        return String(localized: "In sentences: \(names.formatted(.list(type: .and)))")
+    }
+}
+
+/// “Spoken” / “Output” / “In a sentence” for one spoken character, with a switch per mode.
+struct SpokenCharacterSheet: View {
+    let character: SpokenCharacter
+    @Environment(AppState.self) private var app
+    @Environment(\.dismiss) private var dismiss
+    @State private var spoken = ""
+    @State private var output = ""
+    @State private var modes: Set<AppMode> = []
+
+    private var isNew: Bool { !(app.spokenCharacters?.items.contains { $0.id == character.id } ?? false) }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Space.s4) {
+            Form {
+                Section {
+                    TextField("Spoken", text: $spoken, prompt: Text("e.g. comma, Komma"))
+                    TextField("Output", text: $output)
+                } footer: {
+                    Text("Separate spellings with commas.")
+                }
+                Section {
+                    ForEach(SpokenCharacters.modes, id: \.self) { mode in
+                        Toggle(mode.title, isOn: Binding(get: { modes.contains(mode) },
+                                                         set: { if $0 { modes.insert(mode) } else { modes.remove(mode) } }))
+                    }
+                } header: {
+                    Text("In a sentence")
+                } footer: {
+                    Text("Said on its own, it works in every app. In a sentence, only in apps with a mode switched on here.")
+                }
+            }
+            .formStyle(.grouped)
+            HStack {
+                if !isNew {
+                    Button("Delete", role: .destructive) {
+                        app.spokenCharacters?.delete(character.id)
+                        dismiss()
+                    }
+                    .foregroundStyle(Color.vyDanger)
+                }
+                Spacer()
+                Button("Cancel", role: .cancel) { dismiss() }
+                    .keyboardShortcut(.cancelAction)
+                Button("Save") {
+                    var c = character
+                    c.spoken = Replacements.variants(spoken)
+                    c.output = output.replacingOccurrences(of: "↵", with: "\n")
+                    c.inSentence = modes
+                    app.spokenCharacters?.upsert(c)
+                    dismiss()
+                }
+                .buttonStyle(.borderedProminent)
+                .keyboardShortcut(.defaultAction)
+                .disabled(Replacements.variants(spoken).isEmpty || output.isEmpty)
+            }
+            .padding([.horizontal, .bottom], Space.s5)
+        }
+        .frame(width: 420)
+        .onAppear {
+            spoken = character.spokenText
+            output = Replacements.display(character.output)
+            modes = character.inSentence
         }
     }
 }

@@ -307,6 +307,12 @@ struct WoodcutStage: View {
     var dawn = false
     var cropHeight: CGFloat = 130
 
+    /// Loads and decodes the night stage once, so the Microphone step doesn't do it during its transition (the first
+    /// load took 10–33 ms, 2026-10-29). Called while the Permissions step rests.
+    static func preload() {
+        _ = NSImage(named: "Onboarding/woodcut-stage")?.cgImage(forProposedRect: nil, context: nil, hints: nil)
+    }
+
     var body: some View {
         Image(dawn ? "Onboarding/woodcut-stage-dawn" : "Onboarding/woodcut-stage")
             .resizable()

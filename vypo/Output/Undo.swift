@@ -12,6 +12,8 @@ struct LastInsertion: Equatable, Sendable {
     var words: Int = 0
     var recordingSeconds: TimeInterval = 0
     var bundleID: String?
+    /// The recording started hands-free.
+    var handsFree = false
 }
 
 /// Keeps the last insertion and its recording in RAM only, for 5 minutes (§23.4).

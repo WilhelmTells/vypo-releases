@@ -100,6 +100,10 @@ enum DefaultsKey {
     /// switches before that (`spokenSymbols`, `spokenSymbolsAlone`) are read by that move once and then removed.
     static let symbolsAreReplacements = "symbolsAreReplacements"
     static let replacementVariantsSplit = "replacementVariantsSplit"
+    /// `WordsLayout`, decided at the first launch of 0.4.0 and kept.
+    static let wordsLayout = "wordsLayout"
+    /// Words → Spoken characters on or off (`spokenCharacters` layout).
+    static let spokenCharacters = "spokenCharacters"
     static let correctionStrength = "correctionStrength"
     static let saveHistory = "saveHistory"
     static let historyRetention = "historyRetention"
@@ -122,6 +126,7 @@ enum DefaultsKey {
     static let pillBackground = "pillBackground"
     static let collectStats = "collectStats"
     static let showLevel = "showLevel"
+    static let achievementsExpanded = "achievementsExpanded"
     static let languages = "languages"
     static let menuBarTintWhileDictating = "menuBarTintWhileDictating"
     static let showPill = "showPill"
@@ -156,11 +161,13 @@ final class Preferences {
             DefaultsKey.fillerWordsEN: FillerRemover.defaultWords(.en),
             DefaultsKey.fillerWordsDE: FillerRemover.defaultWords(.de),
             DefaultsKey.spokenPunctuation: true,
+            DefaultsKey.spokenCharacters: true,
             DefaultsKey.typographicQuotes: true,
             DefaultsKey.preferBuiltInMic: true,
             DefaultsKey.hideFromCapture: true,
             DefaultsKey.collectStats: true,
             DefaultsKey.showLevel: true,
+            DefaultsKey.achievementsExpanded: true,
             DefaultsKey.menuBarTintWhileDictating: false,
             DefaultsKey.showPill: true,
             DefaultsKey.showInDock: false,
@@ -187,6 +194,7 @@ final class Preferences {
         fillerWordsEN = defaults.stringArray(forKey: DefaultsKey.fillerWordsEN) ?? FillerRemover.defaultWords(.en)
         fillerWordsDE = defaults.stringArray(forKey: DefaultsKey.fillerWordsDE) ?? FillerRemover.defaultWords(.de)
         spokenPunctuation = defaults.bool(forKey: DefaultsKey.spokenPunctuation)
+        spokenCharacters = defaults.bool(forKey: DefaultsKey.spokenCharacters)
         typographicQuotes = defaults.bool(forKey: DefaultsKey.typographicQuotes)
         preferBuiltInMic = defaults.bool(forKey: DefaultsKey.preferBuiltInMic)
         hideFromCapture = defaults.bool(forKey: DefaultsKey.hideFromCapture)
@@ -199,6 +207,7 @@ final class Preferences {
         windowStyle = WindowStyle(rawValue: defaults.string(forKey: DefaultsKey.windowStyle) ?? "") ?? .automatic
         collectStats = defaults.bool(forKey: DefaultsKey.collectStats)
         showLevel = defaults.bool(forKey: DefaultsKey.showLevel)
+        achievementsExpanded = defaults.bool(forKey: DefaultsKey.achievementsExpanded)
         menuBarTintWhileDictating = defaults.bool(forKey: DefaultsKey.menuBarTintWhileDictating)
         showPill = defaults.bool(forKey: DefaultsKey.showPill)
         showInDock = defaults.bool(forKey: DefaultsKey.showInDock)
@@ -245,6 +254,7 @@ final class Preferences {
     var fillerWordsEN: [String] { didSet { defaults.set(fillerWordsEN, forKey: DefaultsKey.fillerWordsEN) } }
     var fillerWordsDE: [String] { didSet { defaults.set(fillerWordsDE, forKey: DefaultsKey.fillerWordsDE) } }
     var spokenPunctuation: Bool { didSet { defaults.set(spokenPunctuation, forKey: DefaultsKey.spokenPunctuation) } }
+    var spokenCharacters: Bool { didSet { defaults.set(spokenCharacters, forKey: DefaultsKey.spokenCharacters) } }
     var typographicQuotes: Bool { didSet { defaults.set(typographicQuotes, forKey: DefaultsKey.typographicQuotes) } }
     var preferBuiltInMic: Bool { didSet { defaults.set(preferBuiltInMic, forKey: DefaultsKey.preferBuiltInMic) } }
     var hideFromCapture: Bool { didSet { defaults.set(hideFromCapture, forKey: DefaultsKey.hideFromCapture) } }
@@ -257,6 +267,8 @@ final class Preferences {
     var collectStats: Bool { didSet { defaults.set(collectStats, forKey: DefaultsKey.collectStats) } }
     /// Settings → Stats: the level card; hidden too while stats are off.
     var showLevel: Bool { didSet { defaults.set(showLevel, forKey: DefaultsKey.showLevel) } }
+    /// Settings → Stats: the achievements card open or folded to its header row; open the very first time.
+    var achievementsExpanded: Bool { didSet { defaults.set(achievementsExpanded, forKey: DefaultsKey.achievementsExpanded) } }
     /// Settings → Appearance → Menu bar. The mark is animated either way.
     var menuBarTintWhileDictating: Bool { didSet { defaults.set(menuBarTintWhileDictating, forKey: DefaultsKey.menuBarTintWhileDictating) } }
     /// Settings → Appearance → Pill. Off: only states that need you show the pill (`PillVisibility`).

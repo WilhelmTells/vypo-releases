@@ -76,6 +76,11 @@ struct PermissionsStep: View {
         .frame(width: 460)
         .animation(reduceMotion ? .easeOut(duration: 0.15) : .easeOut(duration: 0.2), value: accessibilityAsked)
         .animation(reduceMotion ? .easeOut(duration: 0.15) : .easeOut(duration: 0.2), value: ax)
+        .task {
+            // Outside any transition: the next step's picture is ready when it slides in.
+            try? await Task.sleep(for: .seconds(1))
+            if !Task.isCancelled { WoodcutStage.preload() }
+        }
         .task(id: askedAt) {
             // The system prompt can be dismissed with “Deny”; after a while the card offers the pane directly.
             showPane = false

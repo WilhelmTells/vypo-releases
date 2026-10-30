@@ -9,11 +9,17 @@ final class AppState {
     let levelMeter = LevelMeter()
     let pillAdd = PillAddModel()
     let glossary: GlossaryStore
+    /// Decided once, before `replacements` reads its file.
+    let wordsLayout: WordsLayout
     let replacements: ReplacementStore
+    /// Only in the `spokenCharacters` layout.
+    let spokenCharacters: SpokenCharacterStore?
     let history: HistoryStore
     let profiles: AppProfileStore
     let stats: StatsStore
     let level: LevelStore
+    /// `achievements.json`; filled once from the existing data on the first launch with it.
+    let achievements: AchievementStore
     let levelPreview = LevelPreview()
     let permissions = PermissionMonitor()
 
@@ -72,14 +78,36 @@ final class AppState {
     @ObservationIgnored var onOpenSettings: (SettingsPane?) -> Void = { _ in }
     @ObservationIgnored var onOpenOnboarding: (Int?) -> Void = { _ in }
 
-    init(prefs: Preferences = Preferences(), store: Store = .shared) {
+    init(prefs: Preferences = Preferences(), store: Store = .shared, calendar: Calendar = .current) {
         self.prefs = prefs
-        glossary = GlossaryStore(store: store)
-        replacements = ReplacementStore(store: store, defaults: prefs.defaults)
-        history = HistoryStore(store: store)
-        profiles = AppProfileStore(store: store)
-        stats = StatsStore(store: store)
-        level = LevelStore(store: store, seedWords: stats.allTime)
+        let glossary = GlossaryStore(store: store)
+        self.glossary = glossary
+        let wordsLayout = WordsLayout.resolve(store: store, defaults: prefs.defaults)
+        self.wordsLayout = wordsLayout
+        let replacements = ReplacementStore(store: store, defaults: prefs.defaults, layout: wordsLayout)
+        self.replacements = replacements
+        spokenCharacters = wordsLayout == .spokenCharacters ? SpokenCharacterStore(store: store) : nil
+        let history = HistoryStore(store: store)
+        self.history = history
+        let profiles = AppProfileStore(store: store)
+        self.profiles = profiles
+        let stats = StatsStore(store: store)
+        self.stats = stats
+        let level = LevelStore(store: store, seedWords: stats.allTime)
+        self.level = level
+        achievements = AchievementStore(store: store, calendar: calendar, collecting: prefs.collectStats) {
+            AchievementSeed.state(stats: stats.days, xpWords: level.xpWords, glossaryCount: glossary.entries.count,
+                                  replacements: replacements.items, layout: wordsLayout, profiles: profiles.profiles,
+                                  history: history.items, calendar: calendar)
+        }
+        glossary.onEntriesChanged = { [weak self] n in
+            guard let self, self.prefs.collectStats else { return }
+            self.achievements.glossaryCount(n)
+        }
+        replacements.onNewEntry = { [weak self] in self?.achievementReached(.ownReplacement) }
+        profiles.onModeChanged = { [weak self] mode in
+            if mode == .prompt || mode == .writing { self?.achievementReached(.promptOrWritingApp) }
+        }
     }
 
     // MARK: Transient pill states
@@ -107,24 +135,52 @@ final class AppState {
 
     // MARK: Stats and level (§23.12)
 
-    /// Stats and level count every successful paste.
+    /// Stats, level and achievements count every successful paste. The text is only checked for “vypo”, never kept.
     func count(_ insertion: LastInsertion) {
         guard prefs.collectStats else { return }
         stats.record(words: insertion.words, seconds: insertion.recordingSeconds, language: insertion.language,
                      app: insertion.bundleID, at: insertion.date)
         level.add(words: insertion.words)
+        achievements.dictated(DictationFacts(date: insertion.date, words: insertion.words, seconds: insertion.recordingSeconds,
+                                             language: insertion.language, bundleID: insertion.bundleID,
+                                             handsFree: insertion.handsFree, mentionsVypo: Achievements.mentionsVypo(insertion.text)),
+                              savedMinutes: StatsMath.minutesSaved(words: stats.allTime, seconds: stats.allSeconds),
+                              words: level.xpWords)
     }
 
-    /// An undone dictation is subtracted from the stats; the level never sinks.
+    /// An undone dictation is subtracted from the stats; the level and the achievements never sink. The undo itself
+    /// is Second Thoughts.
     func uncount(_ insertion: LastInsertion) {
         guard prefs.collectStats else { return }
         stats.record(words: insertion.words, seconds: insertion.recordingSeconds, language: insertion.language,
                      app: insertion.bundleID, at: insertion.date, sign: -1)
+        achievements.reached(.undo)
     }
 
+    /// Achievements stay: what was reached stays reached.
     func resetStats() {
         stats.reset()
         level.reset()
+    }
+
+    /// Nothing is collected while “Collect stats” is off.
+    func achievementReached(_ flag: AchievementFlag) {
+        guard prefs.collectStats else { return }
+        achievements.reached(flag)
+    }
+
+    /// “Collect stats” switched on: what the glossary, replacements and app files tell is taken now; a store that was
+    /// never filled is filled once.
+    func collectStatsSwitchedOn() {
+        let calendar = Calendar.current
+        achievements.collectingAgain(seed: {
+            AchievementSeed.state(stats: stats.days, xpWords: level.xpWords, glossaryCount: glossary.entries.count,
+                                  replacements: replacements.items, layout: wordsLayout, profiles: profiles.profiles,
+                                  history: history.items, calendar: calendar)
+        }, files: {
+            AchievementSeed.fromFiles(glossaryCount: glossary.entries.count, replacements: replacements.items,
+                                      layout: wordsLayout, profiles: profiles.profiles)
+        })
     }
 
     func setPill(_ mode: PillMode) {

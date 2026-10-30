@@ -11,6 +11,10 @@ struct PipelineContext: Sendable {
     /// Filler words to remove; empty when "Remove filler words" is off.
     var fillers: [String] = []
     var mode: AppMode = .standard
+    /// nil: the Words page before 0.4.0 (`WordsLayout.legacy`), with “Spoken punctuation” in Writing apps. Otherwise
+    /// the entries of Spoken characters; empty when its switch is off.
+    var spokenCharacters: [SpokenCharacter]?
+    /// Writing apps, `legacy` layout only.
     var spokenPunctuation = true
     var typographicQuotes = true
 }
@@ -28,18 +32,27 @@ enum TextPipeline {
         text = GlossaryCorrector.correct(text, entries: ctx.glossary, language: ctx.language, strength: ctx.strength, isWord: isWord)
         // After the glossary (the user's own terms win over a built-in spelling), before the replacements.
         text = Spellings.apply(text, list: ctx.spellings, glossary: ctx.glossary, language: ctx.language)
-        text = Replacements.apply(ctx.replacements, to: text, mode: ctx.mode)
+        text = Replacements.apply(ctx.replacements, to: text, mode: ctx.mode, language: ctx.language)
+        // A term's own spelling wins over a capital at the start of a sentence or line.
+        let terms = Set(ctx.glossary.map(\.term)).union(ctx.spellings)
+        if let characters = ctx.spokenCharacters, !characters.isEmpty {
+            // After the user's own replacements, so theirs win; a word they have an entry for is theirs alone.
+            text = SpokenCharacters.apply(SpokenCharacters.without(ctx.replacements, characters), to: text, mode: ctx.mode, language: ctx.language,
+                                          typographic: ctx.typographicQuotes, terms: terms)
+        }
         guard !text.isEmpty else { return "" }
         if ctx.mode == .writing {
-            if ctx.spokenPunctuation {
+            if ctx.spokenCharacters == nil && ctx.spokenPunctuation {
                 // Line breaks (a spoken "new line" became one) stay: each line on its own.
                 text = text.components(separatedBy: "\n").map {
-                    SpokenPunctuation.apply($0, language: ctx.language, typographic: ctx.typographicQuotes)
+                    SpokenPunctuation.apply($0, language: ctx.language, typographic: ctx.typographicQuotes, terms: terms)
                 }.joined(separator: "\n")
             }
             if ctx.typographicQuotes {
                 text = TypographicQuotes.apply(text, language: ctx.language)
             }
+            // A line break from a replacement (“new line”) is not seen by `SpokenPunctuation`: capital after it too.
+            text = SpokenPunctuation.capitalizeAfterLineBreaks(text, terms: terms)
         }
         text = ProfileTweaks.apply(text, mode: ctx.mode)
         return text

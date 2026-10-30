@@ -40,6 +40,8 @@ final class GlossaryStore {
     private(set) var sets: [GlossarySet] = [.general]
 
     @ObservationIgnored private let store: Store
+    /// After every change of the entries, with their number (Word Keeper, Word Collector).
+    @ObservationIgnored var onEntriesChanged: (Int) -> Void = { _ in }
 
     init(store: Store = .shared) {
         self.store = store
@@ -87,6 +89,7 @@ final class GlossaryStore {
     private func saveEntries() {
         entries.sort { $0.term.localizedCaseInsensitiveCompare($1.term) == .orderedAscending }
         store.save(entries, to: "glossary.json")
+        onEntriesChanged(entries.count)
     }
 
     // MARK: Suggestions

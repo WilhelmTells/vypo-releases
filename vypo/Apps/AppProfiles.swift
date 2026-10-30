@@ -17,6 +17,8 @@ struct AppProfile: Codable, Identifiable, Hashable, Sendable {
 final class AppProfileStore {
     private(set) var profiles: [AppProfile]
     @ObservationIgnored private let store: Store
+    /// An app was switched to another mode (Right Tool).
+    @ObservationIgnored var onModeChanged: (AppMode) -> Void = { _ in }
     private static let file = "appProfiles.json"
     private static let formerDefaultsRemovedKey = "appProfileDefaultsRemoved"
 
@@ -70,6 +72,8 @@ final class AppProfileStore {
     }
 
     func update(_ profile: AppProfile) {
+        let before = self.profile(for: profile.bundleID)?.mode
+        defer { if profile.mode != before { onModeChanged(profile.mode) } }
         if let i = profiles.firstIndex(where: { $0.bundleID == profile.bundleID }) { profiles[i] = profile } else { profiles.append(profile) }
         save()
     }

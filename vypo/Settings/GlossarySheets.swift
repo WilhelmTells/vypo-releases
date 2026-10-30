@@ -132,9 +132,12 @@ struct ImportTermsSheet: View {
         case .existing(let id): setID = id
         case .new: setID = app.glossary.addSet(named: newSetName).id
         }
+        var added = 0
         for item in result.found where checked.contains(item.term) {
-            app.glossary.add(term: item.term, scope: .all, setID: setID)
+            if app.glossary.add(term: item.term, scope: .all, setID: setID) { added += 1 }
         }
+        // Bookworm: a document import that took at least one term.
+        if added > 0 { app.achievementReached(.documentImport) }
         dismiss()
     }
 }

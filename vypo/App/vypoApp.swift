@@ -22,8 +22,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         guard !Self.isRunningTests else { return }
-        // The onboarding test build never looks for updates (it is a throwaway copy with its own bundle ID).
-        app.updates = RunEnvironment.isOnboardingTestBuild ? nil : Updates()
+        // The test app never looks for updates (it is a throwaway copy with its own bundle ID).
+        app.updates = RunEnvironment.isTestApp ? nil : Updates()
         coordinator = AppCoordinator(app: app)
         coordinator?.start()
         statusItem = StatusItemController(app: app)

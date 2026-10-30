@@ -49,10 +49,11 @@ final class SnapshotRenderTests: XCTestCase {
         }
     }
 
-    /// An AppState on a scratch store, seeded with sample data.
-    private func sampleApp() -> AppState {
+    /// An AppState on a scratch store, seeded with sample data. `legacy`: a Mac that ran vypo before 0.4.0.
+    private func sampleApp(_ layout: WordsLayout = .legacy) -> AppState {
         let dir = FileManager.default.temporaryDirectory.appendingPathComponent("vypo-snap-\(UUID().uuidString)")
         let prefs = Preferences(defaults: UserDefaults(suiteName: "vypo.snap.\(UUID().uuidString)")!)
+        prefs.defaults.set(layout.rawValue, forKey: DefaultsKey.wordsLayout)
         let app = AppState(prefs: prefs, store: Store(directory: dir))
         let now = Date()
         app.history.add(HistoryItem(date: now.addingTimeInterval(-86_400 * 1.2), text: "Sounds good, let’s do it that way.", rawText: "", appBundleID: nil, appName: "Slack", language: .en, modelID: "parakeet-ultra"))
@@ -151,6 +152,76 @@ final class SnapshotRenderTests: XCTestCase {
         }
         XCTAssertEqual(level.xpWords, 36_800)
         XCTAssertEqual(level.lastSeenLevel, 4)
+    }
+
+    /// The achievements card as in `design/achievements/final/vypo-achievements/reference/card-*.png`: mixed states with
+    /// Time Back's popover, nothing ready, every Curious found, a fresh install, and the mixed card at a narrow width.
+    func testAchievementsCard() throws {
+        typealias T = AchievementsCardTests
+        let mixed: [AchievementStatus] = [
+            T.status(.firstWords, level: 1, stamped: 1), T.status(.wordKeeper, level: 1, stamped: 1), T.status(.swapArtist, level: 1),
+            T.status(.rightTool, level: 1, stamped: 1), T.status(.secondThoughts, level: 1, stamped: 1),
+            T.status(.tales, level: 1, stamped: 1, value: 37), T.status(.timeBack, level: 2, stamped: 2, on: "2026-10-14", value: 671),
+            T.status(.wordCollector, level: 3, stamped: 3), T.status(.bookshelf, level: 1, value: 20_000), T.status(.regular, level: 3, stamped: 3),
+            T.status(.nightOwl, level: 1, stamped: 1), T.status(.sayMyName, level: 1, stamped: 1),
+        ]
+        let calm = mixed.map { s in s.isReady ? T.status(s.id, level: s.level, stamped: s.level, value: s.value) : s }
+        let curious = mixed + [
+            T.status(.earlyBird, level: 1, stamped: 1), T.status(.threeTongues, level: 1), T.status(.chatterbox, level: 3, stamped: 1, value: 407),
+            T.status(.wellTravelled, level: 2, stamped: 2, value: 7),
+        ]
+        func all(_ some: [AchievementStatus]) -> AchievementCardContent {
+            AchievementCardContent(AchievementID.allCases.map { id in some.first { $0.id == id } ?? T.status(id) })
+        }
+        for (name, content, popover, width) in [("mixed", all(mixed), AchievementID.timeBack, 720.0), ("none-ready", all(calm), nil, 720),
+                                                ("all-curious", all(curious), .chatterbox, 720), ("empty", all([]), nil, 720),
+                                                ("narrow", all(mixed), .swapArtist, 540)] as [(String, AchievementCardContent, AchievementID?, CGFloat)] {
+            try renderWindow("achievements-\(name)", size: CGSize(width: width, height: name == "all-curious" ? 560 : 420)) {
+                AchievementsCardLayout(content: content, popover: popover)
+                    .padding(.horizontal, 30).padding(.top, 24)
+                    .frame(maxHeight: .infinity, alignment: .top)
+                    .background(Color.vyBgWindow)
+            }
+        }
+    }
+
+    /// The unlock (First Words) and the tier-up (Time Back 1 → 2) at the steps of `reference/keyframes-*.png`, from
+    /// `StampMotion`, at 96 pt so the steps read; then the hover tilt with the pointer at the right edge.
+    func testAchievementKeyframes() throws {
+        let size: CGFloat = 96
+        let unlock: [(String, StampMotion.Frame)] = [("0 Ready", StampMotion.ready), ("1 Lift 0.00", StampMotion.frame(at: 0)),
+                                                     ("2 Down 0.17", StampMotion.frame(at: 0.17)), ("3 Pressed 0.25", StampMotion.frame(at: 0.25)),
+                                                     ("4 Lifted 0.50", StampMotion.frame(at: 0.5)), ("5 Stars 0.58", StampMotion.frame(at: 7 / 12)),
+                                                     ("Stars 0.83", StampMotion.frame(at: 10 / 12)), ("Rest 1.08", StampMotion.frame(at: 13 / 12))]
+        for (name, from, to, face) in [("unlock", AchievementArt(id: .firstWords, stamped: 0), AchievementArt(id: .firstWords, stamped: 1), StampFace.vermilion),
+                                       ("tierup", AchievementArt(id: .timeBack, stamped: 1), AchievementArt(id: .timeBack, stamped: 2), .bronze)] {
+            try render("achievements-keyframes-\(name)", width: CGFloat(unlock.count) * (size * 2 + 12) + 40) {
+                HStack(alignment: .top, spacing: 12) {
+                    ForEach(Array(unlock.enumerated()), id: \.offset) { _, step in
+                        VStack(spacing: 8) {
+                            StampFrameView(art: step.1.stamped ? to : from, frame: step.1, face: face, size: size)
+                                .padding(.top, size * 1.7).padding(.bottom, size * 0.3)
+                                .frame(width: size * 2)
+                                .background { AchievementPaperBackground() }
+                            Text(verbatim: step.0).font(.caption).foregroundStyle(Color.vyLabel)
+                        }
+                    }
+                }
+            }
+        }
+        try render("achievements-hover-tilt", width: 4 * 100 + 40) {
+            HStack(spacing: 24) {
+                ForEach(Array([CGPoint(x: 0, y: 0), CGPoint(x: 1, y: 0), CGPoint(x: 0, y: 1), CGPoint(x: -1, y: -1)].enumerated()), id: \.offset) { _, p in
+                    let a = HoverTilt.angles(pointer: p, phase: 1)
+                    StampArtView(art: AchievementArt(id: .timeBack, stamped: 2), size: 60)
+                        .scaleEffect(a.scale)
+                        .rotation3DEffect(.degrees(a.x), axis: (1, 0, 0), perspective: HoverTilt.perspective)
+                        .rotation3DEffect(.degrees(a.y), axis: (0, 1, 0), perspective: HoverTilt.perspective)
+                        .padding(10)
+                        .background { AchievementPaperBackground() }
+                }
+            }
+        }
     }
 
     func testSettingsPanes() throws {
@@ -262,6 +333,46 @@ final class SnapshotRenderTests: XCTestCase {
         }
     }
 
+    /// 0.4.0: the Words pane of a new installation (Spoken characters, empty Replacements) and of an existing one, the
+    /// Spoken characters sheet and an entry's sheet, and the Apps pane of a new installation.
+    func testSpokenCharacters() throws {
+        let size = WindowManager.settingsMinSize
+        let new = sampleApp(.spokenCharacters)
+        // The switches are on; in these snapshots they look grey because the offscreen window is never key
+        // (see `spoken-characters-switches`, an on and an off switch side by side).
+        XCTAssertTrue(new.prefs.spokenCharacters && new.prefs.removeFillers && new.prefs.spellingsEnabled)
+        XCTAssertTrue(new.spokenCharacters!.items.allSatisfy(\.enabled))
+        try renderWindow("spoken-characters-switches", size: CGSize(width: 300, height: 140)) {
+            Form {
+                Toggle("On", isOn: .constant(true))
+                Toggle("Off", isOn: .constant(false))
+            }
+            .formStyle(.grouped)
+            .background(Color.vyBgWindow)
+        }
+        try renderWindow("spoken-characters-words-pane-new", size: CGSize(width: size.width, height: 1300)) {
+            WordsPane().environment(new).background(Color.vyBgWindow)
+        }
+        try renderWindow("spoken-characters-words-pane-legacy", size: CGSize(width: size.width, height: 1700)) {
+            WordsPane().environment(sampleApp(.legacy)).background(Color.vyBgWindow)
+        }
+        try renderWindow("spoken-characters-sheet", size: CGSize(width: 540, height: 600)) {
+            SpokenCharactersSheet().environment(new).background(Color.vyBgWindow)
+        }
+        let semicolon = new.spokenCharacters!.items.first { $0.output == ";" }!
+        try renderWindow("spoken-characters-edit-sheet", size: CGSize(width: 420, height: 420)) {
+            SpokenCharacterSheet(character: semicolon).environment(new).background(Color.vyBgWindow)
+        }
+        new.settingsPane = .apps
+        new.profiles.add(appAt: URL(fileURLWithPath: "/System/Applications/TextEdit.app"))
+        try renderWindow("spoken-characters-apps-pane-new", size: CGSize(width: size.width, height: 760)) {
+            AppsPane().environment(new).background(Color.vyBgWindow)
+        }
+        try renderWindow("spoken-characters-apps-pane-legacy", size: CGSize(width: size.width, height: 760)) {
+            AppsPane().environment(sampleApp(.legacy)).background(Color.vyBgWindow)
+        }
+    }
+
     /// The Stats pane near the owner's state (about 35,000 words, eight apps) and the History cards with the
     /// middle one hovered.
     func testStatsPaneAndHistoryHover() throws {
@@ -275,9 +386,19 @@ final class SnapshotRenderTests: XCTestCase {
             app.stats.record(words: 250 + d * 71 % 400, seconds: 100 + Double(d * 37 % 250), language: d % 5 == 0 ? .de : .en,
                              app: apps[d % apps.count], at: now.addingTimeInterval(-Double(d) * 86_400))
         }
-        try renderWindow("stats-pane", size: CGSize(width: WindowManager.settingsMinSize.width, height: 1300)) {
-            StatsPane().environment(app).background(Color.vyBgWindow)
-        }
+        let size = CGSize(width: WindowManager.settingsMinSize.width, height: 1700)
+        // The achievements card under the level card: open (the first time), with the last row's popover (below,
+        // over the cards that follow), and folded with and without something ready.
+        app.prefs.achievementsExpanded = true
+        try renderWindow("stats-pane", size: size) { StatsPane().environment(app).background(Color.vyBgWindow) }
+        AchievementsCardLayout.snapshotPopover = .regular
+        try renderWindow("stats-pane-popover", size: size) { StatsPane().environment(app).background(Color.vyBgWindow) }
+        AchievementsCardLayout.snapshotPopover = nil
+        app.prefs.achievementsExpanded = false
+        XCTAssertGreaterThan(app.achievements.readyCount, 0)
+        try renderWindow("stats-pane-folded-ready", size: size) { StatsPane().environment(app).background(Color.vyBgWindow) }
+        for a in app.achievements.all where a.isReady { app.achievements.stamp(a.id) }
+        try renderWindow("stats-pane-folded", size: size) { StatsPane().environment(app).background(Color.vyBgWindow) }
         let items = [("Sounds good, let’s do it that way.", "Slack"), ("Die Containerisierung mit Kubernetes erlaubt eine flexible Skalierung der Dienste.", "Pages"),
                      ("Hi Lena, I’ll look at the release first thing tomorrow.", "Mail")]
         try renderWindow("history-hover", size: CGSize(width: 560, height: 300)) {
@@ -462,4 +583,10 @@ final class AboutSnapshotTests: XCTestCase {
             }
         }
     }
+}
+
+/// The achievements card's paper, behind single stamps in the snapshots.
+private struct AchievementPaperBackground: View {
+    @Environment(\.colorScheme) private var scheme
+    var body: some View { RoundedRectangle(cornerRadius: 8).fill(AchievementPaper.background(scheme)) }
 }

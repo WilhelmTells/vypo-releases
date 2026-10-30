@@ -13,6 +13,7 @@ struct StatsPane: View {
         Form {
             Section {
                 Toggle("Collect stats", isOn: $prefs.collectStats)
+                    .onChange(of: prefs.collectStats) { _, on in if on { app.collectStatsSwitchedOn() } }
                 Toggle("Show level", isOn: $prefs.showLevel)
                 LabeledContent("Reset stats") {
                     DestructiveButton("Reset stats") { confirmReset = true }
@@ -22,6 +23,11 @@ struct StatsPane: View {
                     VStack(spacing: 10) {
                         if prefs.showLevel, prefs.collectStats {
                             LevelCard(level: app.level, preview: app.levelPreview)
+                        }
+                        // Under the level card, folding to one row (owner's decision, 2026-10-29); its popover reaches
+                        // over the cards below.
+                        if prefs.collectStats {
+                            AchievementsCard(store: app.achievements, expanded: $prefs.achievementsExpanded).zIndex(1)
                         }
                         row {
                             speedCard
