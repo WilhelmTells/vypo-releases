@@ -1837,6 +1837,26 @@
         }
       }
     },
+    "Heard: “%@” Another window was in front, so vypo didn’t paste it. Click into the field and try again.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gehört: „%@“ Ein anderes Fenster war vorne, deshalb hat vypo nicht eingefügt. Klick ins Feld und versuch es noch einmal."
+          }
+        }
+      }
+    },
+    "Heard: “%@” But it didn’t arrive in the field. Click into the field and try again.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gehört: „%@“ Aber es ist nicht im Feld angekommen. Klick ins Feld und versuch es noch einmal."
+          }
+        }
+      }
+    },
     "Heard: “%@” But vypo couldn’t paste it. Is Accessibility still on?": {
       "localizations": {
         "de": {
@@ -2303,6 +2323,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ich höre zu …"
+          }
+        }
+      }
+    },
+    "Loading speech model…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lädt Sprachmodell …"
           }
         }
       }
@@ -6120,6 +6150,146 @@
           "stringUnit": {
             "state": "translated",
             "value": "aufgeklappt"
+          }
+        }
+      }
+    },
+    "New: Spoken characters.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neu: Gesprochene Zeichen."
+          }
+        }
+      }
+    },
+    "Words like “comma” or “new line” get their own list, with more characters and the Spoken punctuation switch in one place.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wörter wie „Komma“ oder „neue Zeile“ bekommen eine eigene Liste, mit mehr Zeichen und dem Schalter für gesprochene Satzzeichen an einem Ort."
+          }
+        }
+      }
+    },
+    "Switch…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Umstellen …"
+          }
+        }
+      }
+    },
+    "Switch to Spoken characters…": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auf Gesprochene Zeichen umstellen …"
+          }
+        }
+      }
+    },
+    "Switch to Spoken characters": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auf Gesprochene Zeichen umstellen"
+          }
+        }
+      }
+    },
+    "Moves to Spoken characters": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wandert zu Gesprochene Zeichen"
+          }
+        }
+      }
+    },
+    "New in Spoken characters": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neu in Gesprochene Zeichen"
+          }
+        }
+      }
+    },
+    "Stays in Replacements": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bleibt in Ersetzungen"
+          }
+        }
+      }
+    },
+    "A backup of your Replacements is saved first.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vorher wird eine Sicherung deiner Ersetzungen gespeichert."
+          }
+        }
+      }
+    },
+    "Switch": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Umstellen"
+          }
+        }
+      }
+    },
+    "The backup couldn’t be saved, so nothing was changed.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Sicherung konnte nicht gespeichert werden, deshalb wurde nichts geändert."
+          }
+        }
+      }
+    },
+    "Spoken characters couldn’t be saved, so nothing was changed.": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gesprochene Zeichen konnten nicht gespeichert werden, deshalb wurde nichts geändert."
+          }
+        }
+      }
+    },
+    "Switched off": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ausgeschaltet"
+          }
+        }
+      }
+    },
+    "“%@”": {
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "„%@“"
           }
         }
       }

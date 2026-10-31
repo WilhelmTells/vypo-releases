@@ -15,6 +15,8 @@ actor ParakeetEngine: ASREngine {
 
     private var manager: AsrManager?
     private var loading: Task<AsrManager, Error>?
+    /// Set by the first successful prediction after a load (warm-up or dictation); cleared by `unload`.
+    private(set) var isWarm = false
     private(set) var lastTiming: TranscriptionTiming?
     /// A dictation left in the background and the next one must not predict on the same models at once.
     private let turns = TurnQueue()
@@ -28,6 +30,7 @@ actor ParakeetEngine: ASREngine {
 
     func load() async throws {
         guard manager == nil else { return }
+        let began = ContinuousClock.now
         // Concurrent callers share one load.
         let task = loading ?? Task { [directory, config] in
             let models = try await AsrModels.load(from: directory, version: Self.version)
@@ -38,7 +41,7 @@ actor ParakeetEngine: ASREngine {
         loading = task
         defer { loading = nil }
         manager = try await task.value
-        Log.asr.info("Loaded Parakeet Ultra")
+        Log.asr.info("Loaded Parakeet Ultra in \((ContinuousClock.now - began).milliseconds) ms")
     }
 
     func unload() async {
@@ -46,7 +49,34 @@ actor ParakeetEngine: ASREngine {
         loading = nil
         await manager?.cleanup()
         manager = nil
+        isWarm = false
     }
+
+    /// One second of silence, once per load. It waits for a running dictation and a dictation waits for it
+    /// (the queue is first come, first served), which costs the dictation at most the rest of a preparation
+    /// it would have had to do anyway. Not a dictation: nothing is saved, counted or shown.
+    func warmUp() async {
+        guard manager != nil, !isWarm else { return }
+        do {
+            try await turns.withTurn {
+                guard await !self.isWarm, let manager = await self.manager else { return }
+                Log.asr.notice("Warm-up started")
+                let clock = ContinuousClock()
+                let began = clock.now
+                var state = TdtDecoderState.make(decoderLayers: await manager.decoderLayerCount)
+                _ = try await manager.transcribe(AudioPadding.padded([Float](repeating: 0, count: Int(AudioRecorder.sampleRate))),
+                                                 decoderState: &state, language: nil)
+                await self.markWarm()
+                Log.asr.notice("Warm-up finished in \((clock.now - began).milliseconds) ms")
+            }
+        } catch is CancellationError {
+            Log.asr.notice("Warm-up cancelled")
+        } catch {
+            Log.asr.error("Warm-up failed: \(error.localizedDescription, privacy: .public)")
+        }
+    }
+
+    private func markWarm() { isWarm = true }
 
     /// vypo's language as FluidAudio's, which only uses its script: with a hint the decoder prefers a
     /// token in that script over a likelier one in another (Cyrillic "Слэш" for "Slash").
@@ -104,6 +134,7 @@ actor ParakeetEngine: ASREngine {
         var state = TdtDecoderState.make(decoderLayers: await manager.decoderLayerCount)
         let result = try await manager.transcribe(samples, decoderState: &state, language: language.map(Self.fluidLanguage))
         timing.decode = lap()
+        isWarm = true
         if timing.decode > Self.slowAfter {
             Log.asr.warning("Transcription of \(seconds, format: .fixed(precision: 1)) s of audio took \(timing.decode.milliseconds) ms")
         }

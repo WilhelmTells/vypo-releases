@@ -65,8 +65,19 @@ struct SpokenCharacter: Codable, Identifiable, Hashable, Sendable {
 
     var spokenText: String { spoken.joined(separator: ", ") }
 
-    var summary: String {
-        spoken.prefix(2).map { "“\($0)”" }.joined(separator: ", ") + (spoken.count > 2 ? " …" : "")
+    /// The first two spellings for the list, those of vypo's language first (“Comma” before “Komma” in English).
+    var summary: String { summary() }
+
+    func summary(quote: (String) -> String = { "“\($0)”" }) -> String {
+        summary(for: Lang(rawValue: String(Formatting.uiLocale.identifier.prefix(2))) ?? .en, quote: quote)
+    }
+
+    /// The first two spellings, those of `language` first, then the ones of no known language, then the others. Only
+    /// the display: the stored order stays.
+    func summary(for language: Lang, quote: (String) -> String = { "“\($0)”" }) -> String {
+        let rank = { (s: String) in SpokenCharacters.language(of: s).map { $0 == language ? 0 : 2 } ?? 1 }
+        let shown = spoken.enumerated().sorted { (rank($0.element), $0.offset) < (rank($1.element), $1.offset) }.map(\.element)
+        return shown.prefix(2).map(quote).joined(separator: ", ") + (spoken.count > 2 ? " …" : "")
     }
 }
 
@@ -99,6 +110,22 @@ enum SpokenCharacters {
             SpokenCharacter(spoken: ["Slash", "Schrägstrich"], output: "/", inSentence: [.prompt]),
             SpokenCharacter(spoken: ["Bindestrich", "Dash", "Strich"], output: "-", inSentence: []),
         ]
+    }
+
+    /// English or German for a spelling of the defaults (the words of `SpokenPunctuation` and the symbol words), nil
+    /// for any other, also the model's mishearings (“Sammy Colon”).
+    static func language(of spelling: String) -> Lang? {
+        let s = Replacements.normalized(spelling)
+        return [Lang.en, .de].first { knownSpellings($0).contains(s) }
+    }
+
+    private static func knownSpellings(_ language: Lang) -> Set<String> {
+        let symbols: [String] = switch language {
+        case .en: ["slash", "dash"]
+        case .de: ["schrägstrich", "bindestrich", "strich"]
+        default: []
+        }
+        return Set(SpokenPunctuation.phrases(language).map { $0.words.joined(separator: " ") } + symbols)
     }
 
     /// Whether `entry` is the user's version of the default `standard`: same output and a spelling in common.

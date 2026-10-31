@@ -63,13 +63,20 @@ struct TryItStep: View {
             if ready && !wasReady { bringForward() }
             wasReady = ready
         }
+        .onChange(of: fieldFocused && activeState != .inactive, initial: true) { _, focused in
+            model.tryItFieldFocused = focused
+        }
+        .onChange(of: model.tryItFocusRequests) { _, _ in
+            fieldFocused = true
+        }
+        .onDisappear { model.tryItFieldFocused = false }
         .onChange(of: app.pillBase) { _, mode in
             if mode == .listening || mode == .handsfree { outcome = nil }
         }
         .onChange(of: app.lastOutcome?.id) { _, id in
             guard let id, id != handled, let result = app.lastOutcome?.outcome else { return }
             handled = id
-            receive(result)
+            receive(result, id: id)
         }
     }
 
@@ -118,17 +125,29 @@ struct TryItStep: View {
         fieldFocused = true
     }
 
-    /// Maps what the dictation reported. A paste into vypo's own window counts only once the text is there.
-    private func receive(_ result: DictationOutcome) {
-        if case .pasted(let pasted) = result {
-            let wanted = pasted.trimmingCharacters(in: .whitespacesAndNewlines)
-            Task { @MainActor in
-                try? await Task.sleep(for: .milliseconds(700))
-                outcome = TryItState.outcome(for: result) { _ in text.contains(wanted) }
-            }
-        } else {
-            outcome = TryItState.outcome(for: result) { _ in false }
+    /// Maps what the dictation reported. A paste into vypo's own window counts only once the text is there: the field
+    /// is checked until the text shows up, and at the latest when the paste is done with (the clipboard restore).
+    private func receive(_ result: DictationOutcome, id: Int) {
+        let trusted = app.permissions.accessibilityTrusted
+        guard case .pasted(let pasted) = result else {
+            outcome = TryItState.outcome(for: result, accessibilityTrusted: trusted) { _ in false }
+            if case .clipboardOnly(let text) = result { Self.logOutcome(length: text.count, arrived: false, how: "no paste", app: app) }
+            return
         }
+        let wanted = pasted.trimmingCharacters(in: .whitespacesAndNewlines)
+        Task { @MainActor in
+            let arrived = await TryItWatch.textArrived(contains: { text.contains(wanted) },
+                                                       settled: { (app.settledOutcome?.id ?? 0) >= id })
+            outcome = TryItState.outcome(for: result, accessibilityTrusted: app.permissions.accessibilityTrusted) { _ in arrived }
+            let how = (app.settledOutcome?.id == id ? app.settledOutcome?.how : nil) ?? "not settled"
+            Self.logOutcome(length: wanted.count, arrived: arrived, how: how, app: app)
+        }
+    }
+
+    /// One line per Try it dictation: lengths and app IDs only, never the dictated text.
+    static func logOutcome(length: Int, arrived: Bool, how: String, app: AppState) {
+        let t = app.tryItTrace
+        Log.output.notice("Try it: expected \(length) characters, field held them: \(arrived ? "yes" : "no", privacy: .public); front at key press \(t.frontAtKeyPress, privacy: .public), at paste \(t.frontAtPaste, privacy: .public); brought forward: \(t.broughtForward ? "yes" : "no", privacy: .public); retried: \(t.retried ? "yes" : "no", privacy: .public); restore: \(how, privacy: .public); Accessibility: \(app.permissions.accessibilityTrusted ? "on" : "off", privacy: .public)")
     }
 
     // MARK: Field
@@ -211,19 +230,23 @@ struct TryItStep: View {
             Text("Inserted").font(OBFont.bodySemibold).foregroundStyle(Color.vySuccess)
         case .notInYourLanguages(let heard):
             icon("exclamationmark.triangle.fill", .vyWarning)
-            Text("Heard: “\(Self.shorten(heard))” \(Self.languageSentence(heard))")
-                .font(OBFont.body).foregroundStyle(Color.vyLabel).lineLimit(3)
+            lineText("Heard: “\(Self.shorten(heard))” \(Self.languageSentence(heard))")
         case .nothingHeard:
             icon("exclamationmark.triangle.fill", .vyWarning)
             Text("Didn’t hear anything. Check your microphone.").font(OBFont.body).foregroundStyle(Color.vyLabel)
         case .couldntPaste(let heard):
             icon("xmark.circle.fill", .vyDanger)
             if let heard {
-                Text("Heard: “\(Self.shorten(heard))” But vypo couldn’t paste it. Is Accessibility still on?")
-                    .font(OBFont.body).foregroundStyle(Color.vyLabel).lineLimit(3)
+                lineText("Heard: “\(Self.shorten(heard))” But vypo couldn’t paste it. Is Accessibility still on?")
             } else {
-                Text("vypo can’t paste without Accessibility. Is it still on?").font(OBFont.body).foregroundStyle(Color.vyLabel)
+                lineText("vypo can’t paste without Accessibility. Is it still on?")
             }
+        case .didntArrive(let heard):
+            icon("xmark.circle.fill", .vyDanger)
+            lineText("Heard: “\(Self.shorten(heard))” But it didn’t arrive in the field. Click into the field and try again.")
+        case .anotherWindowInFront(let heard):
+            icon("exclamationmark.triangle.fill", .vyWarning)
+            lineText("Heard: “\(Self.shorten(heard))” Another window was in front, so vypo didn’t paste it. Click into the field and try again.")
         case .modelFailed:
             icon("xmark.circle.fill", .vyDanger)
             Text("The speech model couldn’t be loaded.").font(OBFont.body).foregroundStyle(Color.vyLabel)
@@ -232,7 +255,7 @@ struct TryItStep: View {
 
     @ViewBuilder private func resultAction(_ line: TryItOutcome) -> some View {
         switch line {
-        case .inserted: EmptyView()
+        case .inserted, .didntArrive, .anotherWindowInFront: EmptyView()
         case .notInYourLanguages:
             Button("Choose languages") { model.step = OnboardingStep.languages.rawValue }.buttonStyle(.ob(.small))
         case .nothingHeard:
@@ -247,13 +270,20 @@ struct TryItStep: View {
         }
     }
 
+    /// The sentence wraps (up to four lines) and keeps its end; only the quoted text is shortened.
+    private func lineText(_ text: LocalizedStringKey) -> some View {
+        Text(text).font(OBFont.body).foregroundStyle(Color.vyLabel)
+            .lineLimit(4).fixedSize(horizontal: false, vertical: true)
+            .layoutPriority(1)
+    }
+
     private func icon(_ name: String, _ color: Color) -> some View {
         Image(systemName: name).foregroundStyle(color).font(.system(size: 16)).accessibilityHidden(true)
     }
 
     // MARK: Text helpers
 
-    static func shorten(_ text: String, limit: Int = 48) -> String {
+    static func shorten(_ text: String, limit: Int = 40) -> String {
         let t = text.trimmingCharacters(in: .whitespacesAndNewlines)
         return t.count > limit ? String(t.prefix(limit)) + "…" : t
     }

@@ -104,6 +104,8 @@ enum DefaultsKey {
     static let wordsLayout = "wordsLayout"
     /// Words → Spoken characters on or off (`spokenCharacters` layout).
     static let spokenCharacters = "spokenCharacters"
+    /// Words → Replacements, `legacy` layout: “Not now” on the hint about Spoken characters; the link stays.
+    static let spokenCharactersHintDismissed = "spokenCharactersHintDismissed"
     static let correctionStrength = "correctionStrength"
     static let saveHistory = "saveHistory"
     static let historyRetention = "historyRetention"
@@ -162,6 +164,7 @@ final class Preferences {
             DefaultsKey.fillerWordsDE: FillerRemover.defaultWords(.de),
             DefaultsKey.spokenPunctuation: true,
             DefaultsKey.spokenCharacters: true,
+            DefaultsKey.spokenCharactersHintDismissed: false,
             DefaultsKey.typographicQuotes: true,
             DefaultsKey.preferBuiltInMic: true,
             DefaultsKey.hideFromCapture: true,
@@ -195,6 +198,7 @@ final class Preferences {
         fillerWordsDE = defaults.stringArray(forKey: DefaultsKey.fillerWordsDE) ?? FillerRemover.defaultWords(.de)
         spokenPunctuation = defaults.bool(forKey: DefaultsKey.spokenPunctuation)
         spokenCharacters = defaults.bool(forKey: DefaultsKey.spokenCharacters)
+        spokenCharactersHintDismissed = defaults.bool(forKey: DefaultsKey.spokenCharactersHintDismissed)
         typographicQuotes = defaults.bool(forKey: DefaultsKey.typographicQuotes)
         preferBuiltInMic = defaults.bool(forKey: DefaultsKey.preferBuiltInMic)
         hideFromCapture = defaults.bool(forKey: DefaultsKey.hideFromCapture)
@@ -255,6 +259,9 @@ final class Preferences {
     var fillerWordsDE: [String] { didSet { defaults.set(fillerWordsDE, forKey: DefaultsKey.fillerWordsDE) } }
     var spokenPunctuation: Bool { didSet { defaults.set(spokenPunctuation, forKey: DefaultsKey.spokenPunctuation) } }
     var spokenCharacters: Bool { didSet { defaults.set(spokenCharacters, forKey: DefaultsKey.spokenCharacters) } }
+    var spokenCharactersHintDismissed: Bool {
+        didSet { defaults.set(spokenCharactersHintDismissed, forKey: DefaultsKey.spokenCharactersHintDismissed) }
+    }
     var typographicQuotes: Bool { didSet { defaults.set(typographicQuotes, forKey: DefaultsKey.typographicQuotes) } }
     var preferBuiltInMic: Bool { didSet { defaults.set(preferBuiltInMic, forKey: DefaultsKey.preferBuiltInMic) } }
     var hideFromCapture: Bool { didSet { defaults.set(hideFromCapture, forKey: DefaultsKey.hideFromCapture) } }

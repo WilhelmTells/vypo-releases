@@ -336,9 +336,27 @@ struct TermSheet: View {
 struct ReplacementsSection: View {
     @Environment(AppState.self) private var app
     @State private var editing: Replacement?
+    @State private var moving = false
 
     var body: some View {
         Section {
+            // A Mac from before 0.4.0: the move to Spoken characters, only on a click. “Not now” leaves the link below.
+            if app.wordsLayout == .legacy && !app.prefs.spokenCharactersHintDismissed {
+                HStack(alignment: .top, spacing: Space.s3) {
+                    IconTile(symbol: "sparkles", tint: .vyAccent)
+                    RowLabel(title: "New: Spoken characters.",
+                             description: "Words like “comma” or “new line” get their own list, with more characters and the Spoken punctuation switch in one place.")
+                    Spacer()
+                    Button("Switch…") { moving = true }
+                        .buttonStyle(.plain)
+                        .foregroundStyle(Color.vyAccent)
+                        .fixedSize()
+                    Button("Not now") { app.prefs.spokenCharactersHintDismissed = true }
+                        .buttonStyle(.plain)
+                        .foregroundStyle(Color.vyLabelSecondary)
+                        .fixedSize()
+                }
+            }
             if app.wordsLayout == .spokenCharacters && app.replacements.items.isEmpty {
                 // A plain String: as a LocalizedStringKey the address would become a link.
                 Text(String(localized: "Your own words and what vypo writes for them, e.g. “my email” becomes name@example.com."))
@@ -375,6 +393,12 @@ struct ReplacementsSection: View {
                         .foregroundStyle(Color.vyLabelSecondary)
                 }
             }
+            if app.wordsLayout == .legacy && app.prefs.spokenCharactersHintDismissed {
+                Button("Switch to Spoken characters…") { moving = true }
+                    .buttonStyle(.plain)
+                    .font(.callout)
+                    .foregroundStyle(Color.vyAccent)
+            }
         } header: {
             Text("Replacements")
         } footer: {
@@ -382,6 +406,93 @@ struct ReplacementsSection: View {
         }
         .sheet(item: $editing) { r in
             ReplacementSheet(replacement: r).environment(app)
+        }
+        .sheet(isPresented: $moving) {
+            MoveToSpokenCharactersSheet().environment(app)
+        }
+    }
+}
+
+/// Words → Replacements → Switch…: what the move to Spoken characters will do, before it does it.
+struct MoveToSpokenCharactersSheet: View {
+    @Environment(AppState.self) private var app
+    @Environment(\.dismiss) private var dismiss
+    @State private var failed: SpokenCharactersMoveError?
+
+    var body: some View {
+        // Computed from the lists as they are now; `moveToSpokenCharacters` computes the same again. The new defaults get
+        // new ids each time, so the rows go by output (unique in Spoken characters).
+        let move = SpokenCharacters.migration(from: app.replacements.items, spokenPunctuation: app.prefs.spokenPunctuation)
+        VStack(alignment: .leading, spacing: Space.s3) {
+            Text("Switch to Spoken characters").font(.title3.weight(.semibold))
+            Form {
+                if !move.moved.isEmpty {
+                    Section("Moves to Spoken characters") {
+                        ForEach(move.moved, id: \.output) { characterRow($0) }
+                    }
+                }
+                if !move.added.isEmpty {
+                    Section("New in Spoken characters") {
+                        ForEach(move.added, id: \.output) { characterRow($0) }
+                    }
+                }
+                if !move.ownReplacements.isEmpty {
+                    Section("Stays in Replacements") {
+                        ForEach(move.ownReplacements) { r in
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(verbatim: r.summary(quote: Self.quote)).foregroundStyle(Color.vyLabel)
+                                Text("becomes \(Replacements.display(r.output))")
+                                    .font(.callout).foregroundStyle(Color.vyLabelSecondary)
+                            }
+                        }
+                    }
+                }
+            }
+            .formStyle(.grouped)
+            .frame(height: 380)
+            if let failed {
+                Text(failed == .backup ? String(localized: "The backup couldn’t be saved, so nothing was changed.")
+                                       : String(localized: "Spoken characters couldn’t be saved, so nothing was changed."))
+                    .font(.callout)
+                    .foregroundStyle(Color.vyDanger)
+                    .fixedSize(horizontal: false, vertical: true)
+            } else {
+                Text("A backup of your Replacements is saved first.")
+                    .font(.callout)
+                    .foregroundStyle(Color.vyLabelSecondary)
+            }
+            HStack {
+                Spacer()
+                Button("Cancel", role: .cancel) { dismiss() }
+                    .keyboardShortcut(.cancelAction)
+                Button("Switch") {
+                    do {
+                        try app.moveToSpokenCharacters()
+                        dismiss()
+                    } catch {
+                        failed = error as? SpokenCharactersMoveError ?? .write
+                    }
+                }
+                .buttonStyle(.borderedProminent)
+                .keyboardShortcut(.defaultAction)
+            }
+        }
+        .padding(Space.s5)
+        .frame(width: 540)
+    }
+
+    /// The quotes of the app's language, as in the hint („Komma“ in German).
+    private static func quote(_ s: String) -> String { String(localized: "“\(s)”") }
+
+    private func characterRow(_ c: SpokenCharacter) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(verbatim: c.summary(quote: Self.quote)).foregroundStyle(Color.vyLabel)
+            Text("becomes \(Replacements.display(c.output))")
+                .font(.callout).foregroundStyle(Color.vyLabelSecondary)
+            Text(SpokenCharacters.listNote(c.inSentence)).font(.caption).foregroundStyle(Color.vyLabelSecondary)
+            if !c.enabled {
+                Text("Switched off").font(.caption).foregroundStyle(Color.vyLabelSecondary)
+            }
         }
     }
 }

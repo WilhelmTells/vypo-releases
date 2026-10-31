@@ -38,11 +38,11 @@ final class StatusItemController: NSObject {
             lastInsertions = insertions
             animator.inserted()
         }
-        let wasBusy = lastMode.isRecording || lastMode == .processing
-        let isBusy = mode.isRecording || mode == .processing
+        let wasBusy = lastMode.isRecording || lastMode.isProcessing
+        let isBusy = mode.isRecording || mode.isProcessing
         if mode.isRecording && !lastMode.isRecording {
             animator.beginRecording()
-        } else if mode == .processing && lastMode != .processing {
+        } else if mode.isProcessing && !lastMode.isProcessing {
             animator.beginProcessing()
         } else if case .error = mode, mode != lastMode {
             animator.failed()

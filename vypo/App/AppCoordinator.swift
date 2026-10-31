@@ -73,11 +73,10 @@ final class AppCoordinator {
             self.pill.reevaluateScreen()
             // Early, so an Electron app has its accessibility tree ready by the time of the paste.
             if let pid = ctx.pid { Task.detached { TextFieldProbe.enableAccessibility(pid: pid) } }
-            // Load the model while the user is still talking.
-            if let id = self.models.effectiveModel {
-                Task { try? await self.models.engines.load(id) }
-            }
+            // Load the model while the user is still talking (and warm it up, if that has not happened yet).
+            self.models.preload()
         }
+        dictation.willBegin = { [weak self] in self?.tryItGate.keyPressed() }
         dictation.modeForApp = { [weak app] bundleID in app?.profiles.mode(for: bundleID) ?? .standard }
         dictation.preflight = { [weak self] ctx in
             guard let self else { return nil }
@@ -204,6 +203,14 @@ final class AppCoordinator {
         let memoryAtEnd = MemorySnapshot.current()
         let pause = lastProcessed.map { ctx.startedAt.timeIntervalSince($0) }
         defer { lastProcessed = Date() }
+        // Tells the user why it takes long: the model is not ready yet, or the recognition runs over 5 s.
+        let status = LoadingStatusWatch(isReady: { [models] in models.isReady }, show: { [weak self] in self?.app.showLoadingModel(for: job) })
+        status.start()
+        defer {
+            status.stop()
+            // Over, but the text is not in the field yet: back to the dots for the rest.
+            if !job.isLeftover, app.pillBase == .loadingModel { app.setPill(.processing) }
+        }
         let raw: String
         do {
             raw = try await models.transcribe(AudioPadding.padded(samples), with: modelID, hint: LanguageRouter.scriptHint(for: languages))
@@ -269,6 +276,20 @@ final class AppCoordinator {
         Log.asr.notice("\(timing, privacy: .public)")
         app.lastDictation = text
         if prefs.pasteAutomatically {
+            // Try it belongs to the onboarding field: bring vypo forward first, and never paste into another app.
+            let route = await tryItGate.beforePaste()
+            guard !Task.isCancelled else { return nil }
+            if job.isLeftover { return (raw, text, language) }
+            let trace = tryItGate.trace
+            app.tryItTrace = trace
+            if route == .refused {
+                job.inserted = true
+                clipboard.keep(text, restoreAfterPaste: prefs.restoreClipboard, paste: false)
+                Log.output.notice("Try it: not pasted, vypo could not come to the front (front at key press \(trace.frontAtKeyPress, privacy: .public), at paste \(trace.frontAtPaste, privacy: .public)); the text stays on the clipboard")
+                app.didInsertText()
+                app.report(.anotherWindowInFront(text))
+                return (raw, text, language)
+            }
             // No text field: paste anyway (Accessibility may be wrong), but leave the text on the clipboard.
             // In the Finder, ⌘V would make a file of it, so only the clipboard.
             let front = NSWorkspace.shared.frontmostApplication
@@ -290,7 +311,18 @@ final class AppCoordinator {
             switch output {
             case .paste:
                 clipboard.settle()
-                Paster.paste(text, restoreClipboard: prefs.restoreClipboard)
+                let outcomeID = (app.lastOutcome?.id ?? 0) + 1
+                let restorer = Paster.paste(text, restoreClipboard: prefs.restoreClipboard) { [weak app] reason in
+                    app?.pasteSettled(id: outcomeID, how: Self.settleName(reason))
+                }
+                // Try it only: if the field has not read the paste after a second, press ⌘V once more.
+                if let restorer, tryItGate.isOpen() {
+                    Task { @MainActor [weak self] in
+                        try? await Task.sleep(for: TryItRouting.retryAfter)
+                        guard let self, self.tryItGate.retryPasteIfUnread(restorer, post: { Paster.postKey(kVK_ANSI_V, flags: .maskCommand) }) else { return }
+                        self.app.tryItTrace.retried = true
+                    }
+                }
             case .pasteAndKeep: clipboard.keep(text, restoreAfterPaste: prefs.restoreClipboard, paste: true)
             case .keep: clipboard.keep(text, restoreAfterPaste: prefs.restoreClipboard, paste: false)
             }
@@ -314,6 +346,47 @@ final class AppCoordinator {
             app.showNotice(.copied)
         }
         return (raw, text, language)
+    }
+
+    /// How the clipboard restore ended, for the Try it log: "read" (the app read the paste), "timeout" or "other".
+    static func settleName(_ reason: RestorePolicy.Reason?) -> String {
+        switch reason {
+        case .afterRead?: "read"
+        case .timeout?: "timeout"
+        case .fallback?: "fallback"
+        case nil: "other"
+        }
+    }
+
+    // MARK: Try it
+
+    /// Gate for the onboarding's Try it step: its dictation belongs to the onboarding field.
+    private(set) lazy var tryItGate: TryItGate = {
+        let gate = TryItGate()
+        gate.isOpen = { [weak self] in
+            guard let self, let model = self.onboarding else { return false }
+            return model.step == OnboardingStep.tryIt.rawValue && self.windows.onboarding != nil
+        }
+        gate.front = { [weak self] in
+            guard let self else { return .init(vypoFrontmost: false, fieldFocused: false) }
+            let key = NSApp.isActive && self.windows.onboarding?.isKeyWindow == true
+            return .init(vypoFrontmost: key, fieldFocused: key && self.onboarding?.tryItFieldFocused == true)
+        }
+        gate.bringForward = { [weak self] in self?.bringTryItForward() }
+        return gate
+    }()
+
+    /// The onboarding window to the front, key, with the cursor in the field. If macOS does not let vypo activate
+    /// itself, open the app once more through LaunchServices, which does bring it forward.
+    private func bringTryItForward() {
+        guard let model = onboarding else { return }
+        windows.showOnboarding(step: model.step)
+        model.tryItFocusRequests += 1
+        if !NSApp.isActive {
+            let configuration = NSWorkspace.OpenConfiguration()
+            configuration.activates = true
+            NSWorkspace.shared.openApplication(at: Bundle.main.bundleURL, configuration: configuration)
+        }
     }
 
     /// What the pill says when the language filter keeps a transcript out of the field. Without History

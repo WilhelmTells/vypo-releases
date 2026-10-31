@@ -45,4 +45,17 @@ final class TestIsolationTests: XCTestCase {
         LoginItem.applyDefaultOnce(defaults)
         XCTAssertFalse(defaults.bool(forKey: "openAtLoginConfigured"))
     }
+
+    /// Core ML's E5 cache follows the bundle ID, and the test host has the installed app's. `scripts/test.sh` therefore
+    /// gives the host a home of its own; the installed vypo's cache is never filled or cleaned by a test run.
+    func testTheHostsCoreMLCacheIsNotTheInstalledAppsOne() throws {
+        guard ProcessInfo.processInfo.environment["CFFIXED_USER_HOME"] != nil else {
+            throw XCTSkip("started without scripts/test.sh, which gives the test host its own home")
+        }
+        let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0].standardizedFileURL.path
+        let real = (("~/Library/Caches" as NSString).expandingTildeInPath as NSString).standardizingPath
+        let realHome = getpwuid(getuid()).map { String(cString: $0.pointee.pw_dir) } ?? ""
+        XCTAssertFalse(caches.hasPrefix(realHome + "/Library/Caches"), "the host's caches folder is \(caches), not under \(real)")
+        XCTAssertTrue(caches.contains("build.noindex/test-home"))
+    }
 }

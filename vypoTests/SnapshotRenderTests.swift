@@ -73,6 +73,45 @@ final class SnapshotRenderTests: XCTestCase {
         return app
     }
 
+    /// 0.4.1: the move to Spoken characters for a seeded legacy list (Komma "Prompt only", Doppelpunkt off, Strich
+    /// removed, an own entry), with “Spoken punctuation” on and off: the preview sheet, then the Words pane after the move.
+    func testMoveToSpokenCharacters() throws {
+        func r(_ s: [String], _ o: String, _ on: Bool = true, _ sc: SentenceScope = .everywhere) -> Replacement {
+            Replacement(spoken: s, output: o, enabled: on, inSentence: sc)
+        }
+        let seed = [r(["new line", "neue Zeile"], "\n"), r(["new paragraph", "neuer Absatz"], "\n\n"),
+                    r(["Slash", "Schrägstrich"], "/", true, .promptOnly),
+                    r(["Semikolon", "Semicolon", "Semi-Kolon", "Semi Kolon", "Semikolen", "Sammy Colon", "Semikodon", "Siemikulon"], ";", true, .promptOnly),
+                    r(["Doppelpunkt"], ":", false, .promptOnly), r(["Punkt", "Period", "Full stop"], ".", true, .never),
+                    r(["Komma", "Comma"], ",", true, .promptOnly), r(["Bindestrich", "Dash"], "-", true, .never),
+                    r(["Gruß"], "Viele Grüße")]
+        for on in [true, false] {
+            let app = sampleApp(.legacy)
+            app.prefs.spokenPunctuation = on
+            try app.replacements.replaceAll(seed)
+            let tag = on ? "punct-on" : "punct-off"
+            try renderWindow("move-sheet-\(tag)", size: CGSize(width: 540, height: 560)) {
+                MoveToSpokenCharactersSheet().environment(app).background(Color.vyBgWindow)
+            }
+            // The sheet's list scrolls: the same lists cut to the entries in question, so they sit in the visible part.
+            let few = Array(seed.filter { [":", ",", "-"].contains($0.output) }.reversed().sorted { $0.output < $1.output })
+            let short = sampleApp(.legacy)
+            short.prefs.spokenPunctuation = on
+            try short.replacements.replaceAll(few)
+            try renderWindow("move-sheet-few-\(tag)", size: CGSize(width: 540, height: 560)) {
+                MoveToSpokenCharactersSheet().environment(short).background(Color.vyBgWindow)
+            }
+            try short.moveToSpokenCharacters()
+            try renderWindow("move-list-\(tag)", size: CGSize(width: 560, height: 560)) {
+                SpokenCharactersSheet().environment(short).background(Color.vyBgWindow)
+            }
+            try app.moveToSpokenCharacters()
+            try renderWindow("move-after-\(tag)", size: CGSize(width: WindowManager.settingsMinSize.width, height: 2200)) {
+                WordsPane().environment(app).background(Color.vyBgWindow)
+            }
+        }
+    }
+
     /// The mascot in a few poses: rest, legs swung, shouting with eyes shut, the raven, the fanfare, ruffled.
     func testMascotPoses() throws {
         var swung = MascotPose(); swung.legL = 12; swung.legR = -12
@@ -474,7 +513,7 @@ final class SnapshotRenderTests: XCTestCase {
 
     func testPillStates() throws {
         let modes: [PillMode] = [
-            .listening, .processing, .handsfree,
+            .listening, .processing, .loadingModel, .handsfree,
             .error(.modelMissing), .add, .added(.termAdded("TikTok")), .added(.copied), .added(.onClipboard), .added(.savedToHistory), .added(.collectingDiagnostics),
         ]
         try render("pill", width: 300) {
@@ -483,6 +522,19 @@ final class SnapshotRenderTests: XCTestCase {
                     StaticPill(mode: m, level: { 0.7 })
                 }
             }
+        }
+    }
+
+    /// The dots and the loading status, through an offscreen window (ImageRenderer draws only the pills' outlines).
+    func testLoadingStatusPill() throws {
+        try renderWindow("pill-loading", size: CGSize(width: 300, height: 170)) {
+            VStack(spacing: 14) {
+                StaticPill(mode: .processing, level: { 0.7 })
+                StaticPill(mode: .loadingModel, level: { 0.7 })
+                StaticPill(mode: .added(.collectingDiagnostics), level: { 0.7 })
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color.vyBgWindow)
         }
     }
 

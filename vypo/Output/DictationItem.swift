@@ -93,6 +93,10 @@ final class ClipboardRestorer {
     private let pasteboard: NSPasteboard
     private var pasteAt: ContinuousClock.Instant?
     private var task: Task<Void, Never>?
+    /// Why the restore ran, once it has (nil for a restore before the next dictation, or not yet).
+    private(set) var finishReason: RestorePolicy.Reason?
+    /// When the ⌘V was posted the second time (Try it only); the timeout counts from then, so the retry can still be read.
+    private(set) var retriedAt: ContinuousClock.Instant?
 
     /// Writes `text` to the pasteboard; `saved` is the clipboard from before.
     init(text: String, saved: Paster.Snapshot, pasteboard: NSPasteboard, policy: RestorePolicy) {
@@ -105,6 +109,18 @@ final class ClipboardRestorer {
     }
 
     var stillOurs: Bool { pasteboard.changeCount == change }
+    /// Time since the first ⌘V, and whether the app has asked for the text since then.
+    var sincePaste: Duration { pasteAt.map { ContinuousClock.now - $0 } ?? .zero }
+    var wasRead: Bool { item.reads.firstRead != nil }
+
+    /// Posts the ⌘V once more and gives the timeout a new start. Only if still waiting with our item on the pasteboard.
+    @discardableResult
+    func repaste(post: () -> Void) -> Bool {
+        guard isWaiting, stillOurs, retriedAt == nil else { return false }
+        retriedAt = .now
+        post()
+        return true
+    }
     var isWaiting: Bool { task != nil }
 
     /// The ⌘V is about to be posted (by vypo or by you): from now on a read counts, and the restore is timed.
@@ -117,7 +133,7 @@ final class ClipboardRestorer {
             var due = policy.due(pasteAt: start, firstRead: nil, readBeforePaste: false)
             while !Task.isCancelled {
                 let reads = item.reads
-                due = policy.due(pasteAt: start, firstRead: reads.firstRead, readBeforePaste: reads.readBeforePaste)
+                due = policy.due(pasteAt: retriedAt ?? start, firstRead: reads.firstRead, readBeforePaste: reads.readBeforePaste)
                 let now = ContinuousClock.now
                 if now >= due.at { break }
                 try? await Task.sleep(for: min(due.at - now, .milliseconds(10)))
@@ -143,6 +159,7 @@ final class ClipboardRestorer {
 
     private func finish(start: ContinuousClock.Instant, reason: RestorePolicy.Reason?, app: String) {
         task = nil
+        finishReason = reason
         let untouched = stillOurs
         if untouched { Paster.restore(saved, pasteboard) }
         let reads = item.reads

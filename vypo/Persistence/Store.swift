@@ -42,12 +42,17 @@ struct Store: Sendable {
 
     func save<T: Encodable>(_ value: T, to name: String) {
         do {
-            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-            let data = try Self.encoder.encode(value)
-            try data.write(to: url(name), options: .atomic)
+            try write(value, to: name)
         } catch {
             Log.store.error("Could not write \(name, privacy: .public): \(error.localizedDescription, privacy: .public)")
         }
+    }
+
+    /// `save` for a caller that must know it worked (the move to Spoken characters).
+    func write<T: Encodable>(_ value: T, to name: String) throws {
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let data = try Self.encoder.encode(value)
+        try data.write(to: url(name), options: .atomic)
     }
 
     static let encoder: JSONEncoder = {

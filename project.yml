@@ -57,8 +57,8 @@ targets:
       properties:
         CFBundleDisplayName: vypo
         CFBundleName: vypo
-        CFBundleShortVersionString: "0.4.0"
-        CFBundleVersion: "4"
+        CFBundleShortVersionString: "0.4.1"
+        CFBundleVersion: "5"
         # Updates (Sparkle). The feed address stays the same when the files move: the website redirects it.
         SUFeedURL: "https://wilhelmtells.com/vypo/appcast.xml"
         SUPublicEDKey: "JZUAtmYxrDDdfgeaCJGxbAZ8Ll+rmgBxuYSL2wKVzJY="

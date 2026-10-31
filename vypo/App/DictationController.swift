@@ -45,6 +45,8 @@ final class DictationController {
     var preflight: (RecordingContext) -> PillError? = { _ in nil }
     /// The frontmost app's profile mode (§23.5).
     var modeForApp: (String?) -> AppMode = { _ in .standard }
+    /// The dictation key went down and a recording is about to start (the onboarding's Try it brings its window forward).
+    var willBegin: () -> Void = {}
     /// Called when a recording starts (pill screen, model preload).
     var onRecordingStarted: (RecordingContext) -> Void = { _ in }
     /// Transcribes, cleans up and pastes. Must check for cancellation and `DictationJob.isLeftover` before pasting.
@@ -149,6 +151,7 @@ final class DictationController {
             return begin(handsFree: handsFree)
         }
         if app.pillBase == .add { app.cancelAdd() }
+        willBegin()
 
         let front = NSWorkspace.shared.frontmostApplication
         var ctx = RecordingContext(bundleID: front?.bundleIdentifier, appName: front?.localizedName,
@@ -248,7 +251,7 @@ final class DictationController {
             if self.leftover?.job === job { self.leftover = nil }
             guard self.processingJob === job else { return }
             self.phase = .idle
-            if self.app.pillBase == .processing { self.app.setPill(.ready) }
+            if self.app.pillBase.isProcessing { self.app.setPill(.ready) }
             self.processingJob = nil
             self.processingTask = nil
         }

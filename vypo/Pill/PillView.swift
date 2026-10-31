@@ -163,6 +163,15 @@ struct PillView: View {
                 .buttonStyle(.plain)
                 .accessibilityLabel("Stop recording")
             }
+        case .loadingModel:
+            row(leading: PillMetrics.padding, trailing: PillMetrics.padding, spacing: 6) {
+                WorkingDots(color: ink.secondary)
+                Text(PillMode.loadingModelText)
+                    .font(.system(size: 12))
+                    .foregroundStyle(ink.primary)
+                    .fixedSize()
+            }
+            .allowsHitTesting(false)
         case .error(let error):
             row(leading: PillMetrics.padding, trailing: PillMetrics.padding) {
                 Image(systemName: "exclamationmark.triangle.fill")

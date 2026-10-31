@@ -6,6 +6,7 @@ set -uo pipefail
 cd "$(dirname "$0")/.."
 
 xcodegen generate >/dev/null
+. scripts/test-home.sh   # the test host gets its own home, so its Core ML cache is not the installed vypo's
 # build.noindex keeps Spotlight from listing the test host as another vypo.
 xcodebuild -project vypo.xcodeproj -scheme vypo -destination 'platform=macOS,arch=arm64' \
   -derivedDataPath build.noindex/dd test "$@"

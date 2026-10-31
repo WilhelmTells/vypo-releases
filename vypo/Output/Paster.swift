@@ -73,16 +73,27 @@ enum Paster {
     /// Pastes `text` into the focused app. The dictation is a promised item, so vypo sees when the app reads it;
     /// the clipboard comes back shortly after that on its own, so the caller (and the pill) doesn't wait for it.
     /// Without “Restore clipboard” the text is simply copied.
-    static func paste(_ text: String, restoreClipboard: Bool, policy: RestorePolicy = .standard) {
+    /// `onSettled` is called when the paste is done with: the clipboard restore finished (with its reason), or, without
+    /// “Restore clipboard”, a short wait after the ⌘V. The onboarding's Try it step looks for its text until then.
+    @discardableResult
+    static func paste(_ text: String, restoreClipboard: Bool, policy: RestorePolicy = .standard,
+                      onSettled: (@MainActor (RestorePolicy.Reason?) -> Void)? = nil) -> ClipboardRestorer? {
         let pb = NSPasteboard.general
         guard restoreClipboard else {
             copy(text)
             postKey(kVK_ANSI_V, flags: .maskCommand)
-            return
+            if let onSettled {
+                Task { @MainActor in
+                    try? await Task.sleep(for: .milliseconds(500))
+                    onSettled(nil)
+                }
+            }
+            return nil
         }
         let restorer = ClipboardRestorer(text: text, saved: snapshot(pb), pasteboard: pb, policy: policy)
-        restorer.pasted()
+        restorer.pasted { [weak restorer] in onSettled?(restorer?.finishReason) }
         postKey(kVK_ANSI_V, flags: .maskCommand)
+        return restorer
     }
 
     /// Marks vypo's own key presses, so the event tap can tell them from yours.

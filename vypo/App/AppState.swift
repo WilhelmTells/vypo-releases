@@ -9,11 +9,11 @@ final class AppState {
     let levelMeter = LevelMeter()
     let pillAdd = PillAddModel()
     let glossary: GlossaryStore
-    /// Decided once, before `replacements` reads its file.
-    let wordsLayout: WordsLayout
+    /// Decided once, before `replacements` reads its file. `legacy` changes only by `moveToSpokenCharacters`.
+    private(set) var wordsLayout: WordsLayout
     let replacements: ReplacementStore
     /// Only in the `spokenCharacters` layout.
-    let spokenCharacters: SpokenCharacterStore?
+    private(set) var spokenCharacters: SpokenCharacterStore?
     let history: HistoryStore
     let profiles: AppProfileStore
     let stats: StatsStore
@@ -47,6 +47,7 @@ final class AppState {
     var models: ModelService?
     /// Sparkle; nil under tests, which must not look for updates.
     var updates: Updates?
+    private let store: Store
     @ObservationIgnored private var transientToken = 0
     @ObservationIgnored private var appBeforeAdd: NSRunningApplication?
 
@@ -66,6 +67,12 @@ final class AppState {
     /// How the last dictation ended, with a counter so the same outcome twice still changes (the onboarding's Try it
     /// step reports it).
     private(set) var lastOutcome: (id: Int, outcome: DictationOutcome)?
+    /// The id of the last outcome whose paste is done with (the clipboard restore finished), and how: "read", "timeout"
+    /// or "other". Try it looks for its text in the field until then.
+    private(set) var settledOutcome: (id: Int, how: String)?
+    /// What the log says about the last Try it dictation's windows (set by the coordinator).
+    @ObservationIgnored var tryItTrace = TryItGate.Trace()
+    func pasteSettled(id: Int, how: String) { settledOutcome = (id, how) }
     /// While onboarding is on a step before Try it, the dictation key only shows that it was pressed.
     var dictationBlocked = false
     /// The dictation key went down or up (step 5 of onboarding shows the press), whatever `dictationBlocked` says.
@@ -80,6 +87,7 @@ final class AppState {
 
     init(prefs: Preferences = Preferences(), store: Store = .shared, calendar: Calendar = .current) {
         self.prefs = prefs
+        self.store = store
         let glossary = GlossaryStore(store: store)
         self.glossary = glossary
         let wordsLayout = WordsLayout.resolve(store: store, defaults: prefs.defaults)
@@ -110,6 +118,41 @@ final class AppState {
         }
     }
 
+    // MARK: Words layout
+
+    /// Words → Replacements → Switch… on a `legacy` Mac, only on the user's click, at once. In this order:
+    /// 1. the backup (`SpokenCharactersBackup`); if it fails, nothing changes,
+    /// 2. `spokenCharacters.json`, before `SpokenCharacterStore` reads it (without the file it would write the full
+    ///    defaults and bring back deleted ones),
+    /// 3. what is left of `replacements.json`,
+    /// 4. the layout in the preferences and here, with the store; “Write spoken characters” is on.
+    /// “Spoken punctuation” stays as it was (it is in the backup). Not a new own replacement: no achievement moves.
+    func moveToSpokenCharacters(now: Date = Date()) throws {
+        guard wordsLayout == .legacy else { return }
+        let move = SpokenCharacters.migration(from: replacements.items, spokenPunctuation: prefs.spokenPunctuation)
+        let backup: URL
+        do {
+            backup = try SpokenCharactersBackup.write(store: store, defaults: prefs.defaults, replacements: replacements.items, now: now)
+        } catch {
+            Log.store.error("Spoken characters: the backup failed, nothing changed: \(error.localizedDescription, privacy: .public)")
+            throw SpokenCharactersMoveError.backup
+        }
+        do {
+            try store.write(move.characters, to: SpokenCharacterStore.file)
+            try replacements.replaceAll(move.ownReplacements)
+        } catch {
+            // Without the characters file the Mac stays `legacy` as it was; `replacements.json` is written last.
+            try? FileManager.default.removeItem(at: store.url(SpokenCharacterStore.file))
+            Log.store.error("Spoken characters: could not write the lists, nothing changed: \(error.localizedDescription, privacy: .public)")
+            throw SpokenCharactersMoveError.write
+        }
+        prefs.defaults.set(WordsLayout.spokenCharacters.rawValue, forKey: DefaultsKey.wordsLayout)
+        prefs.spokenCharacters = true
+        spokenCharacters = SpokenCharacterStore(store: store)
+        wordsLayout = .spokenCharacters
+        Log.store.notice("Words layout: moved to spokenCharacters, \(move.moved.count) moved, \(move.added.count) new, \(move.ownReplacements.count) stay; backup \(backup.lastPathComponent, privacy: .public)")
+    }
+
     // MARK: Transient pill states
 
     /// Shows a mode for a while, then returns to `ready` if nothing else happened.
@@ -121,6 +164,13 @@ final class AppState {
             guard let self, self.transientToken == token, self.pillBase == mode else { return }
             self.pillBase = .ready
         }
+    }
+
+    /// A dictation in processing waits for the speech model (or runs long): the dots become “Loading speech model…”.
+    /// Only for the dictation the pill belongs to: not for a leftover, and not over an error or notice.
+    func showLoadingModel(for job: DictationJob) {
+        guard !job.isLeftover, pillBase == .processing else { return }
+        setPill(.loadingModel)
     }
 
     func showError(_ error: PillError) {
@@ -235,6 +285,12 @@ final class AppState {
         case .secureInput, .offInThisApp, .noRecording, .notUnderstood: break
         }
     }
+}
+
+/// Why `AppState.moveToSpokenCharacters` changed nothing.
+enum SpokenCharactersMoveError: Error {
+    case backup
+    case write
 }
 
 /// Settings sidebar panes (§15): how vypo works, speaking, how it looks, which words come out,

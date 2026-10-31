@@ -136,7 +136,9 @@ final class OnboardingSnapshotTests: XCTestCase {
         try tryIt("s6-not-in-languages", app(languages: [.de]), outcome: .notInYourLanguages(heard: "Hello, this is a test of the dictation."))
         try tryIt("s6-long", app(languages: [.de]), outcome: .notInYourLanguages(heard: "Hello, this is a rather long test of the dictation to see how the wrong language hint behaves when the heard text keeps going and going."))
         try tryIt("s6-too-quiet", app(), outcome: .nothingHeard)
-        try tryIt("s6-couldnt-paste", app(), outcome: .couldntPaste(heard: "Hello, this is a test."))
+        try tryIt("s6-couldnt-paste", app(ax: false), outcome: .couldntPaste(heard: "Hello, this is a test."))
+        try tryIt("s6-didnt-arrive", app(), outcome: .didntArrive(heard: "Hello, this is a test."))
+        try tryIt("s6-another-window", app(), outcome: .anotherWindowInFront(heard: "vypo turns my voice into text on my own Mac."))
         try tryIt("s6-ax-revoked", app(ax: false), focused: true)
         try tryIt("s6-model-failed", app(model: .installed, loadFailed: true), focused: false)
     }

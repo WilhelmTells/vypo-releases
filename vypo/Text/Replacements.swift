@@ -49,8 +49,10 @@ struct Replacement: Codable, Identifiable, Hashable, Sendable {
     var spokenText: String { spoken.joined(separator: ", ") }
 
     /// The first two spellings for the list: `"Slash", "Schrägstrich"…`.
-    var summary: String {
-        spoken.prefix(2).map { "“\($0)”" }.joined(separator: ", ") + (spoken.count > 2 ? " …" : "")
+    var summary: String { summary() }
+
+    func summary(quote: (String) -> String = { "“\($0)”" }) -> String {
+        spoken.prefix(2).map(quote).joined(separator: ", ") + (spoken.count > 2 ? " …" : "")
     }
 }
 
@@ -272,7 +274,8 @@ enum Replacements {
         return merged
     }
 
-    private static func union(_ a: [String], _ b: [String]) -> [String] {
+    /// `a`, then the spellings of `b` it doesn't have yet (`normalized`).
+    static func union(_ a: [String], _ b: [String]) -> [String] {
         var out = a
         for s in b where !out.contains(where: { normalized($0) == normalized(s) }) { out.append(s) }
         return out
@@ -337,6 +340,12 @@ final class ReplacementStore {
         items.append(contentsOf: missing)
         if !missing.isEmpty { save() }
         return missing.count
+    }
+
+    /// The move to Spoken characters: what is left of the list, written first. Not a new entry (`onNewEntry`).
+    func replaceAll(_ list: [Replacement]) throws {
+        try store.write(list, to: Self.file)
+        items = list
     }
 
     private func save() { store.save(items, to: Self.file) }

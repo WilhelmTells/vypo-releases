@@ -233,8 +233,11 @@ final class OnboardingTests: XCTestCase {
         }
         XCTAssertEqual(map(.pasted("Hi"), inField: true), .inserted("Hi"))
         // Pasted into vypo's own window but the text never arrived: reported, never silent.
-        XCTAssertEqual(map(.pasted("Hi"), inField: false), .couldntPaste(heard: "Hi"))
-        XCTAssertEqual(map(.clipboardOnly("Hi")), .couldntPaste(heard: "Hi"))
+        // With Accessibility on, the Accessibility hint does not show (0.4.1); with it off it does.
+        XCTAssertEqual(map(.pasted("Hi"), inField: false), .didntArrive(heard: "Hi"))
+        XCTAssertEqual(map(.clipboardOnly("Hi")), .didntArrive(heard: "Hi"))
+        XCTAssertEqual(TryItState.outcome(for: .clipboardOnly("Hi"), accessibilityTrusted: false) { _ in false }, .couldntPaste(heard: "Hi"))
+        XCTAssertEqual(map(.anotherWindowInFront("Hi")), .anotherWindowInFront(heard: "Hi"))
         XCTAssertEqual(map(.notInYourLanguages(heard: "Hallo")), .notInYourLanguages(heard: "Hallo"))
         XCTAssertEqual(map(.nothingHeard), .nothingHeard)
         XCTAssertEqual(map(.modelFailed), .modelFailed)

@@ -186,6 +186,10 @@ enum TryItOutcome: Equatable {
     case nothingHeard
     /// `heard` is nil when no text was produced (Accessibility is off).
     case couldntPaste(heard: String?)
+    /// Accessibility is on, but the text did not arrive in the field.
+    case didntArrive(heard: String)
+    /// Another window stayed in front and vypo could not get there, so nothing was pasted (the text is on the clipboard).
+    case anotherWindowInFront(heard: String)
     case modelFailed
 }
 
@@ -195,6 +199,8 @@ enum DictationOutcome: Equatable, Sendable {
     case pasted(String)
     /// The text stayed on the clipboard (no text field in front).
     case clipboardOnly(String)
+    /// Try it was open, another window stayed in front and vypo could not come forward: no ⌘V was posted.
+    case anotherWindowInFront(String)
     case notInYourLanguages(heard: String)
     case nothingHeard
     case modelFailed
@@ -230,19 +236,30 @@ struct TryItState: Equatable {
         if model == .failed { return .modelFailed }
         if case .loading = model { return nil }
         if activity != .idle { return nil }
-        if let outcome { return outcome }
+        if let outcome { return Self.matching(outcome, accessibilityTrusted: accessibilityTrusted) }
         return accessibilityTrusted ? nil : .couldntPaste(heard: nil)
+    }
+
+    /// The Accessibility hint only shows when Accessibility is really off, whatever it was when the paste failed.
+    static func matching(_ outcome: TryItOutcome, accessibilityTrusted: Bool) -> TryItOutcome {
+        switch outcome {
+        case .couldntPaste(let heard?) where accessibilityTrusted: .didntArrive(heard: heard)
+        case .didntArrive(let heard) where !accessibilityTrusted: .couldntPaste(heard: heard)
+        default: outcome
+        }
     }
 
     mutating func attemptStarted() { outcome = nil }
 
     /// Maps what the flow reported. `fieldText` is what the field holds right now: a paste into vypo's
     /// own window counts only if the text is there.
-    static func outcome(for result: DictationOutcome, fieldContains: (String) -> Bool) -> TryItOutcome {
+    static func outcome(for result: DictationOutcome, accessibilityTrusted: Bool = true,
+                        fieldContains: (String) -> Bool) -> TryItOutcome {
         switch result {
         case .pasted(let text):
-            fieldContains(text) ? .inserted(text) : .couldntPaste(heard: text)
-        case .clipboardOnly(let text): .couldntPaste(heard: text)
+            fieldContains(text) ? .inserted(text) : matching(.couldntPaste(heard: text), accessibilityTrusted: accessibilityTrusted)
+        case .clipboardOnly(let text): matching(.couldntPaste(heard: text), accessibilityTrusted: accessibilityTrusted)
+        case .anotherWindowInFront(let text): .anotherWindowInFront(heard: text)
         case .notInYourLanguages(let heard): .notInYourLanguages(heard: heard)
         case .nothingHeard: .nothingHeard
         case .modelFailed: .modelFailed
@@ -284,10 +301,38 @@ final class OnboardingModel {
     var micSkipped = false
     /// Set by snapshots and tests only.
     @ObservationIgnored var preview = OnboardingPreview()
+    /// Try it: the text field has the cursor and the window is key (set by the step).
+    var tryItFieldFocused = false
+    /// Try it: counts up when the dictation asks for the cursor in the field (the step answers it).
+    var tryItFocusRequests = 0
     /// The window size follows the step; set by the window manager.
     @ObservationIgnored var onStepChanged: (Int) -> Void = { _ in }
 
     init(step: Int) {
         self.step = min(max(step, 0), Self.stepCount - 1)
+    }
+}
+
+/// Try it: waits for the pasted text to show up in the field. Checks again and again until the text is there, and
+/// at the latest when the clipboard restore is done (the app has read the paste, or the restore timed out).
+@MainActor
+enum TryItWatch {
+    /// Longest wait for a paste that never settles (the restore is skipped when a new dictation starts).
+    static let cap: Duration = .seconds(3)
+    /// After the restore finished, one more look: the field may update a moment after the app read the paste.
+    static let afterSettled: Duration = .milliseconds(100)
+
+    static func textArrived(contains: () -> Bool, settled: () -> Bool, step: Duration = .milliseconds(25),
+                            sleep: (Duration) async -> Void = { try? await Task.sleep(for: $0) }) async -> Bool {
+        var waited = Duration.zero
+        var settledAt: Duration?
+        while true {
+            if contains() { return true }
+            if settledAt == nil, settled() { settledAt = waited }
+            if let settledAt, waited - settledAt >= afterSettled { return false }
+            if waited >= cap { return false }
+            await sleep(step)
+            waited += step
+        }
     }
 }

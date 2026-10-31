@@ -10,6 +10,8 @@ final class MicReleaseTests: XCTestCase {
     /// The double-tap window, plus the time a capture session takes to stop.
     static let tapRelease = HotkeyStateMachine.doubleTapWindow + 0.65
     static let recordingRelease: TimeInterval = 0.5
+    /// The longest a capture session may take to start once a recording began.
+    static let captureStart: TimeInterval = 3
 
     private var app: AppState!
     private var hotkey: HotkeyMonitor!
@@ -67,8 +69,11 @@ final class MicReleaseTests: XCTestCase {
 
     func testAHoldReleasesTheMicOnRelease() {
         down()
-        wait(0.4)
-        XCTAssertTrue(Self.capturingInput())
+        // The capture session starts off the main thread; a fixed 0.4 s sometimes was not enough (failed once in
+        // a full run on 2026-10-31, passed alone). Wait for it. The release times below stay strict.
+        // The pre-roll opens the microphone on key-down, before the hold counts as a hold: wait for the recording itself.
+        XCTAssertTrue(waitForPhase(.recording(handsFree: false), within: Self.captureStart), "the hold never became a recording")
+        XCTAssertTrue(waitForCapture(within: Self.captureStart), "the microphone never opened")
         XCTAssertEqual(dictation.phase, .recording(handsFree: false))
         up()
         assertReleased(within: Self.recordingRelease)
@@ -110,7 +115,7 @@ final class MicReleaseTests: XCTestCase {
         tap()
         wait(0.6)
         XCTAssertEqual(dictation.phase, .recording(handsFree: true))
-        XCTAssertTrue(Self.capturingInput())
+        XCTAssertTrue(waitForCapture(within: Self.captureStart), "the microphone never opened")
         tap()
         assertReleased(within: Self.recordingRelease)
     }
@@ -172,6 +177,12 @@ final class MicReleaseTests: XCTestCase {
             if !Self.capturingInput() { return Date().timeIntervalSince(start) }
         }
         return .infinity
+    }
+
+    private func waitForPhase(_ phase: DictationController.Phase, within limit: TimeInterval) -> Bool {
+        let start = Date()
+        while dictation.phase != phase && Date().timeIntervalSince(start) < limit { wait(0.01) }
+        return dictation.phase == phase
     }
 
     private func waitForCapture(within limit: TimeInterval) -> Bool {

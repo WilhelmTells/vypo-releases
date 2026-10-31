@@ -52,11 +52,19 @@ enum PillMode: Equatable, Sendable {
     case listening
     case handsfree
     case processing
+    /// Processing, but the speech model is still loading or preparing, or the recognition runs long.
+    case loadingModel
     case error(PillError)
     case add
     case added(PillNotice)
 
     var isRecording: Bool { self == .listening || self == .handsfree }
+
+    /// Transcribing: the dots, or the loading status that replaces them.
+    var isProcessing: Bool { self == .processing || self == .loadingModel }
+
+    /// The pill's text while the speech model loads.
+    static var loadingModelText: String { String(localized: "Loading speech model…") }
 
     var accessibilityLabel: String {
         switch self {
@@ -65,6 +73,7 @@ enum PillMode: Equatable, Sendable {
         case .listening: String(localized: "Listening")
         case .handsfree: String(localized: "Hands-free, listening")
         case .processing: String(localized: "Transcribing")
+        case .loadingModel: Self.loadingModelText
         case .error(let e): String(localized: "Error: \(e.message)")
         case .add: String(localized: "Add to glossary")
         case .added(.termAdded(let t)): String(localized: "\(t) added")
@@ -96,7 +105,7 @@ enum PillVisibility {
             }
         // The user just asked for the diagnostics and waits a few seconds: shown even with the pill off.
         case .add, .added(.onClipboard), .added(.collectingDiagnostics): true
-        case .collapsed, .ready, .listening, .handsfree, .processing, .added(.termAdded), .added(.copied), .added(.undone), .added(.savedToHistory): false
+        case .collapsed, .ready, .listening, .handsfree, .processing, .loadingModel, .added(.termAdded), .added(.copied), .added(.undone), .added(.savedToHistory): false
         }
     }
 }
@@ -144,6 +153,9 @@ enum PillMetrics {
             return CGSize(width: padding + bars + gap + stopSize + 5, height: height)
         case .error(let e):
             return CGSize(width: padding + 14 + gap + textWidth(e.message, errorFont) + padding, height: height)
+        case .loadingModel:
+            // Like a notice with working dots: wider than the bars, the text is never shortened.
+            return CGSize(width: padding + 13 + 6 + textWidth(PillMode.loadingModelText, noticeFont) + padding, height: height)
         case .add:
             return CGSize(width: 10 + 13 + 6 + 150 + 6 + 24 + 5, height: height)
         case .added(let notice):
