@@ -28,10 +28,27 @@ struct WordsPane: View {
     }
 
     var body: some View {
+        ScrollViewReader { proxy in
+            form
+                .onAppear { scrollToTarget(proxy) }
+                .onChange(of: app.scrollTarget) { scrollToTarget(proxy) }
+        }
+    }
+
+    /// A widget link: the suggestion rows, at the top of the pane.
+    private func scrollToTarget(_ proxy: ScrollViewProxy) {
+        guard app.scrollTarget == .suggestions else { return }
+        app.scrollTarget = nil
+        Task { @MainActor in proxy.scrollTo(Self.suggestionsAnchor, anchor: .top) }
+    }
+
+    private static let suggestionsAnchor = "suggestions"
+
+    private var form: some View {
         @Bindable var prefs = app.prefs
-        let suggestions = app.glossary.suggestions
+        let suggestions = app.glossary.visibleSuggestions
         let terms = filtered
-        Form {
+        return Form {
             Section {
                 if terms.isEmpty {
                     Text(search.isEmpty ? "No terms yet. Add names, products or jargon that vypo should always spell right."
@@ -44,9 +61,9 @@ struct WordsPane: View {
                         Spacer()
                         Badge(text: entry.scope.label)
                         if app.glossary.sets.count > 1 {
-                            Badge(text: "\(app.glossary.set(for: entry).name)")
+                            Badge(text: "\(app.glossary.set(for: entry).displayName)")
                         }
-                        Button("Edit") { editing = .edit(entry) }
+                        Button("Edit…") { editing = .edit(entry) }
                             .buttonStyle(.plain)
                             .foregroundStyle(Color.vyAccent)
                     }
@@ -54,6 +71,7 @@ struct WordsPane: View {
             } header: {
                 PaneSectionHeader(pane: .words, title: "Glossary") {
                     toolbar
+                    Color.clear.frame(height: 0).id(Self.suggestionsAnchor)
                     ForEach(suggestions) { s in
                         SuggestionRow(suggestion: s, onAdd: { app.glossary.accept(s) }, onIgnore: { app.glossary.ignore(s) })
                     }
@@ -76,6 +94,14 @@ struct WordsPane: View {
                 } label: {
                     RowLabel(title: "Replace similar-sounding words",
                              description: "Fixes near misses afterwards, e.g. “tick tock” becomes “TikTok”.")
+                }
+                LabeledContent {
+                    Toggle("Learn from my corrections", isOn: $prefs.learnFromCorrections)
+                        .toggleStyle(.switch)
+                        .labelsHidden()
+                } label: {
+                    RowLabel(title: "Learn from my corrections",
+                             description: "When you correct a word vypo wrote, right where it wrote it, vypo suggests it for the glossary. It only looks at its own text.")
                 }
             } header: {
                 Text("How the glossary helps")
@@ -103,7 +129,7 @@ struct WordsPane: View {
                 } header: {
                     Text("Spoken characters")
                 } footer: {
-                    Text("Say “comma” or “slash” and vypo writes “,” or “/”. Under Edit… you set where each one works in a sentence.")
+                    Text("Say “comma” or “slash” and vypo writes “,” or “/”, the same in every app. Under Edit… you set which ones also work in a sentence.")
                 }
             }
 
@@ -118,7 +144,7 @@ struct WordsPane: View {
                             .foregroundStyle(Color.vyAccent)
                     }
                 } label: {
-                    RowLabel(title: "Remove filler words", description: "um, uh, äh, ähm …")
+                    RowLabel(title: "Remove filler words", description: prefs.fillerPreview.map { "\($0)" })
                 }
             } header: {
                 Text("Filler words")
@@ -142,6 +168,9 @@ struct WordsPane: View {
             }
         }
         .formStyle(.grouped)
+        // The dot in the sidebar means “something new here”, so it goes as soon as this pane has shown it.
+        .onAppear { app.glossary.markSuggestionsSeen() }
+        .onChange(of: app.glossary.hasUnseenSuggestions) { app.glossary.markSuggestionsSeen() }
         .sheet(item: $editing) { mode in
             TermSheet(mode: mode).environment(app)
         }
@@ -160,7 +189,7 @@ struct WordsPane: View {
         .sheet(item: $importResult) { result in
             ImportTermsSheet(result: result).environment(app)
         }
-        .alert(nothingFound.map { "No new terms found in \($0)." } ?? "", isPresented: Binding(get: { nothingFound != nil }, set: { if !$0 { nothingFound = nil } })) {
+        .alert(nothingFound.map { String(localized: "No new terms found in \($0).") } ?? "", isPresented: Binding(get: { nothingFound != nil }, set: { if !$0 { nothingFound = nil } })) {
             Button("OK") { nothingFound = nil }
         }
     }
@@ -172,20 +201,20 @@ struct WordsPane: View {
             if app.glossary.sets.count > 1 {
                 Picker("Set", selection: $setFilter) {
                     Text("All sets").tag(UUID?.none)
-                    ForEach(app.glossary.sets) { Text($0.name).tag(UUID?.some($0.id)) }
+                    ForEach(app.glossary.sets) { Text($0.displayName).tag(UUID?.some($0.id)) }
                 }
                 .labelsHidden()
                 .pickerStyle(.menu)
                 .fixedSize()
             }
-            Button { editing = .add } label: { Label("Add term", systemImage: "plus") }
+            Button { editing = .add } label: { Label("Add Term…", systemImage: "plus") }
             Menu {
-                Button("Import from document…") { importDocument() }
+                Button("Import from Document…") { importDocument() }
                 Divider()
-                Button("Import glossary…") { importFile() }
-                Button("Export glossary…") { exportFile() }
+                Button("Import Glossary…") { importFile() }
+                Button("Export Glossary…") { exportFile() }
                 Divider()
-                Button("Manage sets…") { managingSets = true }
+                Button("Manage Sets…") { managingSets = true }
             } label: {
                 Image(systemName: "ellipsis.circle")
             }
@@ -217,7 +246,7 @@ struct WordsPane: View {
 
     private func soundsLikeText(_ e: GlossaryEntry) -> LocalizedStringKey? {
         guard !e.soundsLike.isEmpty else { return nil }
-        let list = e.soundsLike.map { "“\($0)”" }.joined(separator: ", ")
+        let list = e.soundsLike.map(Formatting.quoted).joined(separator: ", ")
         return "sounds like \(list)"
     }
 
@@ -270,7 +299,7 @@ struct TermSheet: View {
     @State private var setID: UUID = GlossarySet.generalID
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Space.s4) {
+        SettingsSheet(title: isNew ? "New Term" : "Edit Term", width: SheetWidth.form) {
             Form {
                 TextField("Term", text: $term)
                 TextField("Sounds like", text: $soundsLike, prompt: Text("e.g. tick tock, tik tok"))
@@ -281,32 +310,18 @@ struct TermSheet: View {
                 }
                 .pickerStyle(.menu)
                 Picker("Set", selection: $setID) {
-                    ForEach(app.glossary.sets) { Text($0.name).tag($0.id) }
+                    ForEach(app.glossary.sets) { Text($0.displayName).tag($0.id) }
                 }
                 .pickerStyle(.menu)
             }
-            .formStyle(.grouped)
-            HStack {
-                if case .edit(let e) = mode {
-                    Button("Delete", role: .destructive) {
-                        app.glossary.delete(e.id)
-                        dismiss()
-                    }
-                    .foregroundStyle(Color.vyDanger)
-                }
-                Spacer()
-                Button("Cancel", role: .cancel) { dismiss() }
-                    .keyboardShortcut(.cancelAction)
-                Button("Save") { save() }
-                    .buttonStyle(.borderedProminent)
-                    .keyboardShortcut(.defaultAction)
-                    .disabled(term.trimmingCharacters(in: .whitespaces).isEmpty)
-            }
-            .padding([.horizontal, .bottom], Space.s5)
+            .sheetForm()
+        } footer: {
+            SheetFormFooter(onDelete: entry.map { e in { app.glossary.delete(e.id); dismiss() } },
+                            canSave: !term.trimmingCharacters(in: .whitespaces).isEmpty,
+                            onSave: save)
         }
-        .frame(width: 440)
         .onAppear {
-            if case .edit(let e) = mode {
+            if let e = entry {
                 term = e.term
                 soundsLike = e.soundsLike.joined(separator: ", ")
                 scope = e.scope
@@ -314,6 +329,9 @@ struct TermSheet: View {
             }
         }
     }
+
+    private var entry: GlossaryEntry? { if case .edit(let e) = mode { e } else { nil } }
+    private var isNew: Bool { entry == nil }
 
     private func save() {
         let variants = soundsLike.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
@@ -345,13 +363,13 @@ struct ReplacementsSection: View {
                 HStack(alignment: .top, spacing: Space.s3) {
                     IconTile(symbol: "sparkles", tint: .vyAccent)
                     RowLabel(title: "New: Spoken characters.",
-                             description: "Words like “comma” or “new line” get their own list, with more characters and the Spoken punctuation switch in one place.")
+                             description: "Words like “comma” or “new line” get their own list, with more characters, and work the same in every app.")
                     Spacer()
                     Button("Switch…") { moving = true }
                         .buttonStyle(.plain)
                         .foregroundStyle(Color.vyAccent)
                         .fixedSize()
-                    Button("Not now") { app.prefs.spokenCharactersHintDismissed = true }
+                    Button("Not Now") { app.prefs.spokenCharactersHintDismissed = true }
                         .buttonStyle(.plain)
                         .foregroundStyle(Color.vyLabelSecondary)
                         .fixedSize()
@@ -368,33 +386,33 @@ struct ReplacementsSection: View {
                         Text("\(r.summary)").foregroundStyle(Color.vyLabel)
                         Text("becomes \(Replacements.display(r.output))")
                             .font(.callout).foregroundStyle(Color.vyLabelSecondary)
-                        if let note = r.inSentence.listNote {
+                        if let note = app.wordsLayout == .legacy ? r.inSentence.listNote : SpokenCharacters.listNote(r.inSentence.alsoInSentence) {
                             Text(note).font(.caption).foregroundStyle(Color.vyLabelSecondary)
                         }
                     }
                     Spacer()
                     Toggle("\(r.summary)", isOn: Binding(get: { r.enabled }, set: { app.replacements.setEnabled(r.id, $0) }))
                         .labelsHidden()
-                    Button("Edit") { editing = r }
+                    Button("Edit…") { editing = r }
                         .buttonStyle(.plain)
                         .foregroundStyle(Color.vyAccent)
                 }
             }
             HStack {
-                Button("Add replacement") { editing = Replacement(spoken: [], output: "") }
+                Button("Add Replacement…") { editing = Replacement(spoken: [], output: "") }
                     .buttonStyle(.plain)
                     .foregroundStyle(Color.vyAccent)
                 Spacer()
                 // A new installation has no default replacements: its characters are under Spoken characters.
                 if app.wordsLayout == .legacy {
-                    Button("Restore default entries") { app.replacements.restoreDefaults() }
+                    Button("Restore Defaults") { app.replacements.restoreDefaults() }
                         .buttonStyle(.plain)
                         .font(.callout)
                         .foregroundStyle(Color.vyLabelSecondary)
                 }
             }
             if app.wordsLayout == .legacy && app.prefs.spokenCharactersHintDismissed {
-                Button("Switch to Spoken characters…") { moving = true }
+                Button("Switch to Spoken Characters…") { moving = true }
                     .buttonStyle(.plain)
                     .font(.callout)
                     .foregroundStyle(Color.vyAccent)
@@ -402,7 +420,11 @@ struct ReplacementsSection: View {
         } header: {
             Text("Replacements")
         } footer: {
-            Text("Say the phrase on the left and vypo writes the right side. Said on its own, an entry works in every app; in a sentence, as set for the entry.")
+            if app.wordsLayout == .legacy {
+                Text("Say the phrase on the left and vypo writes the right side. Said on its own, an entry works in every app; in a sentence, as set for the entry.")
+            } else {
+                Text("Say the phrase on the left and vypo writes the right side, the same in every app. Said on its own, an entry always works; in a sentence, if you set it to.")
+            }
         }
         .sheet(item: $editing) { r in
             ReplacementSheet(replacement: r).environment(app)
@@ -423,8 +445,8 @@ struct MoveToSpokenCharactersSheet: View {
         // Computed from the lists as they are now; `moveToSpokenCharacters` computes the same again. The new defaults get
         // new ids each time, so the rows go by output (unique in Spoken characters).
         let move = SpokenCharacters.migration(from: app.replacements.items, spokenPunctuation: app.prefs.spokenPunctuation)
-        VStack(alignment: .leading, spacing: Space.s3) {
-            Text("Switch to Spoken characters").font(.title3.weight(.semibold))
+        SettingsSheet(title: "Switch to Spoken Characters", explanation: "A backup of your Replacements is saved first.",
+                      width: SheetWidth.list) {
             Form {
                 if !move.moved.isEmpty {
                     Section("Moves to Spoken characters") {
@@ -440,7 +462,7 @@ struct MoveToSpokenCharactersSheet: View {
                     Section("Stays in Replacements") {
                         ForEach(move.ownReplacements) { r in
                             VStack(alignment: .leading, spacing: 2) {
-                                Text(verbatim: r.summary(quote: Self.quote)).foregroundStyle(Color.vyLabel)
+                                Text(verbatim: r.summary).foregroundStyle(Color.vyLabel)
                                 Text("becomes \(Replacements.display(r.output))")
                                     .font(.callout).foregroundStyle(Color.vyLabelSecondary)
                             }
@@ -448,7 +470,7 @@ struct MoveToSpokenCharactersSheet: View {
                     }
                 }
             }
-            .formStyle(.grouped)
+            .sheetForm(scrolls: true)
             .frame(height: 380)
             if let failed {
                 Text(failed == .backup ? String(localized: "The backup couldn’t be saved, so nothing was changed.")
@@ -456,40 +478,25 @@ struct MoveToSpokenCharactersSheet: View {
                     .font(.callout)
                     .foregroundStyle(Color.vyDanger)
                     .fixedSize(horizontal: false, vertical: true)
-            } else {
-                Text("A backup of your Replacements is saved first.")
-                    .font(.callout)
-                    .foregroundStyle(Color.vyLabelSecondary)
             }
-            HStack {
-                Spacer()
-                Button("Cancel", role: .cancel) { dismiss() }
-                    .keyboardShortcut(.cancelAction)
-                Button("Switch") {
-                    do {
-                        try app.moveToSpokenCharacters()
-                        dismiss()
-                    } catch {
-                        failed = error as? SpokenCharactersMoveError ?? .write
-                    }
+        } footer: {
+            SheetConfirmFooter(action: "Switch") {
+                do {
+                    try app.moveToSpokenCharacters()
+                    dismiss()
+                } catch {
+                    failed = error as? SpokenCharactersMoveError ?? .write
                 }
-                .buttonStyle(.borderedProminent)
-                .keyboardShortcut(.defaultAction)
             }
         }
-        .padding(Space.s5)
-        .frame(width: 540)
     }
-
-    /// The quotes of the app's language, as in the hint („Komma“ in German).
-    private static func quote(_ s: String) -> String { String(localized: "“\(s)”") }
 
     private func characterRow(_ c: SpokenCharacter) -> some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text(verbatim: c.summary(quote: Self.quote)).foregroundStyle(Color.vyLabel)
+            Text(verbatim: c.summary).foregroundStyle(Color.vyLabel)
             Text("becomes \(Replacements.display(c.output))")
                 .font(.callout).foregroundStyle(Color.vyLabelSecondary)
-            Text(SpokenCharacters.listNote(c.inSentence)).font(.caption).foregroundStyle(Color.vyLabelSecondary)
+            Text(SpokenCharacters.listNote(c.alsoInSentence)).font(.caption).foregroundStyle(Color.vyLabelSecondary)
             if !c.enabled {
                 Text("Switched off").font(.caption).foregroundStyle(Color.vyLabelSecondary)
             }
@@ -532,11 +539,11 @@ struct ReplacementSheet: View {
     @State private var spoken = ""
     @State private var output = ""
     @State private var inSentence = SentenceScope.everywhere
-
-    private var isNew: Bool { !app.replacements.items.contains { $0.id == replacement.id } }
+    /// Fixed when the sheet opens, so the title doesn't change while it closes.
+    @State private var isNew = true
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Space.s4) {
+        SettingsSheet(title: isNew ? "New Replacement" : "Edit Replacement", width: SheetWidth.form) {
             Form {
                 Section {
                     if app.wordsLayout == .legacy {
@@ -548,62 +555,54 @@ struct ReplacementSheet: View {
                 } footer: {
                     Text("Separate spellings with commas.")
                 }
-                Section {
-                    Picker("In a sentence", selection: $inSentence) {
-                        ForEach(SentenceScope.allCases, id: \.self) { Text($0.title).tag($0) }
+                if app.wordsLayout == .legacy {
+                    Section {
+                        Picker("In a sentence", selection: $inSentence) {
+                            ForEach(SentenceScope.allCases, id: \.self) { Text($0.title).tag($0) }
+                        }
+                    } footer: {
+                        Text("\(inSentence.explanation)")
                     }
-                } footer: {
-                    Text("\(inSentence.explanation)")
+                } else {
+                    Section {
+                        Toggle("Also in a sentence", isOn: Binding(get: { inSentence.alsoInSentence },
+                                                                   set: { inSentence = $0 ? .everywhere : .never }))
+                    } footer: {
+                        Text("Said on its own, it always works. In a sentence only if this is on.")
+                    }
                 }
             }
-            .formStyle(.grouped)
-            HStack {
-                if !isNew {
-                    Button("Delete", role: .destructive) {
-                        app.replacements.delete(replacement.id)
-                        dismiss()
-                    }
-                    .foregroundStyle(Color.vyDanger)
-                }
-                Spacer()
-                Button("Cancel", role: .cancel) { dismiss() }
-                    .keyboardShortcut(.cancelAction)
-                Button("Save") {
-                    var r = replacement
-                    r.spoken = Replacements.variants(spoken)
-                    r.output = output.replacingOccurrences(of: "↵", with: "\n")
-                    r.inSentence = inSentence
-                    app.replacements.upsert(r)
-                    dismiss()
-                }
-                .buttonStyle(.borderedProminent)
-                .keyboardShortcut(.defaultAction)
-                .disabled(Replacements.variants(spoken).isEmpty)
+            .sheetForm()
+        } footer: {
+            SheetFormFooter(onDelete: isNew ? nil : { app.replacements.delete(replacement.id); dismiss() },
+                            canSave: !Replacements.variants(spoken).isEmpty) {
+                var r = replacement
+                r.spoken = Replacements.variants(spoken)
+                r.output = output.replacingOccurrences(of: "↵", with: "\n")
+                r.inSentence = inSentence
+                app.replacements.upsert(r)
+                dismiss()
             }
-            .padding([.horizontal, .bottom], Space.s5)
         }
-        .frame(width: 420)
         .onAppear {
+            isNew = !app.replacements.items.contains { $0.id == replacement.id }
             spoken = replacement.spokenText
             output = Replacements.display(replacement.output)
-            inSentence = replacement.inSentence
+            inSentence = app.wordsLayout == .legacy ? replacement.inSentence : replacement.inEveryApp.inSentence
         }
     }
 }
 
-/// Words → Spoken characters → Edit…: every entry, with on/off, Edit, Add and “Restore default characters”.
+/// Words → Spoken characters → Edit…: every entry, with on/off, Edit, Add and Restore Defaults.
 struct SpokenCharactersSheet: View {
     @Environment(AppState.self) private var app
     @Environment(\.dismiss) private var dismiss
     @State private var editing: SpokenCharacter?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Space.s3) {
-            Text("Spoken characters").font(.title3.weight(.semibold))
-            Text("Say the word and vypo writes the character. Said on its own, it works in every app; in a sentence, in the modes set for it.")
-                .font(.callout)
-                .foregroundStyle(Color.vyLabelSecondary)
-                .fixedSize(horizontal: false, vertical: true)
+        SettingsSheet(title: "Spoken Characters",
+                      explanation: "Say the word and vypo writes the character, the same in every app.",
+                      width: SheetWidth.list) {
             Form {
                 ForEach(app.spokenCharacters?.items ?? []) { c in
                     HStack(spacing: Space.s3) {
@@ -611,29 +610,25 @@ struct SpokenCharactersSheet: View {
                             Text("\(c.summary)").foregroundStyle(Color.vyLabel)
                             Text("becomes \(Replacements.display(c.output))")
                                 .font(.callout).foregroundStyle(Color.vyLabelSecondary)
-                            Text(SpokenCharacters.listNote(c.inSentence)).font(.caption).foregroundStyle(Color.vyLabelSecondary)
+                            Text(SpokenCharacters.listNote(c.alsoInSentence)).font(.caption).foregroundStyle(Color.vyLabelSecondary)
                         }
                         Spacer()
                         Toggle("\(c.summary)", isOn: Binding(get: { c.enabled }, set: { app.spokenCharacters?.setEnabled(c.id, $0) }))
                             .labelsHidden()
-                        Button("Edit") { editing = c }
+                        Button("Edit…") { editing = c }
                             .buttonStyle(.plain)
                             .foregroundStyle(Color.vyAccent)
                     }
                 }
             }
-            .formStyle(.grouped)
+            .sheetForm(scrolls: true)
             .frame(height: 380)
-            HStack {
-                Button("Add character") { editing = SpokenCharacter(spoken: [], output: "", inSentence: [.writing]) }
-                Button("Restore default characters") { app.spokenCharacters?.restoreDefaults() }
-                Spacer()
-                Button("Done") { dismiss() }
-                    .keyboardShortcut(.defaultAction)
+        } footer: {
+            SheetListFooter {
+                Button("Add Character…") { editing = SpokenCharacter(spoken: [], output: "", alsoInSentence: true) }
+                Button("Restore Defaults") { app.spokenCharacters?.restoreDefaults() }
             }
         }
-        .padding(Space.s5)
-        .frame(width: 540)
         .sheet(item: $editing) { c in
             SpokenCharacterSheet(character: c).environment(app)
         }
@@ -641,27 +636,25 @@ struct SpokenCharactersSheet: View {
 }
 
 extension SpokenCharacters {
-    /// The small line under an entry: the modes it works in, in a sentence.
-    static func listNote(_ modes: Set<AppMode>) -> String {
-        let names = Self.modes.filter(modes.contains).map(\.title)
-        guard !names.isEmpty else { return String(localized: "Only on its own") }
-        return String(localized: "In sentences: \(names.formatted(.list(type: .and)))")
+    /// The small line under an entry.
+    static func listNote(_ alsoInSentence: Bool) -> String {
+        alsoInSentence ? String(localized: "Also in a sentence") : String(localized: "Only on its own")
     }
 }
 
-/// “Spoken” / “Output” / “In a sentence” for one spoken character, with a switch per mode.
+/// “Spoken” / “Output” / “Also in a sentence” for one spoken character.
 struct SpokenCharacterSheet: View {
     let character: SpokenCharacter
     @Environment(AppState.self) private var app
     @Environment(\.dismiss) private var dismiss
     @State private var spoken = ""
     @State private var output = ""
-    @State private var modes: Set<AppMode> = []
-
-    private var isNew: Bool { !(app.spokenCharacters?.items.contains { $0.id == character.id } ?? false) }
+    @State private var alsoInSentence = true
+    /// Fixed when the sheet opens, so the title doesn't change while it closes.
+    @State private var isNew = true
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Space.s4) {
+        SettingsSheet(title: isNew ? "New Spoken Character" : "Edit Spoken Character", width: SheetWidth.form) {
             Form {
                 Section {
                     TextField("Spoken", text: $spoken, prompt: Text("e.g. comma, Komma"))
@@ -670,52 +663,33 @@ struct SpokenCharacterSheet: View {
                     Text("Separate spellings with commas.")
                 }
                 Section {
-                    ForEach(SpokenCharacters.modes, id: \.self) { mode in
-                        Toggle(mode.title, isOn: Binding(get: { modes.contains(mode) },
-                                                         set: { if $0 { modes.insert(mode) } else { modes.remove(mode) } }))
-                    }
-                } header: {
-                    Text("In a sentence")
+                    Toggle("Also in a sentence", isOn: $alsoInSentence)
                 } footer: {
-                    Text("Said on its own, it works in every app. In a sentence, only in apps with a mode switched on here.")
+                    Text("Said on its own, it always works. In a sentence only if this is on.")
                 }
             }
-            .formStyle(.grouped)
-            HStack {
-                if !isNew {
-                    Button("Delete", role: .destructive) {
-                        app.spokenCharacters?.delete(character.id)
-                        dismiss()
-                    }
-                    .foregroundStyle(Color.vyDanger)
-                }
-                Spacer()
-                Button("Cancel", role: .cancel) { dismiss() }
-                    .keyboardShortcut(.cancelAction)
-                Button("Save") {
-                    var c = character
-                    c.spoken = Replacements.variants(spoken)
-                    c.output = output.replacingOccurrences(of: "↵", with: "\n")
-                    c.inSentence = modes
-                    app.spokenCharacters?.upsert(c)
-                    dismiss()
-                }
-                .buttonStyle(.borderedProminent)
-                .keyboardShortcut(.defaultAction)
-                .disabled(Replacements.variants(spoken).isEmpty || output.isEmpty)
+            .sheetForm()
+        } footer: {
+            SheetFormFooter(onDelete: isNew ? nil : { app.spokenCharacters?.delete(character.id); dismiss() },
+                            canSave: !Replacements.variants(spoken).isEmpty && !output.isEmpty) {
+                var c = character
+                c.spoken = Replacements.variants(spoken)
+                c.output = output.replacingOccurrences(of: "↵", with: "\n")
+                c.alsoInSentence = alsoInSentence
+                app.spokenCharacters?.upsert(c)
+                dismiss()
             }
-            .padding([.horizontal, .bottom], Space.s5)
         }
-        .frame(width: 420)
         .onAppear {
+            isNew = !(app.spokenCharacters?.items.contains { $0.id == character.id } ?? false)
             spoken = character.spokenText
             output = Replacements.display(character.output)
-            modes = character.inSentence
+            alsoInSentence = character.alsoInSentence
         }
     }
 }
 
-/// A suggestion above the term list: a word you corrected in History.
+/// A suggestion above the term list: a word you corrected in History or in an app.
 private struct SuggestionRow: View {
     var suggestion: GlossarySuggestion
     var onAdd: () -> Void
@@ -724,7 +698,8 @@ private struct SuggestionRow: View {
     var body: some View {
         HStack(spacing: Space.s3) {
             IconTile(symbol: "sparkles", tint: .vyAccent)
-            RowLabel(title: "\(suggestion.term)", description: "Suggested: you corrected “\(suggestion.heard)” \(suggestion.count)×")
+            RowLabel(title: "\(suggestion.term)", description: "Suggested: you corrected “\(suggestion.spellingsLine)” \(suggestion.count)×")
+                .help(suggestion.spellings.joined(separator: " / "))
             Spacer()
             Button("Ignore", action: onIgnore)
                 .buttonStyle(.plain)
@@ -737,144 +712,134 @@ private struct SuggestionRow: View {
     }
 }
 
-/// Glossary → ⋯ → Manage sets: turn sets on and off, rename, delete, add.
-private struct SetsSheet: View {
+/// Glossary → ⋯ → Manage Sets…: turn sets on and off, rename, delete, add.
+struct SetsSheet: View {
     @Environment(AppState.self) private var app
-    @Environment(\.dismiss) private var dismiss
     @State private var editingSet: SetSheet.Mode?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Space.s3) {
-            Text("Sets").font(.title3.weight(.semibold))
-            Text("Group terms, e.g. per project, and turn a group off when you don’t need it.")
-                .font(.callout)
-                .foregroundStyle(Color.vyLabelSecondary)
+        SettingsSheet(title: "Sets", explanation: "Group terms, e.g. per project, and turn a group off when you don’t need it.",
+                      width: SheetWidth.list) {
             Form {
                 ForEach(app.glossary.sets) { set in
                     HStack(spacing: Space.s3) {
-                        RowLabel(title: "\(set.name)", description: "\(app.glossary.count(in: set)) terms")
+                        RowLabel(title: "\(set.displayName)", description: "\(app.glossary.count(in: set)) terms")
                         Spacer()
-                        Toggle(set.name, isOn: Binding(get: { set.isActive }, set: { app.glossary.setActive(set.id, $0) }))
+                        Toggle(set.displayName, isOn: Binding(get: { set.isActive }, set: { app.glossary.setActive(set.id, $0) }))
                             .labelsHidden()
-                        Button("Edit") { editingSet = .edit(set) }
+                        Button("Edit…") { editingSet = .edit(set) }
                             .buttonStyle(.plain)
                             .foregroundStyle(Color.vyAccent)
                     }
                 }
             }
-            .formStyle(.grouped)
+            .sheetForm(scrolls: true)
             .frame(minHeight: 160)
-            HStack {
-                Button("New set…") { editingSet = .new }
-                Spacer()
-                Button("Done") { dismiss() }
-                    .keyboardShortcut(.defaultAction)
+        } footer: {
+            SheetListFooter {
+                Button("New Set…") { editingSet = .new }
             }
         }
-        .padding(Space.s5)
-        .frame(width: 420)
         .sheet(item: $editingSet) { mode in
             SetSheet(mode: mode).environment(app)
         }
     }
 }
 
-/// One spelling per line, the same for every language, with “Reset to defaults”.
+/// One spelling per line, the same for every language. Saved as you type, so closing the sheet can't lose anything.
 struct SpellingsSheet: View {
     @Environment(AppState.self) private var app
-    @Environment(\.dismiss) private var dismiss
     @State private var text = ""
+    @State private var confirmRestore = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Space.s4) {
-            Text("One spelling per line. vypo writes each one exactly like this, whatever capitals it heard.")
-                .foregroundStyle(Color.vyLabelSecondary)
-                .fixedSize(horizontal: false, vertical: true)
-            TextEditor(text: $text)
-                .font(.body)
-                .frame(height: 220)
-                .scrollContentBackground(.hidden)
-                .padding(4)
-                .background(RoundedRectangle(cornerRadius: Radius.sm).fill(Color.vyBgGroup))
-                .overlay(RoundedRectangle(cornerRadius: Radius.sm).strokeBorder(Color.vyBorderControl, lineWidth: 1))
-                .accessibilityLabel(Text("Spellings"))
-            HStack {
-                Button("Reset to defaults") {
-                    text = Spellings.defaultList.joined(separator: "\n")
-                }
-                Spacer()
-                Button("Cancel", role: .cancel) { dismiss() }
-                    .keyboardShortcut(.cancelAction)
-                Button("Save") {
-                    app.prefs.setSpellings(FillerWordsSheet.words(text))
-                    dismiss()
-                }
-                .buttonStyle(.borderedProminent)
-                .keyboardShortcut(.defaultAction)
+        SettingsSheet(title: "Spellings",
+                      explanation: "One spelling per line: vypo writes each one exactly like this, whatever capitals it heard.",
+                      width: SheetWidth.list) {
+            SheetWordEditor(label: "Spellings", text: $text, height: 220)
+        } footer: {
+            SheetListFooter {
+                Button("Restore Defaults…") { confirmRestore = true }
             }
         }
-        .padding(Space.s5)
-        .frame(width: 340)
         .onAppear { text = app.prefs.spellings.joined(separator: "\n") }
+        .onChange(of: text) {
+            let words = FillerWordsSheet.words(text)
+            if words != app.prefs.spellings { app.prefs.setSpellings(words) }
+        }
+        .alert("Restore the default spellings?", isPresented: $confirmRestore) {
+            Button("Restore", role: .destructive) { text = Spellings.defaultList.joined(separator: "\n") }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("This replaces your list.")
+        }
     }
 }
 
-/// One word per line, per language, with “Reset to defaults” (§23.2).
+/// One word per line, one list per chosen language (§23.2). Saved as you type, so closing the sheet can't lose anything.
 struct FillerWordsSheet: View {
     @Environment(AppState.self) private var app
-    @Environment(\.dismiss) private var dismiss
-    @State private var english = ""
-    @State private var german = ""
+    @State private var shown: Lang?
+    @State private var text = ""
+    @State private var confirmRestore = false
+
+    /// The language to show instead of the first chosen one; the picker changes it from there.
+    var language: Lang?
+
+    init(language: Lang? = nil) {
+        self.language = language
+        _shown = State(initialValue: language)
+    }
+
+    private var current: Lang { shown ?? app.prefs.languages[0] }
+
+    private func joined(_ words: [String]) -> String { words.joined(separator: "\n") }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Space.s4) {
-            let langs = app.prefs.languages.filter(\.hasExtras)
-            if langs.isEmpty {
-                Text("Filler words are removed in English and German.")
-                    .foregroundStyle(Color.vyLabelSecondary)
-            } else {
-                HStack(alignment: .top, spacing: Space.s4) {
-                    if langs.contains(.en) { column("English", $english) }
-                    if langs.contains(.de) { column("German", $german) }
+        let lang = current
+        SettingsSheet(title: "Filler Words",
+                      explanation: "vypo removes these words from what you dictate, in each of your languages.",
+                      width: SheetWidth.list) {
+            if app.prefs.languages.count > 1 {
+                Picker("Language", selection: Binding(get: { lang }, set: show)) {
+                    ForEach(app.prefs.languages) { Text($0.name).tag($0) }
                 }
+                .pickerStyle(.menu)
+                .fixedSize()
             }
-            HStack {
-                Button("Reset to defaults") {
-                    english = FillerRemover.defaultWords(.en).joined(separator: "\n")
-                    german = FillerRemover.defaultWords(.de).joined(separator: "\n")
-                }
-                Spacer()
-                Button("Cancel", role: .cancel) { dismiss() }
-                    .keyboardShortcut(.cancelAction)
-                Button("Save") {
-                    app.prefs.setFillerWords(Self.words(english), for: .en)
-                    app.prefs.setFillerWords(Self.words(german), for: .de)
-                    dismiss()
-                }
-                .buttonStyle(.borderedProminent)
-                .keyboardShortcut(.defaultAction)
+            // Saved in the binding, so showing another language can't write this text into it.
+            SheetWordEditor(label: "\(lang.name)",
+                            text: Binding(get: { text }, set: { text = $0; save($0, for: lang) }),
+                            height: 200,
+                            hint: "No filler words for \(lang.name) yet. Add one per line.")
+                .id(lang) // A fresh editor, so ⌘Z can't bring another language's list back.
+        } footer: {
+            SheetListFooter {
+                Button("Restore Defaults…") { confirmRestore = true }
+                    .disabled(app.prefs.fillerWords(for: lang) == FillerRemover.defaultWords(lang))
             }
         }
-        .padding(Space.s5)
-        .frame(width: 440)
-        .onAppear {
-            english = app.prefs.fillerWords(for: .en).joined(separator: "\n")
-            german = app.prefs.fillerWords(for: .de).joined(separator: "\n")
+        .onAppear { text = joined(app.prefs.fillerWords(for: lang)) }
+        .onChange(of: language) { if let language { show(language) } }
+        .alert("Restore the default filler words for \(lang.name)?", isPresented: $confirmRestore) {
+            Button("Restore", role: .destructive) {
+                app.prefs.setFillerWords(FillerRemover.defaultWords(lang), for: lang)
+                text = joined(app.prefs.fillerWords(for: lang))
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("This replaces your list.")
         }
     }
 
-    private func column(_ title: LocalizedStringKey, _ text: Binding<String>) -> some View {
-        VStack(alignment: .leading, spacing: Space.s1) {
-            Text(title).font(.headline)
-            TextEditor(text: text)
-                .font(.body)
-                .frame(height: 180)
-                .scrollContentBackground(.hidden)
-                .padding(4)
-                .background(RoundedRectangle(cornerRadius: Radius.sm).fill(Color.vyBgGroup))
-                .overlay(RoundedRectangle(cornerRadius: Radius.sm).strokeBorder(Color.vyBorderControl, lineWidth: 1))
-                .accessibilityLabel(Text(title))
-        }
+    private func show(_ lang: Lang) {
+        shown = lang
+        text = joined(app.prefs.fillerWords(for: lang))
+    }
+
+    private func save(_ text: String, for lang: Lang) {
+        let words = Self.words(text)
+        if words != app.prefs.fillerWords(for: lang) { app.prefs.setFillerWords(words, for: lang) }
     }
 
     static func words(_ text: String) -> [String] {

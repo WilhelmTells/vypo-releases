@@ -50,7 +50,7 @@ enum SpokenPunctuation {
         apply(text, table: phrases(language), language: language, typographic: typographic, terms: terms)
     }
 
-    /// The same with another table (lowercase words, longest first): the Writing entries of Spoken characters.
+    /// The same with another table (lowercase words, longest first): the entries of Spoken characters.
     static func apply(_ text: String, table: [(words: [String], mark: Mark)], language: Lang, typographic: Bool = true,
                       terms: Set<String> = []) -> String {
         let tokens = Tokenized(text)
@@ -62,8 +62,10 @@ enum SpokenPunctuation {
             for (phrase, mark) in table where i + phrase.count <= words.count {
                 let window = words[i..<(i + phrase.count)]
                 guard zip(window, phrase).allSatisfy({ $0.core.lowercased() == $1 }) else { continue }
-                // “ein wichtiger Punkt”, “the period”: a noun, not a mark.
-                if isNoun(words, at: i, language: language) { continue }
+                // “ein wichtiger Punkt”, “the period”, “Punkt acht Uhr”: a word, not a mark.
+                if case .punct(let p) = mark {
+                    if staysWord(words, at: i, count: phrase.count, output: p, language: language) { continue }
+                } else if isNoun(words, at: i, language: language) { continue }
                 // Leading punctuation of the spoken words stays; trailing punctuation the model added is dropped.
                 if let lead = window.first?.lead, !lead.isEmpty {
                     var w = TextWord(Substring(lead)); w.lead = lead; w.core = ""; w.trail = ""
@@ -84,7 +86,7 @@ enum SpokenPunctuation {
         var out = ""
         var capitalize = false
         var glue = true // no space before the next word
-        for item in items {
+        for (n, item) in items.enumerated() {
             switch item {
             case .word(var w):
                 if capitalize, !w.core.isEmpty {
@@ -96,7 +98,7 @@ enum SpokenPunctuation {
                 if !glue && !out.isEmpty { out += " " }
                 out += w.text
                 glue = false
-                if let last = w.trail.last, ".?!".contains(last) { capitalize = true }
+                if let last = w.trail.last, ".?!".contains(last), !isAbbreviation(items, at: n) { capitalize = true }
             case .mark(.punct(let p)):
                 trimTrailingSpaces(&out)
                 // Drop a mark the model already put there.
@@ -122,6 +124,26 @@ enum SpokenPunctuation {
         return out
     }
 
+    /// Abbreviations a sentence doesn't end with, lowercase and without spaces. The next word stays as it is: only a
+    /// capital is ever added, so “usw. Dann” keeps its “Dann”.
+    private static let abbreviations: Set<String> = [
+        "z.b.", "bzw.", "usw.", "ca.", "d.h.", "u.a.", "etc.", "nr.", "dr.", "prof.", "bspw.", "evtl.", "ggf.", "inkl.", "vgl.",
+        "z.t.", "u.u.", "sog.", "str.", "mio.", "mrd.",
+        "e.g.", "i.e.", "vs.", "mr.", "mrs.", "ms.", "approx.", "jr.", "sr.", "st.", "no.",
+    ]
+
+    /// Whether the word at `n` ends in the period of an abbreviation, also one in two words (“z. B.”, “d. h.”).
+    private static func isAbbreviation(_ items: [Item], at n: Int) -> Bool {
+        func text(_ i: Int) -> String? {
+            guard items.indices.contains(i), case .word(let w) = items[i], w.trail == "." else { return nil }
+            return w.core.lowercased() + w.trail
+        }
+        guard let word = text(n) else { return false }
+        return abbreviations.contains(word)
+            || text(n - 1).map { abbreviations.contains($0 + word) } == true
+            || text(n + 1).map { abbreviations.contains(word + $0) } == true
+    }
+
     /// Words that can stand between an article and a noun without being an adjective.
     private static let notAdjectives: Set<String> = ["alles", "etwas", "nichts", "vieles", "jetzt", "immer", "schon", "eben", "dann", "noch"]
 
@@ -132,17 +154,50 @@ enum SpokenPunctuation {
         "kein", "keine", "keinen", "keinem", "keiner", "beim", "zum", "zur", "vom", "im", "am", "unterm", "überm", "vorm",
     ]
 
+    /// The one rule for every spoken mark and symbol, in every app: whether the spoken words at `i` (`count` words) stay
+    /// words. A noun (`isNoun`), or a period or comma right before a number (`beforeNumber`). Symbols that connect words
+    /// (`/`, `-`) ask only the word right before: “the folder slash docs” is a path, “the slash command” a noun.
+    static func staysWord(_ words: [TextWord], at i: Int, count: Int, output: String, language: Lang?) -> Bool {
+        isNoun(words, at: i, language: language, adjectives: Replacements.join(for: output) != .connect)
+            || ((output == "." || output == ",") && beforeNumber(words, afterIndex: i + count - 1))
+    }
+
+    /// Number words after which “Punkt” or “Komma” is no mark (“Punkt acht Uhr”, “drei Komma fünf”). Up to twelve, the
+    /// teens, the tens, hundred and thousand. Not “ein”: it is mostly an article (“Punkt ein neuer Satz”).
+    private static let numberWords: Set<String> = [
+        "null", "eins", "zwei", "drei", "vier", "fünf", "sechs", "sieben", "acht", "neun", "zehn", "elf", "zwölf",
+        "dreizehn", "vierzehn", "fünfzehn", "sechzehn", "siebzehn", "achtzehn", "neunzehn",
+        "zwanzig", "dreißig", "vierzig", "fünfzig", "sechzig", "siebzig", "achtzig", "neunzig", "hundert", "tausend",
+        "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve",
+        "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen",
+        "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety", "hundred", "thousand",
+    ]
+
+    /// Whether the word after `i` is a digit or a number word, with nothing between them but a space.
+    private static func beforeNumber(_ words: [TextWord], afterIndex i: Int) -> Bool {
+        guard i + 1 < words.count, words[i].trail.isEmpty, words[i + 1].lead.isEmpty else { return false }
+        let next = words[i + 1].core
+        return next.first?.isNumber == true || numberWords.contains(next.lowercased())
+    }
+
     /// Whether the spoken word at `i` is used as a noun: an article or possessive (`GlossaryCorrector.determiners`
     /// and `moreDeterminers`; English also “an”) stands right before it, or two words before it with one adjective between
     /// (“ein wichtiger Punkt”). German adjectives are lowercase and inflected (-e -en -er -es -em), English ones
-    /// are any lowercase word. Nothing between the words but a space.
-    static func isNoun(_ words: [TextWord], at i: Int, language: Lang) -> Bool {
-        func determiner(_ w: TextWord) -> Bool {
-            w.lead.isEmpty && w.trail.isEmpty && isDeterminer(w.core, language: language)
+    /// are any lowercase word. Nothing between the words but a space. `adjectives: false` looks only at the word right
+    /// before: line breaks and connecting symbols, where “the code new line” is still a break.
+    /// A single capital letter names a letter (“Pfad A Schrägstrich B”); it is an article only where an English
+    /// sentence starts (“A long period of time”).
+    static func isNoun(_ words: [TextWord], at i: Int, language: Lang?, adjectives: Bool = true) -> Bool {
+        func determiner(_ at: Int) -> Bool {
+            let w = words[at]
+            guard w.lead.isEmpty, w.trail.isEmpty, isDeterminer(w.core, language: language) else { return false }
+            guard w.core.count == 1, w.core.first?.isUppercase == true else { return true }
+            let startsSentence = at == 0 || words[at - 1].trail.last.map { ".?!".contains($0) } == true
+            return startsSentence && language != .de
         }
         guard i > 0 else { return false }
-        if determiner(words[i - 1]) { return true }
-        guard i > 1, determiner(words[i - 2]) else { return false }
+        if determiner(i - 1) { return true }
+        guard adjectives, i > 1, determiner(i - 2) else { return false }
         let a = words[i - 1]
         guard a.lead.isEmpty, a.trail.isEmpty, a.core.count >= 3, a.core.first?.isLowercase == true,
               !notAdjectives.contains(a.core) else { return false }

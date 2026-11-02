@@ -65,7 +65,7 @@ struct HistoryPane: View {
                         .fixedSize()
                     }
                     SettingsRow("Clear history") {
-                        DestructiveButton("Clear history") { confirmClear = true }
+                        DestructiveButton("Clear History…") { confirmClear = true }
                     }
                 }
             }
@@ -129,7 +129,7 @@ struct HistoryPane: View {
         }
         if hiddenCount > 0 {
             HStack {
-                Button("Show more") { shown += Self.page }
+                Button("Show More") { shown += Self.page }
                     .buttonStyle(.plain)
                     .foregroundStyle(Color.vyAccent)
                 Spacer()
@@ -169,7 +169,7 @@ struct HistoryPane: View {
                 .transition(.opacity)
             } else {
                 Button { openSearch() } label: {
-                    Label("Search history", systemImage: "magnifyingglass")
+                    Label("Search History", systemImage: "magnifyingglass")
                         .labelStyle(.iconOnly)
                         .frame(width: 22, height: 22)
                         .contentShape(Rectangle())
@@ -219,11 +219,11 @@ struct HistoryPane: View {
         editing = nil
         guard new != old, !new.isEmpty else { return }
         app.history.update(item.id) { $0.text = new }
-        var latest: GlossarySuggestion?
-        for sub in WordDiff.suggestionCandidates(from: old, to: new) where !app.glossary.contains(term: sub.term) {
-            latest = app.glossary.suggest(heard: sub.heard, term: sub.term, scope: GlossaryScope(item.language))
+        let filter = CorrectionFilter(languages: app.prefs.languages, isGlossaryTerm: app.glossary.contains(term:))
+        let pairs = filter.accepted(from: old, to: new)
+        if let latest = app.glossary.learn(from: pairs, scope: GlossaryScope(item.language), source: .history) {
+            banner = .offer(latest)
         }
-        if let latest { banner = .offer(latest) }
     }
 
     private func accept() {

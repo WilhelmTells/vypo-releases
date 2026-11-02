@@ -311,6 +311,7 @@ final class SymbolPolishTests: XCTestCase {
         XCTAssertEqual(run("Begriffserklärung Doppelpunkt Zero Day Exploit."), "Begriffserklärung: Zero Day Exploit")
         // The article only counts right before the word.
         XCTAssertEqual(run("the folder slash docs", language: .en), "the folder/docs")
+        XCTAssertEqual(run("Pfad A Schrägstrich B"), "Pfad A/B")
     }
 
     func testAloneStaysASymbolWhateverTheRule() {

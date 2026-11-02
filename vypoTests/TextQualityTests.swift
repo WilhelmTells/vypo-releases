@@ -80,11 +80,17 @@ final class SpokenPunctuationTests: XCTestCase {
         XCTAssertEqual(TypographicQuotes.apply("\"Hi\" there", language: .en), "“Hi” there")
     }
 
-    func testPipelineAppliesOnlyInWritingApps() {
+    /// `legacy` keeps the separate table for Writing apps; with Spoken characters it works in every app.
+    func testPipelineByLayout() {
         var ctx = PipelineContext(language: .en)
         ctx.mode = .standard
         XCTAssertEqual(TextPipeline.process("hello comma world", ctx), "hello comma world")
         ctx.mode = .writing
         XCTAssertEqual(TextPipeline.process("hello comma world", ctx), "hello, world")
+        ctx.spokenCharacters = SpokenCharacters.defaults
+        for mode in [AppMode.standard, .prompt, .writing] {
+            ctx.mode = mode
+            XCTAssertEqual(TextPipeline.process("hello comma world", ctx), "hello, world", "\(mode)")
+        }
     }
 }

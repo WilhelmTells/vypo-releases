@@ -22,6 +22,7 @@ final class AppCoordinator {
     let positioner = PillPositioner()
     var permissions: PermissionMonitor { app.permissions }
     let windows: WindowManager
+    private let widgetSync: WidgetSync
     let memory = DictationMemory()
     /// The language of the previous dictation; short ones that can't be told apart keep it.
     private var lastLanguage: Lang?
@@ -36,11 +37,13 @@ final class AppCoordinator {
     /// Holds a dictation that found no text field on the clipboard until you paste it.
     private let clipboard = ClipboardKeeper()
     private(set) var dictation: DictationController!
+    private lazy var corrections = CorrectionLearner(app: app)
 
     init(app: AppState) {
         self.app = app
         models = ModelService()
         windows = WindowManager(app: app)
+        widgetSync = WidgetSync(app: app)
         app.models = models
     }
 
@@ -94,6 +97,10 @@ final class AppCoordinator {
             self.hotkey.holdToTalk = prefs.holdToTalk
             self.hotkey.doubleTapHandsFree = prefs.doubleTapHandsFree
         }
+        observeChanges { [weak self] in
+            guard let self, !self.app.prefs.learnFromCorrections else { return }
+            self.corrections.stopAll()
+        }
         hotkey.customShortcut = KeyboardShortcuts.getShortcut(for: .dictation)
         // KeyboardShortcuts posts this (internal) notification for every change made through its API.
         NotificationCenter.default.addObserver(forName: Notification.Name("KeyboardShortcuts_shortcutByNameDidChange"), object: nil, queue: .main) { [weak self] _ in
@@ -112,6 +119,7 @@ final class AppCoordinator {
         RetiredGlossaryHelper.runAtLaunch()
         models.preload()
         app.onOpenSettings = { [weak self] pane in self?.windows.showSettings(pane) }
+        widgetSync.start()
         app.onCopyLast = { [weak self] in self?.copyLastDictation() }
         app.onCopyDiagnostics = { [weak self] in self?.copyDiagnostics() }
         LoginItem.applyDefaultOnce()
@@ -261,8 +269,10 @@ final class AppCoordinator {
             return nil
         }
         // Smart spacing and capitalization, right before pasting (§23.1).
+        var insertion: InsertionContext?
         if prefs.smartSpacing && prefs.pasteAutomatically {
             let context = if let read = ctx.insertion { await read.value } else { ContextReader.insertionContext() }
+            insertion = context
             text = ContextFormatter.format(text, context: context, language: language,
                                            glossaryTerms: Set(glossary.map(\.term)).union(prefs.spellingsEnabled ? prefs.spellings : []))
         }
@@ -312,8 +322,13 @@ final class AppCoordinator {
             case .paste:
                 clipboard.settle()
                 let outcomeID = (app.lastOutcome?.id ?? 0) + 1
-                let restorer = Paster.paste(text, restoreClipboard: prefs.restoreClipboard) { [weak app] reason in
+                // A Prompt app's Return sends the text right away, so there is nothing left to correct; Try it is vypo's own field.
+                let watched = !tryItGate.isOpen() && !ProfileTweaks.sendsReturn(mode: ctx.mode, autoEnter: app.profiles.autoEnter(for: ctx.bundleID),
+                                                                               inTextField: true, text: text)
+                let restorer = Paster.paste(text, restoreClipboard: prefs.restoreClipboard) { [weak app, weak self, text, insertion] reason in
                     app?.pasteSettled(id: outcomeID, how: Self.settleName(reason))
+                    guard watched, let frontPID else { return }
+                    self?.corrections.pasted(text, app: frontApp, pid: frontPID, language: language, context: insertion)
                 }
                 // Try it only: if the field has not read the paste after a second, press ⌘V once more.
                 if let restorer, tryItGate.isOpen() {

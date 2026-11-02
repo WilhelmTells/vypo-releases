@@ -35,6 +35,9 @@ targets:
     platform: macOS
     sources:
       - path: vypo
+      # The widget's data and links; its views too, so the tests can render them (not in Release, see below).
+      - path: vypoWidget/Shared
+      - path: vypoWidget/Views
       - path: Resources
         excludes:
           - "Vypo.icon"
@@ -48,17 +51,23 @@ targets:
       - package: FluidAudio
       - package: KeyboardShortcuts
       - package: Sparkle
+      - target: vypoWidget
+        embed: true
+        codeSign: false
     entitlements:
       path: vypo/vypo.entitlements
       properties:
         com.apple.security.device.audio-input: true
+        # The app writes the widget's snapshot here. The team prefix needs no provisioning profile on macOS.
+        com.apple.security.application-groups:
+          - "$(DEVELOPMENT_TEAM).com.wilhelmtells.vypo"
     info:
       path: vypo/Info.plist
       properties:
         CFBundleDisplayName: vypo
         CFBundleName: vypo
-        CFBundleShortVersionString: "0.4.1"
-        CFBundleVersion: "5"
+        CFBundleShortVersionString: "0.5.0"
+        CFBundleVersion: "6"
         # Updates (Sparkle). The feed address stays the same when the files move: the website redirects it.
         SUFeedURL: "https://wilhelmtells.com/vypo/appcast.xml"
         SUPublicEDKey: "JZUAtmYxrDDdfgeaCJGxbAZ8Ll+rmgBxuYSL2wKVzJY="
@@ -71,6 +80,12 @@ targets:
         LSApplicationCategoryType: public.app-category.productivity
         NSMicrophoneUsageDescription: "vypo listens only while you dictate. Audio never leaves this Mac."
         LSMinimumSystemVersion: "26.0"
+        VYPOAppGroup: "$(DEVELOPMENT_TEAM).com.wilhelmtells.vypo"
+        VYPOURLScheme: vypo
+        # What the widget opens (WidgetLink). scripts/test-app.sh gives its copy another scheme.
+        CFBundleURLTypes:
+          - CFBundleURLName: com.wilhelmtells.vypo
+            CFBundleURLSchemes: [vypo]
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.wilhelmtells.vypo
@@ -82,11 +97,53 @@ targets:
         COMBINE_HIDPI_IMAGES: YES
         ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS: NO
         ASSETCATALOG_COMPILER_GENERATE_ASSET_SYMBOLS: NO
+      configs:
+        Release:
+          EXCLUDED_SOURCE_FILE_NAMES: "WidgetView*.swift"
+  vypoWidget:
+    type: app-extension
+    platform: macOS
+    sources:
+      - path: vypoWidget
+        excludes:
+          - Info.plist
+          - "*.entitlements"
+      # One catalog for the app and the widget, so both say the same.
+      - path: vypo/Localizable.xcstrings
+    entitlements:
+      path: vypoWidget/vypoWidget.entitlements
+      properties:
+        com.apple.security.app-sandbox: true
+        com.apple.security.application-groups:
+          - "$(DEVELOPMENT_TEAM).com.wilhelmtells.vypo"
+    info:
+      path: vypoWidget/Info.plist
+      properties:
+        CFBundleDisplayName: vypo
+        CFBundleShortVersionString: "0.5.0"
+        CFBundleVersion: "6"
+        LSMinimumSystemVersion: "26.0"
+        VYPOAppGroup: "$(DEVELOPMENT_TEAM).com.wilhelmtells.vypo"
+        VYPOURLScheme: vypo
+        VYPOWidgetKind: vypo.level
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.wilhelmtells.vypo.widget
+        PRODUCT_NAME: vypoWidget
+        ENABLE_HARDENED_RUNTIME: YES
+        GENERATE_INFOPLIST_FILE: NO
+        SKIP_INSTALL: YES
+        ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS: NO
+        ASSETCATALOG_COMPILER_GENERATE_ASSET_SYMBOLS: NO
   vypoTests:
     type: bundle.unit-test
     platform: macOS
     sources:
       - path: vypoTests
+      # The widget's images, for WidgetRenderTests.
+      - path: vypoWidget/Assets.xcassets
     dependencies:
       - target: vypo
     settings:

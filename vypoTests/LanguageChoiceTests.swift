@@ -66,7 +66,8 @@ final class LanguageChoiceTests: XCTestCase {
         XCTAssertEqual(Preferences(defaults: d).languages, [.fr])
     }
 
-    func testNoFillerWordsWithoutExtras() {
-        XCTAssertEqual(Preferences(defaults: defaults()).fillerWords(for: .fr), [])
+    func testFillerWordsDontDependOnSpokenPunctuation() {
+        XCTAssertEqual(Preferences(defaults: defaults()).fillerWords(for: .fr), FillerRemover.defaultWords(.fr))
+        XCTAssertEqual(Preferences(defaults: defaults()).fillerWords(for: .hr), [])
     }
 }

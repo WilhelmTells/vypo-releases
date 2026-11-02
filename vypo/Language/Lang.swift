@@ -69,9 +69,6 @@ enum Lang: String, Codable, CaseIterable, Sendable, Identifiable {
         }
     }
 
-    /// Filler words and spoken punctuation exist only for English and German.
-    var hasExtras: Bool { self == .en || self == .de }
-
     /// Typographic quotes: „…“ in German, “…” in English, the locale's for the others.
     func quotes(typographic: Bool) -> (open: String, close: String) {
         guard typographic else { return ("\"", "\"") }

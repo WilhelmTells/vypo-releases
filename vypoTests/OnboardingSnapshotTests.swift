@@ -15,7 +15,8 @@ final class OnboardingSnapshotTests: XCTestCase {
         (Bundle.main.preferredLocalizations.first ?? "en").hasPrefix("de") ? "-de" : ""
     }
 
-    private func shoot<V: View>(_ name: String, size: CGSize, schemes: [Bool] = [false, true], @ViewBuilder _ view: () -> V) throws {
+    private func shoot<V: View>(_ name: String, size: CGSize, schemes: [Bool] = [false, true], adjust: (NSView) -> Void = { _ in },
+                                @ViewBuilder _ view: () -> V) throws {
         guard let dir else { throw XCTSkip("No snapshot dir") }
         for dark in schemes {
             let host = NSHostingView(rootView: view().frame(width: size.width, height: size.height))
@@ -27,11 +28,16 @@ final class OnboardingSnapshotTests: XCTestCase {
             host.layoutSubtreeIfNeeded()
             RunLoop.main.run(until: Date().addingTimeInterval(0.5))
             host.layoutSubtreeIfNeeded()
+            adjust(host)
             guard let rep = host.bitmapImageRepForCachingDisplay(in: host.bounds) else { XCTFail("no rep"); return }
             host.cacheDisplay(in: host.bounds, to: rep)
             try rep.representation(using: .png, properties: [:])!.write(to: dir.appendingPathComponent("\(name)\(suffix)-\(dark ? "dark" : "light").png"))
             window.close()
         }
+    }
+
+    private static func scrollView(in view: NSView) -> NSScrollView? {
+        (view as? NSScrollView) ?? view.subviews.lazy.compactMap { scrollView(in: $0) }.first
     }
 
     /// An app on a scratch store with the permissions and the model in the given state.
@@ -77,6 +83,24 @@ final class OnboardingSnapshotTests: XCTestCase {
         try shoot("s2-waiting", size: big) { onboarding(app(mic: true, ax: false, model: .downloading(0.3)), step: 1) { p, _ in p.permissionsAsked = true } }
         try shoot("s2-both", size: big) { onboarding(app(model: .downloading(0.3)), step: 1) }
         try shoot("s2-mic-denied", size: big) { onboarding(app(mic: false, micDenied: true, ax: false, model: .downloading(0.3)), step: 1) }
+        // The worst case: microphone refused, Accessibility requested, details open (reopened by hand after the click).
+        try shoot("s2-overflow", size: big) {
+            onboarding(app(mic: false, micDenied: true, ax: false, model: .downloading(0.3)), step: 1) { p, _ in p.permissionsAsked = true; p.permissionsDetails = true }
+        }
+        // Scrolled to the end: the content reaches the last line, the footer stays where it is.
+        try shoot("s2-overflow-end", size: big, adjust: { host in
+            guard let scroll = Self.scrollView(in: host), let doc = scroll.documentView else { return XCTFail("no scroll view") }
+            XCTAssertGreaterThan(doc.frame.height, scroll.contentView.bounds.height)
+            scroll.contentView.scroll(to: NSPoint(x: 0, y: doc.isFlipped ? doc.frame.height - scroll.contentView.bounds.height : 0))
+            scroll.reflectScrolledClipView(scroll.contentView)
+            RunLoop.main.run(until: Date().addingTimeInterval(0.3))
+        }) {
+            onboarding(app(mic: false, micDenied: true, ax: false, model: .downloading(0.3)), step: 1) { p, _ in p.permissionsAsked = true; p.permissionsDetails = true }
+        }
+        // The same right after “Allow Accessibility…”: the click closes the details.
+        try shoot("s2-overflow-collapsed", size: big) {
+            onboarding(app(mic: false, micDenied: true, ax: false, model: .downloading(0.3)), step: 1) { p, _ in p.permissionsAsked = true }
+        }
         try shoot("s2-back-waiting", size: CGSize(width: 400, height: 100)) {
             let a = app(ax: false); return BackToVypoView(app: a, back: {}).environment(a).background(Color.vyBgWindow)
         }

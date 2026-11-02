@@ -17,7 +17,7 @@ struct AppsPane: View {
                 ForEach(app.profiles.sorted) { profile in
                     row(profile)
                 }
-                Button("Add app…") { addApp() }
+                Button("Add App…") { addApp() }
                     .buttonStyle(.plain)
                     .foregroundStyle(Color.vyAccent)
             } header: {
@@ -36,7 +36,7 @@ struct AppsPane: View {
             }
 
             Section {
-                // A new installation sets every spoken character in Words → Spoken characters, with its modes.
+                // A new installation sets every spoken character in Words → Spoken characters, the same in every app.
                 if app.wordsLayout == .legacy {
                     Toggle(isOn: $prefs.spokenPunctuation) {
                         RowLabel(title: "Spoken punctuation", description: "English and German only.")
@@ -49,7 +49,7 @@ struct AppsPane: View {
                 if app.wordsLayout == .legacy {
                     Text("Say “comma” or “Komma” and get “,”; quotes become “curly”.")
                 } else {
-                    Text("Quotes become “curly”, spoken ones too. Which words become characters is set in Words → Spoken characters.")
+                    Text("Straight quotes become “curly”. Spoken quotes always are, in every app. Which words become characters is set in Words → Spoken characters.")
                 }
             }
         }

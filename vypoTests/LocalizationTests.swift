@@ -36,7 +36,9 @@ final class LocalizationTests: XCTestCase {
         for (key, value) in try catalog("Localizable") {
             let entry = value as? [String: Any]
             let unit = ((entry?["localizations"] as? [String: Any])?["de"] as? [String: Any])?["stringUnit"] as? [String: Any]
-            guard let german = unit?["value"] as? String else { continue }
+            guard var german = unit?["value"] as? String else { continue }
+            // A plural inside a longer string (`%#@name@`) stands for one number.
+            german = german.replacingOccurrences(of: "%#@\\w+@", with: "%lld", options: .regularExpression)
             XCTAssertEqual(placeholders(key), placeholders(german), "“\(key)” → “\(german)”")
         }
     }

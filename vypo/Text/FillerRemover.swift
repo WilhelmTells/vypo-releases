@@ -2,11 +2,31 @@ import Foundation
 
 /// Removes filler words like "um" and "äh" (§23.2).
 enum FillerRemover {
+    /// The built-in list of a language. Only pure hesitation sounds, never a word that is also a real word there, because
+    /// removal ignores case (Spanish “em” is out for “EM”).
+    /// Croatian stays empty on purpose: its usual filler, “ovaj”, is a real word.
     static func defaultWords(_ lang: Lang) -> [String] {
         switch lang {
-        case .en: ["uh", "um", "uhm", "umm", "erm", "er", "ah", "hmm", "mhm"]
+        case .bg: ["ъъъ", "ммм"]
+        case .cs: ["ehm", "hmm"]
+        case .da: ["øh", "øhm", "hmm"]
         case .de: ["äh", "ähm", "ähh", "öhm", "öh", "hm", "hmm", "mhm"]
-        default: []
+        case .el: ["εεε", "μμμ"]
+        case .en: ["uh", "um", "uhm", "umm", "erm", "er", "ah", "hmm", "mhm"]
+        case .es: ["ehm", "mmm"]
+        case .fi: ["öö", "hmm"]
+        case .fr: ["euh", "heu", "hum"]
+        case .hr: []
+        case .hu: ["ööö", "öö", "hmm"]
+        case .it: ["ehm", "uhm", "mmm"]
+        case .nl: ["uh", "uhm", "eh", "ehm"]
+        case .pl: ["yyy", "eee", "hmm"]
+        case .pt: ["hum", "ahn", "hmm"]
+        case .ro: ["ăăă", "ăă", "hmm"]
+        case .ru: ["эээ", "ммм"]
+        case .sk: ["ehm", "hmm"]
+        case .sv: ["öh", "eh", "hmm"]
+        case .uk: ["еее", "ммм"]
         }
     }
 

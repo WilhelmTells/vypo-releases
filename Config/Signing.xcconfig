@@ -2,5 +2,7 @@
 //
 //     DEVELOPMENT_TEAM = ABCDE12345
 //
-// `security find-identity -v -p codesigning` shows it as the OU of your “Apple Development” certificate.
+// It is the OU of your “Apple Development” certificate:
+//
+//     security find-certificate -c "Apple Development" -p | openssl x509 -noout -subject
 #include? "Local.xcconfig"

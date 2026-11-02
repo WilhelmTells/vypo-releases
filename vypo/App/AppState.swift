@@ -1,6 +1,12 @@
 import AppKit
 import Observation
 
+/// A place in a Settings pane that a widget link points to.
+enum PaneScrollTarget: Hashable {
+    case achievements(AchievementID)
+    case suggestions
+}
+
 /// Root UI state, injected via `.environment` (§4).
 @MainActor
 @Observable
@@ -41,6 +47,8 @@ final class AppState {
     var pillVisible = true
     /// The selected Settings pane.
     var settingsPane: SettingsPane = .general
+    /// What the pane scrolls to when a widget link opened it; the pane clears it.
+    var scrollTarget: PaneScrollTarget?
 
     @ObservationIgnored var pill: PillController?
     /// Set at launch (nil in unit tests).
@@ -272,6 +280,22 @@ final class AppState {
     func pillStopTapped() { onStopTapped() }
 
     func openSettings(_ pane: SettingsPane? = nil) { onOpenSettings(pane) }
+
+    /// Opens what the widget links to, the way the menu opens Settings. A stamp that doesn't exist is no link.
+    func open(_ link: WidgetLink) {
+        switch link {
+        case .stats:
+            openSettings(.stats)
+        case .stamp(let raw):
+            guard let id = AchievementID(rawValue: raw) else { return }
+            prefs.achievementsExpanded = true
+            scrollTarget = .achievements(id)
+            openSettings(.stats)
+        case .suggestion:
+            scrollTarget = .suggestions
+            openSettings(.words)
+        }
+    }
     func openAbout() { onOpenSettings(.about) }
 
     /// Click on an error opens the matching place (§18).
@@ -334,7 +358,7 @@ enum SettingsPane: String, CaseIterable, Identifiable, Hashable {
         case .general: String(localized: "How vypo starts, pastes and transcribes.")
         case .recording: String(localized: "How you start dictating, and what vypo listens with.")
         case .appearance: String(localized: "How vypo looks on your Mac.")
-        case .words: String(localized: "Which words come out: your terms, replacements and filler words.")
+        case .words: String(localized: "Which words come out: your terms, replacements, spoken characters, filler words and spellings.")
         case .apps: String(localized: "What’s different in specific apps.")
         case .history: String(localized: "Your recent dictations, only on this Mac.")
         case .stats: String(localized: "How much you’ve dictated. Counted only on this Mac.")

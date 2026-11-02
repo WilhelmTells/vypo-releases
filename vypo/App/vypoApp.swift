@@ -16,6 +16,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     let app = AppState()
     private(set) var coordinator: AppCoordinator?
     private var statusItem: StatusItemController?
+    /// Links that arrived before the app was up: a click on the widget can be what launches it.
+    private var pendingLinks: [WidgetLink] = []
 
     /// Unit tests run inside the app; skip startup side effects then.
     static var isRunningTests: Bool { RunEnvironment.isTesting }
@@ -38,6 +40,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             Task { @MainActor in
                 AppPresence.apply(showInDock: show, windowOpen: self.coordinator?.windows.isWindowOpen ?? false, activate: true)
             }
+        }
+        pendingLinks.forEach(app.open)
+        pendingLinks = []
+    }
+
+    /// A click on the widget. Unknown addresses do nothing.
+    func application(_ application: NSApplication, open urls: [URL]) {
+        guard !Self.isRunningTests else { return }
+        for link in urls.compactMap({ WidgetLink(url: $0) }) {
+            if coordinator == nil { pendingLinks.append(link) } else { app.open(link) }
         }
     }
 

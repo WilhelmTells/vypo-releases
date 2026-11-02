@@ -9,14 +9,31 @@ struct StatsPane: View {
     @State private var comparison: WorkComparison?
 
     var body: some View {
+        ScrollViewReader { proxy in
+            form
+                .onAppear { scrollToTarget(proxy) }
+                .onChange(of: app.scrollTarget) { scrollToTarget(proxy) }
+        }
+    }
+
+    /// A widget link: brings the achievements card into view; a ready stamp is on it.
+    private func scrollToTarget(_ proxy: ScrollViewProxy) {
+        guard case .achievements = app.scrollTarget else { return }
+        app.scrollTarget = nil
+        Task { @MainActor in proxy.scrollTo(Self.achievementsAnchor, anchor: .top) }
+    }
+
+    private static let achievementsAnchor = "achievements"
+
+    private var form: some View {
         @Bindable var prefs = app.prefs
-        Form {
+        return Form {
             Section {
                 Toggle("Collect stats", isOn: $prefs.collectStats)
                     .onChange(of: prefs.collectStats) { _, on in if on { app.collectStatsSwitchedOn() } }
                 Toggle("Show level", isOn: $prefs.showLevel)
                 LabeledContent("Reset stats") {
-                    DestructiveButton("Reset stats") { confirmReset = true }
+                    DestructiveButton("Reset Stats…") { confirmReset = true }
                 }
             } header: {
                 PaneSectionHeader(pane: .stats) {
@@ -27,7 +44,9 @@ struct StatsPane: View {
                         // Under the level card, folding to one row (owner's decision, 2026-10-29); its popover reaches
                         // over the cards below.
                         if prefs.collectStats {
-                            AchievementsCard(store: app.achievements, expanded: $prefs.achievementsExpanded).zIndex(1)
+                            AchievementsCard(store: app.achievements, expanded: $prefs.achievementsExpanded)
+                                .zIndex(1)
+                                .id(Self.achievementsAnchor)
                         }
                         row {
                             speedCard
@@ -401,10 +420,7 @@ private struct Heatmap: View {
                width: cell, height: cell)
     }
 
-    static func level(_ words: Int, peak: Int) -> Int {
-        guard words > 0 else { return 0 }
-        return min(4, 1 + Int(Double(words) / Double(peak) * 3.999))
-    }
+    static func level(_ words: Int, peak: Int) -> Int { WidgetSnapshot.activityLevel(words, peak: peak) }
 
     /// Mon, Wed and Fri, for the rows in the calendar's weekday order; empty for the others.
     static func weekdayLabels() -> [String] {

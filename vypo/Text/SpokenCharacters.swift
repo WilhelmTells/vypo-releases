@@ -24,25 +24,28 @@ enum WordsLayout: String, Sendable {
     }
 }
 
-/// A word you say for a character (Words → Spoken characters): its spellings, the character, on/off, and the modes in
-/// which it works in the middle of a sentence. Said on its own it works in every app.
+/// A word you say for a character (Words → Spoken characters): its spellings, the character, on/off, and whether it also
+/// works in the middle of a sentence. Said on its own it always works. The same in every app, except Off apps, where
+/// vypo doesn't dictate.
 struct SpokenCharacter: Codable, Identifiable, Hashable, Sendable {
     var id = UUID()
     var spoken: [String]
     var output: String
     var enabled = true
-    /// Default, Prompt and Writing; none means only on its own.
-    var inSentence: Set<AppMode>
+    /// false: only on its own.
+    var alsoInSentence: Bool
 
-    init(id: UUID = UUID(), spoken: [String], output: String, enabled: Bool = true, inSentence: Set<AppMode>) {
+    init(id: UUID = UUID(), spoken: [String], output: String, enabled: Bool = true, alsoInSentence: Bool) {
         self.id = id
         self.spoken = spoken
         self.output = output
         self.enabled = enabled
-        self.inSentence = inSentence
+        self.alsoInSentence = alsoInSentence
     }
 
-    private enum CodingKeys: String, CodingKey { case id, spoken, output, enabled, inSentence }
+    /// `inSentence` is the list of modes up to 0.4.1, read when `alsoInSentence` is missing and still written, so 0.4.1
+    /// can read the file: all three modes when on, none when off.
+    private enum CodingKeys: String, CodingKey { case id, spoken, output, enabled, alsoInSentence, inSentence }
 
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -50,7 +53,8 @@ struct SpokenCharacter: Codable, Identifiable, Hashable, Sendable {
         spoken = try c.decode([String].self, forKey: .spoken)
         output = try c.decode(String.self, forKey: .output)
         enabled = try c.decodeIfPresent(Bool.self, forKey: .enabled) ?? true
-        inSentence = Set(try c.decodeIfPresent([AppMode].self, forKey: .inSentence) ?? [])
+        alsoInSentence = try c.decodeIfPresent(Bool.self, forKey: .alsoInSentence)
+            ?? !(try c.decodeIfPresent([AppMode].self, forKey: .inSentence) ?? []).isEmpty
     }
 
     func encode(to encoder: Encoder) throws {
@@ -59,56 +63,53 @@ struct SpokenCharacter: Codable, Identifiable, Hashable, Sendable {
         try c.encode(spoken, forKey: .spoken)
         try c.encode(output, forKey: .output)
         try c.encode(enabled, forKey: .enabled)
-        // In the order of the modes, so the file doesn't change from one save to the next.
-        try c.encode(SpokenCharacters.modes.filter(inSentence.contains), forKey: .inSentence)
+        try c.encode(alsoInSentence, forKey: .alsoInSentence)
+        try c.encode(alsoInSentence ? SpokenCharacters.modes : [], forKey: .inSentence)
     }
 
     var spokenText: String { spoken.joined(separator: ", ") }
 
     /// The first two spellings for the list, those of vypo's language first (“Comma” before “Komma” in English).
-    var summary: String { summary() }
-
-    func summary(quote: (String) -> String = { "“\($0)”" }) -> String {
-        summary(for: Lang(rawValue: String(Formatting.uiLocale.identifier.prefix(2))) ?? .en, quote: quote)
-    }
+    var summary: String { summary(for: Lang(rawValue: String(Formatting.uiLocale.identifier.prefix(2))) ?? .en) }
 
     /// The first two spellings, those of `language` first, then the ones of no known language, then the others. Only
     /// the display: the stored order stays.
-    func summary(for language: Lang, quote: (String) -> String = { "“\($0)”" }) -> String {
+    func summary(for language: Lang) -> String {
         let rank = { (s: String) in SpokenCharacters.language(of: s).map { $0 == language ? 0 : 2 } ?? 1 }
         let shown = spoken.enumerated().sorted { (rank($0.element), $0.offset) < (rank($1.element), $1.offset) }.map(\.element)
-        return shown.prefix(2).map(quote).joined(separator: ", ") + (spoken.count > 2 ? " …" : "")
+        return shown.prefix(2).map(Formatting.quoted).joined(separator: ", ") + (spoken.count > 2 ? " …" : "")
     }
 }
 
 enum SpokenCharacters {
-    /// The modes an entry can work in, in a sentence.
+    /// What the file says in the old `inSentence`, in this order.
     static let modes: [AppMode] = [.standard, .prompt, .writing]
 
-    /// Opening and closing quote: in Writing apps they become the language's quotes (“Typographic quotes”) or `"`.
+    /// Opening and closing quote as stored: they are written in the forms of the detected language.
     static let openQuote = "“"
     static let closeQuote = "”"
 
-    /// What a new installation starts with and “Restore default characters” brings back: the eight default entries of
-    /// Replacements before 0.4.0 and the words of `SpokenPunctuation`, each working where one of the two made it work.
+    /// What a new installation starts with and “Restore Defaults” brings back: the eight default entries of
+    /// Replacements before 0.4.0 and the words of `SpokenPunctuation`. The hyphen stays on its own: “Strich” and “Dash”
+    /// are too often plain words.
     /// “Colon” is left out on purpose: in English it is also an organ.
     static var defaults: [SpokenCharacter] {
         [
-            SpokenCharacter(spoken: ["new line", "neue Zeile"], output: "\n", inSentence: [.standard, .prompt, .writing]),
-            SpokenCharacter(spoken: ["new paragraph", "neuer Absatz"], output: "\n\n", inSentence: [.standard, .prompt, .writing]),
-            SpokenCharacter(spoken: ["Punkt", "Period", "Full stop"], output: ".", inSentence: [.writing]),
-            SpokenCharacter(spoken: ["Komma", "Comma"], output: ",", inSentence: [.writing]),
-            SpokenCharacter(spoken: ["Fragezeichen", "Question mark"], output: "?", inSentence: [.writing]),
-            SpokenCharacter(spoken: ["Ausrufezeichen", "Exclamation mark", "Exclamation point"], output: "!", inSentence: [.writing]),
-            SpokenCharacter(spoken: ["Doppelpunkt"], output: ":", inSentence: [.prompt, .writing]),
+            SpokenCharacter(spoken: ["new line", "neue Zeile"], output: "\n", alsoInSentence: true),
+            SpokenCharacter(spoken: ["new paragraph", "neuer Absatz"], output: "\n\n", alsoInSentence: true),
+            SpokenCharacter(spoken: ["Punkt", "Period", "Full stop"], output: ".", alsoInSentence: true),
+            SpokenCharacter(spoken: ["Komma", "Comma"], output: ",", alsoInSentence: true),
+            SpokenCharacter(spoken: ["Fragezeichen", "Question mark"], output: "?", alsoInSentence: true),
+            SpokenCharacter(spoken: ["Ausrufezeichen", "Exclamation mark", "Exclamation point"], output: "!", alsoInSentence: true),
+            SpokenCharacter(spoken: ["Doppelpunkt"], output: ":", alsoInSentence: true),
             // Semi-Kolon … Siemikulon: what Parakeet wrote for “Semikolon” in the owner's history.
             SpokenCharacter(spoken: ["Semikolon", "Semicolon", "Semi-Kolon", "Semi Kolon", "Semikolen", "Semi colon", "Semi-colon",
                                      "Sammy Colon", "Semikodon", "Siemikulon"],
-                            output: ";", inSentence: [.prompt, .writing]),
-            SpokenCharacter(spoken: ["Anführungszeichen auf", "Open quote"], output: openQuote, inSentence: [.writing]),
-            SpokenCharacter(spoken: ["Anführungszeichen zu", "Close quote"], output: closeQuote, inSentence: [.writing]),
-            SpokenCharacter(spoken: ["Slash", "Schrägstrich"], output: "/", inSentence: [.prompt]),
-            SpokenCharacter(spoken: ["Bindestrich", "Dash", "Strich"], output: "-", inSentence: []),
+                            output: ";", alsoInSentence: true),
+            SpokenCharacter(spoken: ["Anführungszeichen auf", "Open quote"], output: openQuote, alsoInSentence: true),
+            SpokenCharacter(spoken: ["Anführungszeichen zu", "Close quote"], output: closeQuote, alsoInSentence: true),
+            SpokenCharacter(spoken: ["Slash", "Schrägstrich"], output: "/", alsoInSentence: true),
+            SpokenCharacter(spoken: ["Bindestrich", "Dash", "Strich"], output: "-", alsoInSentence: false),
         ]
     }
 
@@ -146,7 +147,7 @@ enum SpokenCharacters {
         }
     }
 
-    /// The mark `SpokenPunctuation` writes for an output in a Writing app; nil for line breaks and everything else,
+    /// The mark `SpokenPunctuation` writes for an output; nil for line breaks and everything else,
     /// which are replaced like replacements.
     static func mark(for output: String) -> SpokenPunctuation.Mark? {
         if output == openQuote { return .openQuote }
@@ -156,30 +157,41 @@ enum SpokenCharacters {
     }
 
     /// Runs after the user's own replacements, so theirs win. Any language: the spellings are words of one language
-    /// each, and a dictation's detected language isn't always right.
-    /// - Said on its own, an enabled entry works in every mode (`Replacements.apply`).
-    /// - In a sentence, in the modes it is set for. Default and Prompt: as a replacement (spacing from the output, an
-    ///   article before it keeps the word). Writing: punctuation and quotes go through `SpokenPunctuation` (a capital
-    ///   after . ? !, a mark the model wrote is replaced, the noun rule, quote pairs), each line on its own; line breaks
-    ///   and other outputs as replacements.
-    static func apply(_ entries: [SpokenCharacter], to text: String, mode: AppMode, language: Lang,
-                      typographic: Bool = true, terms: Set<String> = []) -> String {
+    /// each, and a dictation's detected language isn't always right. The same in every app:
+    /// - Said on its own, an enabled entry works (`Replacements.apply`).
+    /// - In a sentence, if it is set to. Punctuation and quotes go through `SpokenPunctuation` (a capital after . ? !,
+    ///   a mark the model wrote is replaced, `staysWord`, quote pairs), each line on its own; line breaks and other
+    ///   outputs as replacements.
+    /// Spoken quotes are always the forms of `language`; “Typographic quotes” is about the `"` the model wrote.
+    static func apply(_ entries: [SpokenCharacter], to text: String, language: Lang, terms: Set<String> = []) -> String {
         let on = entries.filter(\.enabled)
-        let marked = { (e: SpokenCharacter) in mode == .writing && e.inSentence.contains(.writing) && mark(for: e.output) != nil }
-        let replacements = on.filter { !marked($0) }.map {
-            Replacement(id: $0.id, spoken: $0.spoken, output: $0.output, inSentence: $0.inSentence.contains(mode) ? .everywhere : .never)
+        let marked = { (e: SpokenCharacter) in e.alsoInSentence && mark(for: e.output) != nil }
+        let quotes = language.quotes(typographic: true)
+        let replacements = on.filter { !marked($0) }.map { e in
+            let output = e.output == openQuote ? quotes.open : e.output == closeQuote ? quotes.close : e.output
+            return Replacement(id: e.id, spoken: e.spoken, output: output, inSentence: e.alsoInSentence ? .everywhere : .never)
         }
-        let result = Replacements.apply(replacements, to: text, mode: .standard, language: language)
-        guard mode == .writing else { return result }
+        let result = Replacements.apply(replacements, to: text, language: language)
         let table = on.filter(marked).flatMap { e in
             e.spoken.map { (words: Replacements.normalized($0).split(separator: " ").map(String.init), mark: mark(for: e.output)!) }
         }
         .filter { !$0.words.isEmpty }
         .sorted { $0.words.count > $1.words.count }
-        // Also with an empty table, as “Spoken punctuation” did: a capital after the model's own . ? !
+        // Also with an empty table: a capital after the model's own . ? !
         return result.components(separatedBy: "\n").map {
-            SpokenPunctuation.apply($0, table: table, language: language, typographic: typographic, terms: terms)
+            SpokenPunctuation.apply($0, table: table, language: language, typographic: true, terms: terms)
         }.joined(separator: "\n")
+    }
+
+    /// Whether `text` ends in a word that `spellings` turn into a period. A Prompt app keeps that period: the user said it.
+    static func endsInSpokenPeriod(_ text: String, spellings: [String], language: Lang) -> Bool {
+        let words = Tokenized(text.components(separatedBy: "\n").last ?? text).words
+        return spellings.contains { spelling in
+            let parts = Replacements.normalized(spelling).split(separator: " ").map(String.init)
+            let start = words.count - parts.count
+            guard !parts.isEmpty, start >= 0, zip(words[start...], parts).allSatisfy({ $0.core.lowercased() == $1 }) else { return false }
+            return !SpokenPunctuation.staysWord(words, at: start, count: parts.count, output: ".", language: language)
+        }
     }
 }
 

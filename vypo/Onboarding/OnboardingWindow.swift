@@ -77,7 +77,16 @@ struct OnboardingView: View {
 
     @ViewBuilder private var content: some View {
         switch OnboardingStep(rawValue: model.step) {
-        case .permissions: PermissionsStep(asked: model.preview.permissionsAsked, details: model.preview.permissionsDetails)
+        case .permissions:
+            // The tallest step: it scrolls when it doesn't fit, and stops above the footer so Continue stays in reach.
+            ScrollView {
+                PermissionsStep(asked: model.preview.permissionsAsked, details: model.preview.permissionsDetails)
+                    .frame(maxWidth: .infinity)
+                    .padding(.bottom, 12)
+            }
+            .scrollBounceBehavior(.basedOnSize)
+            .scrollIndicators(.visible) // The details can sit entirely below the edge; the bar says there's more.
+            .padding(.bottom, Self.footerHeight)
         case .microphone:
             MicrophoneStep(model: model, previewLine: model.preview.micLine, previewSilent: model.preview.micSilent,
                            previewLevel: model.preview.micLevel)
@@ -98,6 +107,8 @@ struct OnboardingView: View {
     }
 
     // MARK: Footer
+
+    private static let footerHeight: CGFloat = 60
 
     private var footer: some View {
         let step = model.step
@@ -125,7 +136,7 @@ struct OnboardingView: View {
             }
         }
         .padding(.horizontal, 24)
-        .frame(height: 60)
+        .frame(height: Self.footerHeight)
         .animation(reduceMotion ? nil : .easeOut(duration: 0.3), value: model.micShowsSkip)
     }
 

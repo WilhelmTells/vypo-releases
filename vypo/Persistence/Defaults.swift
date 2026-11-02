@@ -107,6 +107,7 @@ enum DefaultsKey {
     /// Words → Replacements, `legacy` layout: “Not now” on the hint about Spoken characters; the link stays.
     static let spokenCharactersHintDismissed = "spokenCharactersHintDismissed"
     static let correctionStrength = "correctionStrength"
+    static let learnFromCorrections = "learnFromCorrections"
     static let saveHistory = "saveHistory"
     static let historyRetention = "historyRetention"
     // §23.11
@@ -114,8 +115,8 @@ enum DefaultsKey {
     static let removeFillers = "removeFillers"
     static let spellingsEnabled = "spellingsEnabled"
     static let spellingsList = "spellings.list"
-    static let fillerWordsEN = "fillerWords.en"
-    static let fillerWordsDE = "fillerWords.de"
+    /// Only a list the user changed; see `Preferences.setFillerWords`.
+    static func fillerWords(_ lang: Lang) -> String { "fillerWords.\(lang.rawValue)" }
     static let spokenPunctuation = "spokenPunctuation"
     static let spokenSymbols = "spokenSymbols"
     static let spokenSymbolsAlone = "spokenSymbolsAlone"
@@ -155,13 +156,12 @@ final class Preferences {
             DefaultsKey.pasteAutomatically: true,
             DefaultsKey.restoreClipboard: true,
             DefaultsKey.correctionStrength: CorrectionStrength.normal.rawValue,
+            DefaultsKey.learnFromCorrections: true,
             DefaultsKey.saveHistory: true,
             DefaultsKey.historyRetention: HistoryRetention.days30.rawValue,
             DefaultsKey.smartSpacing: true,
             DefaultsKey.removeFillers: true,
             DefaultsKey.spellingsEnabled: true,
-            DefaultsKey.fillerWordsEN: FillerRemover.defaultWords(.en),
-            DefaultsKey.fillerWordsDE: FillerRemover.defaultWords(.de),
             DefaultsKey.spokenPunctuation: true,
             DefaultsKey.spokenCharacters: true,
             DefaultsKey.spokenCharactersHintDismissed: false,
@@ -187,6 +187,7 @@ final class Preferences {
         pasteAutomatically = defaults.bool(forKey: DefaultsKey.pasteAutomatically)
         restoreClipboard = defaults.bool(forKey: DefaultsKey.restoreClipboard)
         correctionStrength = CorrectionStrength(rawValue: defaults.string(forKey: DefaultsKey.correctionStrength) ?? "") ?? .normal
+        learnFromCorrections = defaults.bool(forKey: DefaultsKey.learnFromCorrections)
         saveHistory = defaults.bool(forKey: DefaultsKey.saveHistory)
         historyRetention = HistoryRetention(rawValue: defaults.string(forKey: DefaultsKey.historyRetention) ?? "") ?? .days30
         smartSpacing = defaults.bool(forKey: DefaultsKey.smartSpacing)
@@ -194,8 +195,19 @@ final class Preferences {
         spellingsEnabled = defaults.bool(forKey: DefaultsKey.spellingsEnabled)
         // Only a user's own edit is stored; nil means the built-in list (`Spellings.defaultList`).
         spellingsEdited = defaults.stringArray(forKey: DefaultsKey.spellingsList)
-        fillerWordsEN = defaults.stringArray(forKey: DefaultsKey.fillerWordsEN) ?? FillerRemover.defaultWords(.en)
-        fillerWordsDE = defaults.stringArray(forKey: DefaultsKey.fillerWordsDE) ?? FillerRemover.defaultWords(.de)
+        // Until 0.5.0, Save in the sheet stored `fillerWords.en` and `.de` even when nothing had changed. Those copies go,
+        // so the built-in list can grow in an update; a real edit stays.
+        var editedFillers: [Lang: [String]] = [:]
+        for lang in Lang.allCases {
+            let key = DefaultsKey.fillerWords(lang)
+            guard let stored = defaults.stringArray(forKey: key) else { continue }
+            if stored == FillerRemover.defaultWords(lang) {
+                defaults.removeObject(forKey: key)
+            } else {
+                editedFillers[lang] = stored
+            }
+        }
+        fillerWordsEdited = editedFillers
         spokenPunctuation = defaults.bool(forKey: DefaultsKey.spokenPunctuation)
         spokenCharacters = defaults.bool(forKey: DefaultsKey.spokenCharacters)
         spokenCharactersHintDismissed = defaults.bool(forKey: DefaultsKey.spokenCharactersHintDismissed)
@@ -238,13 +250,14 @@ final class Preferences {
     var saveHistory: Bool { didSet { defaults.set(saveHistory, forKey: DefaultsKey.saveHistory) } }
     var historyRetention: HistoryRetention { didSet { defaults.set(historyRetention.rawValue, forKey: DefaultsKey.historyRetention) } }
     var smartSpacing: Bool { didSet { defaults.set(smartSpacing, forKey: DefaultsKey.smartSpacing) } }
+    var learnFromCorrections: Bool { didSet { defaults.set(learnFromCorrections, forKey: DefaultsKey.learnFromCorrections) } }
     var removeFillers: Bool { didSet { defaults.set(removeFillers, forKey: DefaultsKey.removeFillers) } }
     var spellingsEnabled: Bool { didSet { defaults.set(spellingsEnabled, forKey: DefaultsKey.spellingsEnabled) } }
     /// The user's edited spellings; nil while the list is the built-in one, which is never stored.
     private(set) var spellingsEdited: [String]?
     var spellings: [String] { spellingsEdited ?? Spellings.defaultList }
 
-    /// Saves an edited list. The built-in list (also after “Reset to defaults”) is not stored, so the app's own list can
+    /// Saves an edited list. The built-in list (also after “Restore Defaults…”) is not stored, so the app's own list can
     /// grow in an update; a list that is only different is stored as it is.
     func setSpellings(_ words: [String]) {
         if words == Spellings.defaultList {
@@ -255,8 +268,8 @@ final class Preferences {
             defaults.set(words, forKey: DefaultsKey.spellingsList)
         }
     }
-    var fillerWordsEN: [String] { didSet { defaults.set(fillerWordsEN, forKey: DefaultsKey.fillerWordsEN) } }
-    var fillerWordsDE: [String] { didSet { defaults.set(fillerWordsDE, forKey: DefaultsKey.fillerWordsDE) } }
+    /// The user's edited filler lists; a language without an entry uses its built-in list, which is never stored.
+    private(set) var fillerWordsEdited: [Lang: [String]]
     var spokenPunctuation: Bool { didSet { defaults.set(spokenPunctuation, forKey: DefaultsKey.spokenPunctuation) } }
     var spokenCharacters: Bool { didSet { defaults.set(spokenCharacters, forKey: DefaultsKey.spokenCharacters) } }
     var spokenCharactersHintDismissed: Bool {
@@ -296,18 +309,29 @@ final class Preferences {
     }
 
     func fillerWords(for lang: Lang) -> [String] {
-        switch lang {
-        case .en: fillerWordsEN
-        case .de: fillerWordsDE
-        default: []
+        fillerWordsEdited[lang] ?? FillerRemover.defaultWords(lang)
+    }
+
+    /// Like `setSpellings`: the built-in list (also after “Restore Defaults…”) is not stored, so it can grow in an update.
+    /// An emptied list is an edit and is stored.
+    func setFillerWords(_ words: [String], for lang: Lang) {
+        let key = DefaultsKey.fillerWords(lang)
+        if words == FillerRemover.defaultWords(lang) {
+            fillerWordsEdited[lang] = nil
+            defaults.removeObject(forKey: key)
+        } else {
+            fillerWordsEdited[lang] = words
+            defaults.set(words, forKey: key)
         }
     }
 
-    func setFillerWords(_ words: [String], for lang: Lang) {
-        switch lang {
-        case .en: fillerWordsEN = words
-        case .de: fillerWordsDE = words
-        default: break
+    /// The Words pane's “uh, um, äh, ähm …”, from the chosen languages' lists. Nil if they are all empty.
+    var fillerPreview: String? {
+        let perLanguage = max(1, 4 / languages.count)
+        var words: [String] = []
+        for lang in languages {
+            for word in fillerWords(for: lang).prefix(perLanguage) where !words.contains(word) { words.append(word) }
         }
+        return words.isEmpty ? nil : words.prefix(6).joined(separator: ", ") + " …"
     }
 }

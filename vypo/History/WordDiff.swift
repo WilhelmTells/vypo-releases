@@ -5,6 +5,8 @@ enum WordDiff {
     struct Substitution: Equatable {
         var old: [String]
         var new: [String]
+        /// Where `old` starts, in the words of the old text.
+        var oldStart = 0
 
         var heard: String { old.joined(separator: " ") }
         var term: String { new.joined(separator: " ") }
@@ -29,8 +31,9 @@ enum WordDiff {
         }
         var result: [Substitution] = []
         var removed: [String] = [], added: [String] = []
+        var removedStart = 0
         func flush() {
-            if !removed.isEmpty && !added.isEmpty { result.append(Substitution(old: removed, new: added)) }
+            if !removed.isEmpty && !added.isEmpty { result.append(Substitution(old: removed, new: added, oldStart: removedStart)) }
             removed = []; added = []
         }
         var i = 0, j = 0
@@ -41,6 +44,7 @@ enum WordDiff {
             } else if j < m, i == n || lcs[i][j + 1] >= lcs[i + 1][j] {
                 added.append(b[j]); j += 1
             } else {
+                if removed.isEmpty { removedStart = i }
                 removed.append(a[i]); i += 1
             }
         }

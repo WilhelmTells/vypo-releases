@@ -15,39 +15,28 @@ struct SpokenCharactersMigration: Sendable, Equatable {
 }
 
 extension SpokenCharacters {
-    /// The modes of a changed “in a sentence” of a replacement.
-    static func modes(for scope: SentenceScope) -> Set<AppMode> {
-        switch scope {
-        case .everywhere: [.standard, .prompt, .writing]
-        case .promptOnly: [.prompt]
-        case .never: []
-        }
-    }
-
     /// The move, a pure function of the old list and the “Spoken punctuation” switch:
     /// - An entry that is a version of a default of Replacements (`Replacements.isVersion`) becomes the default of
     ///   Spoken characters with the same output: the user's spellings in their order, plus only the spellings of the new
     ///   default that no old default had (one the user removed stays removed; a list that still holds exactly the old
-    ///   default's spellings gets the new default's order); the user's on/off; the new default's modes if “in a
-    ///   sentence” was left as it came, otherwise `modes(for:)`. Two versions of one default become one entry
-    ///   (spellings together, on if either was on, the modes of the entries that were on together).
-    /// - “Spoken punctuation” on: a mark entry keeps Writing whatever the scope was, because the separate table did
-    ///   that in 0.4.0. One that was off is on in Writing apps only.
+    ///   default's spellings gets the new default's order); the user's on/off; the new default's “Also in a sentence” if
+    ///   “in a sentence” was left as it came, otherwise `SentenceScope.alsoInSentence`. Two versions of one default
+    ///   become one entry (spellings together, on if either was on, “Also in a sentence” if an entry that was on had it).
+    /// - “Spoken punctuation” on: a mark entry is “Also in a sentence” whatever the scope was, because the separate table
+    ///   did that in Writing apps. One that was off stays off: there is no “Writing only” any more, and on would bring
+    ///   the word back in every app.
+    /// - “Spoken punctuation” off: marks stayed out of Writing sentences, so a mark entry goes by its own scope, whatever
+    ///   the new default says, and a mark Replacements never had is “Only on its own”.
     /// - A default with no version in the list was deleted and stays deleted.
     /// - Defaults Replacements never had are added.
-    /// - “Spoken punctuation” off: no punctuation or quote works in a Writing sentence, as before.
     /// - Everything else stays in Replacements, also an own symbol entry (“Punkt” → “.” that is no version).
     static func migration(from items: [Replacement], spokenPunctuation: Bool) -> SpokenCharactersMigration {
         let legacy = Replacements.defaults
-        let fitted = { (c: SpokenCharacter) -> SpokenCharacter in
-            var c = c
-            if !spokenPunctuation && mark(for: c.output) != nil { c.inSentence.remove(.writing) }
-            return c
-        }
         var result = SpokenCharactersMigration(characters: [], ownReplacements: [], moved: [], added: [], merged: [])
         for d in defaults {
             guard let old = legacy.first(where: { $0.output == d.output }) else {
-                let c = fitted(d)
+                var c = d
+                if !spokenPunctuation && mark(for: c.output) != nil { c.alsoInSentence = false }
                 result.added.append(c)
                 result.characters.append(c)
                 continue
@@ -68,21 +57,15 @@ extension SpokenCharacters {
             }
             c.enabled = versions.contains(where: \.enabled)
             let counted = c.enabled ? versions.filter(\.enabled) : versions
-            c.inSentence = counted.reduce(into: Set<AppMode>()) {
-                $0.formUnion($1.inSentence == old.inSentence ? d.inSentence : modes(for: $1.inSentence))
+            if mark(for: c.output) == nil {
+                c.alsoInSentence = counted.contains { $0.inSentence == old.inSentence ? d.alsoInSentence : $0.inSentence.alsoInSentence }
+            } else {
+                c.alsoInSentence = spokenPunctuation || counted.contains(where: \.inSentence.alsoInSentence)
             }
-            if spokenPunctuation && mark(for: c.output) != nil {
-                c.inSentence.insert(.writing)
-                if !c.enabled {
-                    c.enabled = true
-                    c.inSentence = [.writing]
-                }
-            }
-            c = fitted(c)
             result.moved.append(c)
             result.characters.append(c)
         }
-        result.ownReplacements = items.filter { r in !legacy.contains { Replacements.isVersion(r, of: $0) } }
+        result.ownReplacements = items.filter { r in !legacy.contains { Replacements.isVersion(r, of: $0) } }.map(\.inEveryApp)
         return result
     }
 }

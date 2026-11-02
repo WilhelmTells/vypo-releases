@@ -64,27 +64,28 @@ final class SpokenCharactersTests: XCTestCase {
         ("Period", "."), ("Full stop", "."), ("Komma", ","), ("Comma", ","), ("Bindestrich", "-"), ("Dash", "-"), ("Strich", "-"),
     ]
 
-    /// Where a new installation writes something else, on purpose (see the report).
+    /// Where a new installation writes something else in a Writing app, on purpose.
     private let intended: [String: String] = [
         // Parakeet's spellings of “Semikolon” are part of the one entry, which works in Writing too.
-        "Wort Sammy Colon weiter|writing": "Wort; weiter",
+        "Wort Sammy Colon weiter": "Wort; weiter",
+        // Slash works in a sentence in every app now; a word after an article stays a word.
+        "Projekte slash vypo": "Projekte/vypo", "Struktur slash Anna slash user": "Struktur/Anna/user",
+        "Slash exit.": "/exit.", "Anna/slash user": "Anna/user", "Anna/slash": "Anna/", "Anna/ slash user": "Anna/user",
+        "the folder slash docs": "the folder/docs", "Struktur slash Anna/slash user": "Struktur/Anna/user", "Geh in den Ordner Projekte slash Vypo slash Docs.": "Geh in den Ordner Projekte/Vypo/Docs.",
     ]
 
-    func testANewInstallationWritesWhat030Wrote() {
+    /// The other two modes changed on purpose (`testEveryExpectedResult`); Writing is the path they all use now.
+    func testWritingAppsWriteWhat030Wrote() {
         var checked = 0
-        for (raw, lang) in corpus {
-            for mode in modes {
-                for typographic in [true, false] {
-                    let spellings = ["macOS", "iPhone"]
-                    let old = legacy(raw, mode, lang, spellings: spellings, typographic: typographic)
-                    let now = new(raw, mode, lang, spellings: spellings, typographic: typographic)
-                    let expected = intended["\(raw)|\(mode.rawValue)"] ?? old
-                    XCTAssertEqual(now, expected, "“\(raw)” (\(lang.rawValue)) in \(mode.rawValue), typographic \(typographic)")
-                    checked += 1
-                }
-            }
+        for (raw, lang) in corpus where !raw.lowercased().hasSuffix("slash x") {
+            // The typographic switch no longer decides about spoken quotes, so it stays on here.
+            let spellings = ["macOS", "iPhone"]
+            let old = legacy(raw, .writing, lang, spellings: spellings)
+            let now = new(raw, .writing, lang, spellings: spellings)
+            XCTAssertEqual(now, intended[raw] ?? old, "“\(raw)” (\(lang.rawValue))")
+            checked += 1
         }
-        XCTAssertGreaterThan(checked, 900)
+        XCTAssertGreaterThan(checked, 100)
     }
 
     func testTheWritingCasesWithTheirExpectedOutput() {
@@ -99,26 +100,146 @@ final class SpokenCharactersTests: XCTestCase {
         XCTAssertEqual(w("Hello comma how are you period", .en), "Hello, how are you.")
         XCTAssertEqual(w("Wort Doppelpunkt weiter"), "Wort: weiter")
         XCTAssertEqual(w("Wort Semikolon weiter"), "Wort; weiter")
-        XCTAssertEqual(w("Projekte slash vypo"), "Projekte slash vypo")
+        XCTAssertEqual(w("Projekte slash vypo"), "Projekte/vypo")
         XCTAssertEqual(w("Wirklich Fragezeichen"), "Wirklich?")
         XCTAssertEqual(w("er sagte Anführungszeichen auf hallo Anführungszeichen zu"), "er sagte „hallo“")
         XCTAssertEqual(w("He said open quote hi close quote", .en), "He said “hi”")
-        XCTAssertEqual(new("er sagte Anführungszeichen auf hallo Anführungszeichen zu", .writing, typographic: false), "er sagte \"hallo\"")
+        // “Typographic quotes” is about the `"` the model wrote; spoken ones are the language's forms anyway.
+        XCTAssertEqual(new("er sagte Anführungszeichen auf hallo Anführungszeichen zu", .writing, typographic: false), "er sagte „hallo“")
+        XCTAssertEqual(new("er sagte \"hallo\"", .writing, typographic: false), "er sagte \"hallo\"")
+        XCTAssertEqual(new("er sagte \"hallo\"", .writing), "er sagte „hallo“")
+        XCTAssertEqual(new("er sagte \"hallo\"", .standard), "er sagte \"hallo\"")
     }
 
-    func testDefaultAndPromptWithTheirExpectedOutput() {
-        XCTAssertEqual(new("Projekte slash vypo", .prompt), "Projekte/vypo")
-        XCTAssertEqual(new("Projekte slash vypo", .standard), "Projekte slash vypo")
-        XCTAssertEqual(new("Eins Semikolon zwei", .prompt), "Eins; zwei")
-        XCTAssertEqual(new("Eins Semikolon zwei", .standard), "Eins Semikolon zwei")
-        XCTAssertEqual(new("Begriffserklärung Doppelpunkt Zero", .prompt), "Begriffserklärung: Zero")
-        XCTAssertEqual(new("Hallo Komma wie geht es dir Punkt", .standard), "Hallo Komma wie geht es dir Punkt")
-        XCTAssertEqual(new("Hallo Komma wie geht es dir Punkt", .prompt), "Hallo Komma wie geht es dir Punkt")
-        XCTAssertEqual(new("Erste Zeile neue Zeile zweite Zeile", .standard), "Erste Zeile\nzweite Zeile")
-        XCTAssertEqual(new("Use the slash command", .prompt, .en), "Use the slash command")
-        for (word, symbol) in [("Punkt", "."), ("Slash", "/"), ("Doppelpunkt", ":")] {
-            for mode in [AppMode.standard, .prompt, .writing] { XCTAssertEqual(new(word, mode), symbol) }
+    /// The table of the brief, through `TextPipeline.process`, with the raw text of the analysis report. Nil: as said.
+    func testEveryExpectedResult() {
+        let cases: [(raw: String, lang: Lang, standard: String, prompt: String, writing: String)] = [
+            ("Hallo Komma Welt.", .de, "Hallo, Welt.", "Hallo, Welt", "Hallo, Welt."),
+            ("Komma.", .de, ",", ",", ","),
+            ("Hallo Punkt.", .de, "Hallo.", "Hallo.", "Hallo."),
+            ("Hallo Punkt wie geht es dir.", .de, "Hallo. Wie geht es dir.", "Hallo. Wie geht es dir", "Hallo. Wie geht es dir."),
+            ("Wir treffen uns Punkt acht Uhr.", .de, "Wir treffen uns Punkt acht Uhr.", "Wir treffen uns Punkt acht Uhr", "Wir treffen uns Punkt acht Uhr."),
+            ("Das ist ein wichtiger Punkt.", .de, "Das ist ein wichtiger Punkt.", "Das ist ein wichtiger Punkt", "Das ist ein wichtiger Punkt."),
+            ("Pfad A Schrägstrich B.", .de, "Pfad A/B.", "Pfad A/B", "Pfad A/B."),
+            ("Unterm Strich passt es.", .de, "Unterm Strich passt es.", "Unterm Strich passt es", "Unterm Strich passt es."),
+            ("Erste Zeile, neue Zeile, zweite Zeile.", .de, "Erste Zeile\nzweite Zeile.", "Erste Zeile\nzweite Zeile", "Erste Zeile\nZweite Zeile."),
+            ("Hier steht Anführungszeichen auf Hallo Anführungszeichen zu.", .de, "Hier steht „Hallo“", "Hier steht „Hallo“", "Hier steht „Hallo“"),
+            ("Hello, comma, world.", .en, "Hello, world.", "Hello, world", "Hello, world."),
+            ("A long period of time.", .en, "A long period of time.", "A long period of time", "A long period of time."),
+        ]
+        for c in cases {
+            XCTAssertEqual(new(c.raw, .standard, c.lang), c.standard, "Standard: \(c.raw)")
+            XCTAssertEqual(new(c.raw, .prompt, c.lang), c.prompt, "Prompt: \(c.raw)")
+            XCTAssertEqual(new(c.raw, .writing, c.lang), c.writing, "Writing: \(c.raw)")
         }
+    }
+
+    func testALoneLineBreakSendsNoReturn() {
+        let text = new("neue Zeile.", .prompt)
+        XCTAssertEqual(text, "\n")
+        XCTAssertFalse(ProfileTweaks.sendsReturn(mode: .prompt, autoEnter: true, inTextField: true, text: text))
+        XCTAssertFalse(ProfileTweaks.sendsReturn(mode: .prompt, autoEnter: true, inTextField: true, text: new("neuer Absatz.", .prompt)))
+        XCTAssertFalse(ProfileTweaks.sendsReturn(mode: .prompt, autoEnter: true, inTextField: true, text: " \n "))
+        XCTAssertTrue(ProfileTweaks.sendsReturn(mode: .prompt, autoEnter: true, inTextField: true, text: "Hallo\n"))
+    }
+
+    func testNumbersAfterPunktAndKomma() {
+        for mode in modes {
+            for text in ["Punkt 8 Uhr", "Punkt zwölf", "Treffen um Punkt dreißig", "drei Komma fünf", "3 Komma 5", "Punkt Acht"] {
+                XCTAssertEqual(new(text, mode), text, "\(mode)")
+            }
+            for text in ["Period one begins", "version full stop two", "two comma five", "Period 3"] {
+                XCTAssertEqual(new(text, mode, .en), text, "\(mode)")
+            }
+            // Punctuation between them: not “directly followed”. Another word: a mark.
+            XCTAssertEqual(new("Fertig Punkt, acht Uhr", mode), "Fertig. Acht Uhr", "\(mode)")
+            XCTAssertEqual(new("Fertig Punkt nun acht", mode), "Fertig. Nun acht", "\(mode)")
+            // Only period and comma: other marks are no decimal point or time.
+            XCTAssertEqual(new("Wie viele Fragezeichen acht", mode), "Wie viele? Acht", "\(mode)")
+        }
+    }
+
+    func testASingleCapitalLetterIsNoArticle() {
+        for mode in modes {
+            XCTAssertEqual(new("Pfad A Schrägstrich B", mode).hasPrefix("Pfad A/B"), true, "\(mode)")
+            XCTAssertEqual(new("Hello a slash b", mode, .en), "Hello a slash b", "lowercase: the article")
+            XCTAssertEqual(new("A dash of salt.  A long period.", mode == .prompt ? .standard : mode, .en), "A dash of salt. A long period.")
+            XCTAssertEqual(new("A Schrägstrich B", mode), "A/B", "in German “A” is never an article")
+        }
+    }
+
+    /// Symbols that connect words (`/`, `-`) ask only the word right before; marks also look past an adjective.
+    func testConnectingSymbolsAreProtectedByTheDirectArticleOnly() {
+        for mode in modes {
+            XCTAssertEqual(new("the folder slash docs", mode, .en).hasPrefix("the folder/docs"), true, "\(mode)")
+            XCTAssertEqual(new("Pfad Schrägstrich Ordner", mode), "Pfad/Ordner", "\(mode)")
+            XCTAssertEqual(new("the slash command", mode, .en), "the slash command", "\(mode)")
+            XCTAssertEqual(new("der Schrägstrich fehlt", mode), "der Schrägstrich fehlt", "\(mode)")
+            // The long list of determiners stays.
+            for text in ["Am Schrägstrich hängt es", "Beim Slash bleibt es"] { XCTAssertEqual(new(text, mode), text, "\(mode)") }
+            // Marks keep the adjective.
+            XCTAssertEqual(new("Das ist ein großes Fragezeichen", mode), "Das ist ein großes Fragezeichen", "\(mode)")
+        }
+        // The hyphen, once it is set to work in a sentence.
+        var list = SpokenCharacters.defaults
+        list[list.firstIndex { $0.output == "-" }!].alsoInSentence = true
+        XCTAssertEqual(new("the long dash here", .standard, .en, characters: list), "the long-here")
+        XCTAssertEqual(new("the dash here", .standard, .en, characters: list), "the dash here")
+        // The same for an own entry with a symbol output; an output that is plain text has no rule.
+        let own = [Replacement(spoken: "Pfad", output: "/")]
+        XCTAssertEqual(new("Der Pfad bleibt", .standard, own: own), "Der Pfad bleibt")
+        XCTAssertEqual(new("x Pfad y", .standard, own: own), "x/y")
+        let text = [Replacement(spoken: "brb", output: "be right back")]
+        XCTAssertEqual(new("the brb is here", .standard, .en, own: text), "the be right back is here")
+    }
+
+    func testNoCapitalAfterAnAbbreviation() {
+        for mode in modes {
+            for text in ["z. B. das", "z.B. das", "Das ist z. B. das", "Äpfel bzw. Birnen und mehr", "usw. und so", "ca. drei", "d. h. wir", "d.h. wir",
+                         "u. a. das", "u.a. das", "etc. und", "Nr. acht", "Dr. med", "Prof. hier",
+                         "bspw. das", "Das gilt z. T. auch hier", "z.T. auch"] {
+                XCTAssertEqual(new(text, mode), text, "\(mode)")
+            }
+            for text in ["e.g. this", "i.e. this", "red etc. and", "cats vs. dogs", "Dr. who", "Mr. who", "Mrs. who", "Ms. who", "approx. three"] {
+                XCTAssertEqual(new(text, mode, .en), text, "\(mode)")
+            }
+            // A real sentence end still gets its capital, spoken or from the model.
+            XCTAssertEqual(new("Hallo Punkt wie geht es", mode), "Hallo. Wie geht es", "\(mode)")
+            XCTAssertEqual(new("Ja. wir gehen", mode), "Ja. Wir gehen", "\(mode)")
+            XCTAssertEqual(new("Hallo Punkt z. B. das", mode), "Hallo. Z. B. das", "\(mode)")
+            XCTAssertEqual(new("Wirklich? ja", mode), "Wirklich? Ja", "\(mode)")
+        }
+        // `legacy` Writing uses the same path.
+        XCTAssertEqual(legacy("z. B. das", .writing), "z. B. das")
+    }
+
+    func testPromptKeepsASpokenPeriodAtTheEnd() {
+        XCTAssertEqual(new("Hallo Punkt.", .prompt), "Hallo.")
+        XCTAssertEqual(new("Hallo Punkt", .prompt), "Hallo.")
+        XCTAssertEqual(new("Hello full stop.", .prompt, .en), "Hello.")
+        XCTAssertEqual(new("Erste neue Zeile zweite Punkt.", .prompt), "Erste\nzweite.")
+        XCTAssertEqual(new("Hallo Welt.", .prompt), "Hallo Welt", "the model's period goes")
+        XCTAssertEqual(new("Das ist ein wichtiger Punkt.", .prompt), "Das ist ein wichtiger Punkt", "a noun is no spoken period")
+        // An own entry for the period counts too.
+        let own = [Replacement(spoken: "Stopp", output: ".")]
+        XCTAssertEqual(new("Hallo Stopp.", .prompt, own: own), "Hallo.")
+        // “Only on its own”: the word stays, the model's period goes.
+        var list = SpokenCharacters.defaults
+        list[list.firstIndex { $0.output == "." }!].alsoInSentence = false
+        XCTAssertEqual(new("Hallo Punkt.", .prompt, characters: list), "Hallo Punkt")
+        // `legacy` stays as it was.
+        XCTAssertEqual(legacy("Hallo Punkt.", .prompt), "Hallo Punkt")
+    }
+
+    func testPromptOnlyCountsAsAlsoInASentence() {
+        let own = [Replacement(spoken: "Rohr", output: "|", inSentence: .promptOnly)]
+        for mode in modes { XCTAssertEqual(new("a Rohr b", mode, own: own), "a | b", "\(mode)") }
+        let never = [Replacement(spoken: "Rohr", output: "|", inSentence: .never)]
+        for mode in modes {
+            XCTAssertEqual(new("a Rohr b", mode, own: never), "a Rohr b", "\(mode)")
+            XCTAssertEqual(new("Rohr", mode, own: never), "|", "\(mode)")
+        }
+        XCTAssertEqual(legacy("a slash b", .standard), "a slash b", "`legacy` keeps Prompt apps only")
     }
 
     // MARK: Intended changes
@@ -128,7 +249,7 @@ final class SpokenCharactersTests: XCTestCase {
         XCTAssertEqual(new("Wort colon weiter", .writing, .en), "Wort colon weiter")
         XCTAssertEqual(new("colon", .writing, .en), "colon")
         // Anyone who wants it adds it.
-        let own = SpokenCharacters.defaults + [SpokenCharacter(spoken: ["colon"], output: ":", inSentence: [])]
+        let own = SpokenCharacters.defaults + [SpokenCharacter(spoken: ["colon"], output: ":", alsoInSentence: false)]
         XCTAssertEqual(new("colon", .standard, .en, characters: own), ":")
         XCTAssertEqual(new("Wort colon weiter", .writing, .en, characters: own), "Wort colon weiter")
     }
@@ -159,8 +280,13 @@ final class SpokenCharactersTests: XCTestCase {
             XCTAssertEqual(new("Fragezeichen", mode), "?")
             XCTAssertEqual(new("Exclamation mark.", mode, .en), "!")
         }
-        XCTAssertEqual(new("Anführungszeichen auf", .standard), "“", "outside Writing: the character as written")
-        XCTAssertEqual(new("Anführungszeichen auf", .writing), "„", "in Writing: the language's quote")
+        for mode in [AppMode.standard, .prompt, .writing] {
+            XCTAssertEqual(new("Anführungszeichen auf", mode), "„", "the language's quote in every app")
+            XCTAssertEqual(new("Open quote", mode, .en), "“")
+        }
+        var alone = SpokenCharacters.defaults
+        alone[alone.firstIndex { $0.output == SpokenCharacters.closeQuote }!].alsoInSentence = false
+        XCTAssertEqual(new("Anführungszeichen zu", .standard, characters: alone), "“", "the German closing form, also when only on its own")
     }
 
     // MARK: Order, switches, language
@@ -190,18 +316,18 @@ final class SpokenCharactersTests: XCTestCase {
         XCTAssertEqual(new("Komma", .standard, characters: list), "Komma")
     }
 
-    func testModesPerEntry() {
+    func testAlsoInASentencePerEntry() {
         var list = SpokenCharacters.defaults
-        let slash = list.firstIndex { $0.output == "/" }!
-        list[slash].inSentence = [.standard, .writing]
-        XCTAssertEqual(new("Projekte slash vypo", .standard, characters: list), "Projekte/vypo")
-        XCTAssertEqual(new("Projekte slash vypo", .writing, characters: list), "Projekte/vypo")
-        XCTAssertEqual(new("Projekte slash vypo", .prompt, characters: list), "Projekte slash vypo")
+        let dash = list.firstIndex { $0.output == "-" }!
+        for mode in modes { XCTAssertEqual(new("Wort Bindestrich Wort", mode), "Wort Bindestrich Wort", "\(mode)") }
+        list[dash].alsoInSentence = true
+        for mode in modes { XCTAssertEqual(new("Wort Bindestrich Wort", mode, characters: list), "Wort-Wort", "\(mode)") }
         let period = list.firstIndex { $0.output == "." }!
-        list[period].inSentence = [.prompt]
-        XCTAssertEqual(new("Das ist gut Punkt", .writing, characters: list), "Das ist gut Punkt")
-        XCTAssertEqual(new("Das ist gut Punkt nächster", .prompt, characters: list), "Das ist gut. nächster")
-        XCTAssertEqual(new("Punkt", .writing, characters: list), ".", "on its own in every mode")
+        list[period].alsoInSentence = false
+        for mode in modes {
+            XCTAssertTrue(new("Das ist gut Punkt nächster", mode, characters: list).hasPrefix("Das ist gut Punkt nächster"), "\(mode)")
+            XCTAssertEqual(new("Punkt", mode, characters: list), ".", "on its own in every mode")
+        }
     }
 
     func testAnyLanguage() {
@@ -219,15 +345,7 @@ final class SpokenCharactersTests: XCTestCase {
     func testTheDefaultTable() {
         let d = SpokenCharacters.defaults
         XCTAssertFalse(d.contains { $0.spoken.contains { $0.lowercased() == "colon" } })
-        func modes(_ output: String) -> Set<AppMode> { d.first { $0.output == output }!.inSentence }
-        XCTAssertEqual(modes("\n"), [.standard, .prompt, .writing])
-        XCTAssertEqual(modes("\n\n"), [.standard, .prompt, .writing])
-        XCTAssertEqual(modes("."), [.writing])
-        XCTAssertEqual(modes(","), [.writing])
-        XCTAssertEqual(modes(":"), [.prompt, .writing])
-        XCTAssertEqual(modes(";"), [.prompt, .writing])
-        XCTAssertEqual(modes("/"), [.prompt])
-        XCTAssertEqual(modes("-"), [])
+        for c in d { XCTAssertEqual(c.alsoInSentence, c.output != "-", Replacements.display(c.output)) }
         // Every spelling of the old defaults and of the old Writing table is in.
         let all = Set(d.flatMap(\.spoken).map(Replacements.normalized))
         for r in Replacements.defaults { for s in r.spoken { XCTAssertTrue(all.contains(Replacements.normalized(s)), s) } }
@@ -244,6 +362,7 @@ final class SpokenCharactersTests: XCTestCase {
         XCTAssertEqual(back, SpokenCharacters.defaults.enumerated().map { i, c in var c = c; c.id = back[i].id; return c })
         XCTAssertEqual(try Store.encoder.encode(back), data)
         XCTAssertTrue(String(decoding: data, as: UTF8.self).contains(#""inSentence" : ["#))
+        XCTAssertTrue(String(decoding: data, as: UTF8.self).contains(#""alsoInSentence" : true"#))
     }
 
     private func scratch() -> (Store, UserDefaults) {
@@ -260,10 +379,10 @@ final class SpokenCharactersTests: XCTestCase {
         XCTAssertEqual(sc.items.count, SpokenCharacters.defaults.count)
         var slash = sc.items.first { $0.output == "/" }!
         slash.spoken = ["Slash", "Eigen"]
-        slash.inSentence = [.standard]
+        slash.alsoInSentence = false
         sc.upsert(slash)
         sc.delete(sc.items.first { $0.output == "." }!.id)
-        sc.upsert(SpokenCharacter(spoken: ["Pfeil"], output: "→", inSentence: [.writing]))
+        sc.upsert(SpokenCharacter(spoken: ["Pfeil"], output: "→", alsoInSentence: true))
         XCTAssertEqual(sc.restoreDefaults(), 1)
         XCTAssertEqual(sc.items.first { $0.output == "/" }, slash, "yours stays")
         XCTAssertTrue(sc.items.contains { $0.output == "→" })
@@ -385,14 +504,78 @@ final class SpokenCharactersTests: XCTestCase {
         XCTAssertTrue(SpokenCharacters.defaults.allSatisfy(\.enabled))
     }
 
-    func testThePromptModeTextPointsToWhereItIsSet() {
+    func testTheModeTextsNameWhatIsLeft() {
         XCTAssertTrue(AppMode.prompt.explanation(.legacy).contains("Prompt apps only"))
-        XCTAssertTrue(AppMode.prompt.explanation(.spokenCharacters).contains("Spoken characters"))
-        XCTAssertEqual(AppMode.writing.explanation(.legacy), AppMode.writing.explanation(.spokenCharacters))
+        XCTAssertTrue(AppMode.writing.explanation(.legacy).contains("comma"))
+        for mode in [AppMode.prompt, .writing] {
+            let text = mode.explanation(.spokenCharacters)
+            XCTAssertFalse(text.contains("Spoken characters") || text.contains("Replacements") || text.contains("comma"), text)
+        }
     }
 
     func testListNote() {
-        XCTAssertEqual(SpokenCharacters.listNote([]), "Only on its own")
-        XCTAssertEqual(SpokenCharacters.listNote([.writing, .prompt]), "In sentences: Prompt and Writing")
+        XCTAssertEqual(SpokenCharacters.listNote(false), "Only on its own")
+        XCTAssertEqual(SpokenCharacters.listNote(true), "Also in a sentence")
+    }
+
+    // MARK: The file, with 0.4.1
+
+    /// How 0.4.1 read an entry, copied from `SpokenCharacter.init(from:)` of that version.
+    private struct Decoded041: Decodable {
+        var id: UUID
+        var spoken: [String]
+        var output: String
+        var enabled: Bool
+        var inSentence: Set<AppMode>
+
+        private enum CodingKeys: String, CodingKey { case id, spoken, output, enabled, inSentence }
+
+        init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            id = try c.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
+            spoken = try c.decode([String].self, forKey: .spoken)
+            output = try c.decode(String.self, forKey: .output)
+            enabled = try c.decodeIfPresent(Bool.self, forKey: .enabled) ?? true
+            inSentence = Set(try c.decodeIfPresent([AppMode].self, forKey: .inSentence) ?? [])
+        }
+    }
+
+    private func decoded(_ modes: String, flag: String = "") throws -> SpokenCharacter {
+        let json = #"[{"spoken":["x"],"output":"/","enabled":true"# + flag + #","inSentence":"# + modes + "}]"
+        return try Store.decoder.decode([SpokenCharacter].self, from: Data(json.utf8))[0]
+    }
+
+    func testAnOldFileWithEveryShapeOfInSentence() throws {
+        for shape in [#"["default"]"#, #"["prompt"]"#, #"["writing"]"#, #"["prompt","writing"]"#, #"["default","prompt","writing"]"#] {
+            XCTAssertTrue(try decoded(shape).alsoInSentence, shape)
+        }
+        XCTAssertFalse(try decoded("[]").alsoInSentence)
+        let missing = try Store.decoder.decode([SpokenCharacter].self, from: Data(#"[{"spoken":["x"],"output":"/"}]"#.utf8))
+        XCTAssertFalse(missing[0].alsoInSentence)
+    }
+
+    func testTheNewFlagComesFirst() throws {
+        XCTAssertFalse(try decoded(#"["writing"]"#, flag: #","alsoInSentence":false"#).alsoInSentence)
+        XCTAssertTrue(try decoded("[]", flag: #","alsoInSentence":true"#).alsoInSentence)
+    }
+
+    func test041CanStillReadTheFile() throws {
+        let data = try Store.encoder.encode(SpokenCharacters.defaults)
+        let old = try Store.decoder.decode([Decoded041].self, from: data)
+        XCTAssertEqual(old.map(\.output), SpokenCharacters.defaults.map(\.output))
+        for (o, c) in zip(old, SpokenCharacters.defaults) {
+            XCTAssertEqual(o.inSentence, c.alsoInSentence ? [.standard, .prompt, .writing] : [], Replacements.display(c.output))
+        }
+    }
+
+    func testAnOldReplacementsFileWithEveryScope() throws {
+        let json = #"[{"spoken":["a"],"output":"1","inSentence":"everywhere"},{"spoken":["b"],"output":"2","inSentence":"promptOnly"},"#
+            + #"{"spoken":["c"],"output":"3","inSentence":"never"},{"spoken":"d","output":"4"}]"#
+        let items = try Store.decoder.decode([Replacement].self, from: Data(json.utf8))
+        XCTAssertEqual(items.map(\.inSentence.alsoInSentence), [true, true, false, true])
+        XCTAssertEqual(items.map(\.inEveryApp.inSentence), [.everywhere, .everywhere, .never, .everywhere])
+        // The file format didn't change: 0.4.1 reads `inSentence` as one of its three values.
+        let text = String(decoding: try Store.encoder.encode(items), as: UTF8.self)
+        for scope in ["everywhere", "promptOnly", "never"] { XCTAssertTrue(text.contains(#""inSentence" : "\#(scope)""#), scope) }
     }
 }

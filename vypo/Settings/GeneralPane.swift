@@ -75,7 +75,7 @@ struct GeneralPane: View {
             app.models?.manager.refreshStorage()
         }
         .alert("Restart vypo to change the language?", isPresented: $askRelaunch) {
-            Button("Restart now") { AppLanguage.relaunch() }
+            Button("Restart Now") { AppLanguage.relaunch() }
             Button("Later", role: .cancel) {}
         } message: {
             Text("vypo quits and opens again. This takes a second.")
@@ -168,7 +168,7 @@ struct SpeechModelRow: View {
             case .notInstalled:
                 Button("Download (\(info.approxSizeText))") { models?.download() }
             case .failed:
-                Button("Retry download") { models?.download() }
+                Button("Retry Download") { models?.download() }
             }
         } label: {
             VStack(alignment: .leading, spacing: 2) {

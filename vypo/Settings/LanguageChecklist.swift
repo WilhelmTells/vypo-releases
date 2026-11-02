@@ -34,24 +34,12 @@ struct LanguageChecklist: View {
 
 /// Settings → General → Languages → Choose…
 struct LanguagesSheet: View {
-    @Environment(\.dismiss) private var dismiss
-
     var body: some View {
-        VStack(alignment: .leading, spacing: Space.s4) {
-            VStack(alignment: .leading, spacing: Space.s1) {
-                Text("Languages").font(.headline)
-                Text("vypo recognizes which of your languages you’re speaking.")
-                    .foregroundStyle(Color.vyLabelSecondary)
-            }
+        SettingsSheet(title: "Languages", explanation: "vypo recognizes which of your languages you’re speaking.",
+                      width: SheetWidth.list) {
             LanguageChecklist(showMore: true)
-            HStack {
-                Spacer()
-                Button("Done") { dismiss() }
-                    .buttonStyle(.borderedProminent)
-                    .keyboardShortcut(.defaultAction)
-            }
+        } footer: {
+            SheetListFooter()
         }
-        .padding(Space.s5)
-        .frame(width: 460)
     }
 }

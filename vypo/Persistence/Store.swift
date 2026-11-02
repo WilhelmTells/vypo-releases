@@ -79,6 +79,7 @@ enum Log {
     static let models = Logger(subsystem: subsystem, category: "models")
     static let output = Logger(subsystem: subsystem, category: "output")
     static let pill = Logger(subsystem: subsystem, category: "pill")
+    static let corrections = Logger(subsystem: subsystem, category: "corrections")
 }
 
 extension Duration {

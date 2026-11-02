@@ -2,10 +2,14 @@ import Foundation
 import Observation
 
 /// Where an entry works in the middle of a sentence. Said on its own, every enabled entry works in every app.
+/// The `spokenCharacters` layout has two states, “Also in a sentence” and “Only on its own”: there `promptOnly` from an
+/// older file counts as the first (`Replacement.inEveryApp`), and the file keeps it until the entry is edited.
 enum SentenceScope: String, Codable, CaseIterable, Sendable {
     case everywhere
     case promptOnly
     case never
+
+    var alsoInSentence: Bool { self != .never }
 }
 
 /// What you say (one or more spellings) and what it becomes (§11.5).
@@ -45,14 +49,19 @@ struct Replacement: Codable, Identifiable, Hashable, Sendable {
         inSentence = try c.decodeIfPresent(SentenceScope.self, forKey: .inSentence) ?? .everywhere
     }
 
+    /// The entry as it works in the `spokenCharacters` layout: the same in every app.
+    var inEveryApp: Replacement {
+        var r = self
+        r.inSentence = inSentence.alsoInSentence ? .everywhere : .never
+        return r
+    }
+
     /// The spellings as typed in the field.
     var spokenText: String { spoken.joined(separator: ", ") }
 
     /// The first two spellings for the list: `"Slash", "Schrägstrich"…`.
-    var summary: String { summary() }
-
-    func summary(quote: (String) -> String = { "“\($0)”" }) -> String {
-        spoken.prefix(2).map(quote).joined(separator: ", ") + (spoken.count > 2 ? " …" : "")
+    var summary: String {
+        spoken.prefix(2).map(Formatting.quoted).joined(separator: ", ") + (spoken.count > 2 ? " …" : "")
     }
 }
 
@@ -71,7 +80,7 @@ enum Replacements {
         return nil
     }
 
-    /// The entries every installation starts with, and `Restore default entries` brings back.
+    /// The entries every installation starts with, and `Restore Defaults` brings back.
     /// “Colon” is left out on purpose: in English it is also an organ, and the entry has one rule for all spellings.
     static var defaults: [Replacement] {
         [
@@ -123,7 +132,8 @@ enum Replacements {
     /// (`inSentence`; “Prompt apps only” in `mode == .prompt`). Case-insensitive, whole words, also with a trailing
     /// "." or "," the model added. Longest first. Outputs of `, ; : . ? !` attach to the word before, outputs of
     /// `/ \ _ ~ -` join the words around them. A line break right after an article or possessive stays words
-    /// (“Die neue Zeile gefällt mir”); `language` adds that language's articles (`SpokenPunctuation.isDeterminer`).
+    /// (“Die neue Zeile gefällt mir”). Symbols follow `SpokenPunctuation.staysWord`, `language` adds that language's
+    /// articles. An output that is plain text has no such rule: “my brb” is still replaced.
     static func apply(_ replacements: [Replacement], to text: String, mode: AppMode = .standard, language: Lang? = nil) -> String {
         let active = replacements.filter { $0.enabled && $0.spoken.contains { !normalized($0).isEmpty } }
         if let phrase = alonePhrase(text),
@@ -158,17 +168,15 @@ enum Replacements {
         }
         guard !symbols.isEmpty else { return result }
         // Line breaks (a spoken "new line" became one) stay: each line on its own.
-        return result.components(separatedBy: "\n").map { applySymbols($0, symbols) }.joined(separator: "\n")
+        return result.components(separatedBy: "\n").map { applySymbols($0, symbols, language: language) }.joined(separator: "\n")
     }
 
     /// “die neue Zeile”, “ein neuer Absatz”, “the new line”: an article or possessive, nothing but a space between.
     /// Only the word right before: “the code new line” is still a break.
     private static func followsDeterminer(_ before: Substring, match: Substring, language: Lang?) -> Bool {
-        guard !match.hasPrefix(",") else { return false }
-        let word = before.reversed().prefix { !$0.isWhitespace }
-        guard !word.isEmpty else { return false }
-        let w = TextWord(Substring(String(word.reversed())))
-        return w.lead.isEmpty && w.trail.isEmpty && SpokenPunctuation.isDeterminer(w.core, language: language)
+        guard !match.hasPrefix(","), before.last?.isWhitespace == false else { return false }
+        let words = Tokenized(String(before)).words
+        return SpokenPunctuation.isNoun(words + [TextWord(lead: "", core: "", trail: "")], at: words.count, language: language, adjectives: false)
     }
 
     private enum Item {
@@ -176,10 +184,10 @@ enum Replacements {
         case symbol(String, Join)
     }
 
-    /// A symbol word right after an article or possessive (the same list as the glossary's) stays a word.
+    /// A symbol word that is used as a word stays one (`SpokenPunctuation.staysWord`).
     /// `Projekte slash vypo` → `Projekte/vypo`; `Begriffserklärung, Doppelpunkt, Zero` → `Begriffserklärung: Zero`.
     /// A symbol the model wrote itself is kept once: `Anna/slash` → `Anna/`.
-    private static func applySymbols(_ text: String, _ table: [(words: [String], char: String, join: Join)]) -> String {
+    private static func applySymbols(_ text: String, _ table: [(words: [String], char: String, join: Join)], language: Lang?) -> String {
         let table = table.sorted { $0.words.count > $1.words.count }
         let words = Tokenized(text).words
         var items: [Item] = []
@@ -188,8 +196,8 @@ enum Replacements {
             for entry in table where i + entry.words.count <= words.count {
                 let window = words[i..<(i + entry.words.count)]
                 guard zip(window, entry.words).allSatisfy({ $0.core.lowercased() == $1 }) else { continue }
-                // “the slash command”, “der Doppelpunkt”: after an article or possessive it is a noun, not a symbol.
-                if i > 0, GlossaryCorrector.determiners.contains(words[i - 1].core.lowercased()) { continue }
+                // “the slash command”, “der Doppelpunkt”: a noun, not a symbol.
+                if SpokenPunctuation.staysWord(words, at: i, count: entry.words.count, output: entry.char, language: language) { continue }
                 if let lead = window.first?.lead, !lead.isEmpty {
                     var w = TextWord(Substring(lead)); w.lead = lead; w.core = ""; w.trail = ""
                     items.append(.word(w))
@@ -290,7 +298,7 @@ final class ReplacementStore {
 
     private(set) var items: [Replacement]
     @ObservationIgnored private let store: Store
-    /// A new entry of the user's own (Add replacement); not an edit, not “Restore default entries” (Swap Artist).
+    /// A new entry of the user's own (Add Replacement…); not an edit, not “Restore Defaults” (Swap Artist).
     @ObservationIgnored var onNewEntry: () -> Void = {}
 
     /// `spokenCharacters` (a new installation): the list starts empty and belongs to the user; the characters are

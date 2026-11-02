@@ -141,6 +141,7 @@ struct LevelCard: View {
         guard let next = rank.next else {
             return String(localized: "Level \(rank.level) of \(Rank.highest.level), \(rank.name). \(number(words)) words.")
         }
+        if next.threshold - words == 1 { return String(localized: "Level \(rank.level) of \(Rank.highest.level), \(rank.name). 1 word to the next level.") }
         return String(localized: "Level \(rank.level) of \(Rank.highest.level), \(rank.name). \(number(next.threshold - words)) words to the next level.")
     }
 }

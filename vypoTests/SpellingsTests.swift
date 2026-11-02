@@ -101,7 +101,7 @@ final class SpellingsTests: XCTestCase {
         XCTAssertTrue(p.spellingsEnabled)
         XCTAssertEqual(p.spellings, Spellings.defaultList)
         XCTAssertNil(d.object(forKey: "spellings.list"))
-        // Saving the sheet untouched, or after “Reset to defaults”, stores nothing either.
+        // The built-in list, also after “Restore Defaults…”, stores nothing either.
         p.setSpellings(Spellings.defaultList)
         XCTAssertNil(d.object(forKey: "spellings.list"))
         // Registered defaults are not written to the preferences file: only a change is.

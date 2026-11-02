@@ -32,13 +32,20 @@ enum TextPipeline {
         text = GlossaryCorrector.correct(text, entries: ctx.glossary, language: ctx.language, strength: ctx.strength, isWord: isWord)
         // After the glossary (the user's own terms win over a built-in spelling), before the replacements.
         text = Spellings.apply(text, list: ctx.spellings, glossary: ctx.glossary, language: ctx.language)
-        text = Replacements.apply(ctx.replacements, to: text, mode: ctx.mode, language: ctx.language)
+        // `legacy` keeps “Prompt apps only”; with Spoken characters an entry works the same in every app.
+        let everyApp = ctx.spokenCharacters != nil
+        let own = everyApp ? ctx.replacements.map(\.inEveryApp) : ctx.replacements
+        var saidPeriod = everyApp && SpokenCharacters.endsInSpokenPeriod(
+            text, spellings: own.filter { $0.enabled && $0.output == "." && $0.inSentence == .everywhere }.flatMap(\.spoken), language: ctx.language)
+        text = Replacements.apply(own, to: text, mode: ctx.mode, language: ctx.language)
         // A term's own spelling wins over a capital at the start of a sentence or line.
         let terms = Set(ctx.glossary.map(\.term)).union(ctx.spellings)
         if let characters = ctx.spokenCharacters, !characters.isEmpty {
             // After the user's own replacements, so theirs win; a word they have an entry for is theirs alone.
-            text = SpokenCharacters.apply(SpokenCharacters.without(ctx.replacements, characters), to: text, mode: ctx.mode, language: ctx.language,
-                                          typographic: ctx.typographicQuotes, terms: terms)
+            let entries = SpokenCharacters.without(own, characters)
+            saidPeriod = saidPeriod || SpokenCharacters.endsInSpokenPeriod(
+                text, spellings: entries.filter { $0.enabled && $0.output == "." && $0.alsoInSentence }.flatMap(\.spoken), language: ctx.language)
+            text = SpokenCharacters.apply(entries, to: text, language: ctx.language, terms: terms)
         }
         guard !text.isEmpty else { return "" }
         if ctx.mode == .writing {
@@ -54,23 +61,24 @@ enum TextPipeline {
             // A line break from a replacement (“new line”) is not seen by `SpokenPunctuation`: capital after it too.
             text = SpokenPunctuation.capitalizeAfterLineBreaks(text, terms: terms)
         }
-        text = ProfileTweaks.apply(text, mode: ctx.mode)
+        text = ProfileTweaks.apply(text, mode: ctx.mode, saidPeriod: saidPeriod)
         return text
     }
 }
 
 /// Mode-specific changes (§23.5).
 enum ProfileTweaks {
-    /// Prompt apps: one trailing "." is removed (never "?" or "!").
-    static func apply(_ text: String, mode: AppMode) -> String {
+    /// Prompt apps: one trailing "." is removed (never "?" or "!"), unless it came from a spoken “Punkt” (`saidPeriod`).
+    static func apply(_ text: String, mode: AppMode, saidPeriod: Bool = false) -> String {
         // A lone "." (the word "Punkt" said by itself) stays.
-        guard mode == .prompt, text.hasSuffix("."), !text.hasSuffix(".."), !Replacements.isLoneSymbol(text) else { return text }
+        guard mode == .prompt, !saidPeriod, text.hasSuffix("."), !text.hasSuffix(".."), !Replacements.isLoneSymbol(text) else { return text }
         return String(text.dropLast())
     }
 
     /// Whether Return follows the paste: a Prompt app with “Send automatically”, text in a text field, and
-    /// never after a lone symbol: “Slash” by itself must not send “/”.
+    /// never after a lone symbol or nothing but line breaks: “Slash” by itself must not send “/”, “new line” no break.
     static func sendsReturn(mode: AppMode, autoEnter: Bool, inTextField: Bool, text: String) -> Bool {
         inTextField && mode == .prompt && autoEnter && !Replacements.isLoneSymbol(text)
+            && !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 }

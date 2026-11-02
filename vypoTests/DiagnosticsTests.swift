@@ -60,7 +60,7 @@ final class DiagnosticsTests: XCTestCase {
         for part in ["vypo 1.0 (build 7)", "macOS Version 27.0 (Build 26A434)", "Mac: Mac15,12, Apple M3, 8 GB memory",
                      "Languages: German, English", "Speech model: installed, loaded",
                      "Microphone: granted; Accessibility: not granted", "Glossary: 2 terms, 2 in active sets",
-                     "Last 1 dictation timings:", "t1 Dictation timing: audio 3.0 s",
+                     "Last 1 dictation timing:", "t1 Dictation timing: audio 3.0 s",
                      "Errors in the last 24 hours: 1", "e1 [store] Could not decode glossary for […]"] {
             XCTAssertTrue(text.contains(part), "missing: \(part)\n\(text)")
         }

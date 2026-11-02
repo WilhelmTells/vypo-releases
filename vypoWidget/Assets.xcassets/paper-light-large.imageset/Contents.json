@@ -1,0 +1,22 @@
+{
+  "images": [
+    {
+      "idiom": "universal",
+      "filename": "paper-light-large.png",
+      "scale": "1x"
+    },
+    {
+      "idiom": "universal",
+      "filename": "paper-light-large-2x.png",
+      "scale": "2x"
+    },
+    {
+      "idiom": "universal",
+      "scale": "3x"
+    }
+  ],
+  "info": {
+    "author": "xcode",
+    "version": 1
+  }
+}

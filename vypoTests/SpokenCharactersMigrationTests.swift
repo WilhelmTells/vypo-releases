@@ -53,7 +53,7 @@ final class SpokenCharactersMigrationTests: XCTestCase {
         let items = edited(",") { $0.spoken.append("Beistrich") }
         let comma = entry(SpokenCharacters.migration(from: items, spokenPunctuation: true).characters, ",")
         XCTAssertEqual(comma?.spoken, ["Komma", "Comma", "Beistrich"])
-        XCTAssertEqual(comma?.inSentence, [.writing])
+        XCTAssertEqual(comma?.alsoInSentence, true)
         XCTAssertEqual(comma?.enabled, true)
     }
 
@@ -61,21 +61,22 @@ final class SpokenCharactersMigrationTests: XCTestCase {
         let items = edited("/") { $0.enabled = false }
         let m = SpokenCharacters.migration(from: items, spokenPunctuation: true)
         XCTAssertEqual(entry(m.characters, "/")?.enabled, false)
-        XCTAssertEqual(entry(m.characters, "/")?.inSentence, [.prompt])
+        XCTAssertEqual(entry(m.characters, "/")?.alsoInSentence, true)
         XCTAssertTrue(m.characters.filter { $0.output != "/" }.allSatisfy(\.enabled))
     }
 
     func testAChangedScopeIsMapped() {
-        var items = edited(".") { $0.inSentence = .everywhere }
+        var items = edited("-") { $0.inSentence = .everywhere }
         items[items.firstIndex { $0.output == "/" }!].inSentence = .never
         items[items.firstIndex { $0.output == "\n" }!].inSentence = .promptOnly
         let m = SpokenCharacters.migration(from: items, spokenPunctuation: true)
-        XCTAssertEqual(entry(m.characters, ".")?.inSentence, [.standard, .prompt, .writing])
-        XCTAssertEqual(entry(m.characters, "/")?.inSentence, [])
-        XCTAssertEqual(entry(m.characters, "\n")?.inSentence, [.prompt])
-        // Left as it came: the new default's modes.
-        XCTAssertEqual(entry(m.characters, ":")?.inSentence, [.prompt, .writing])
-        XCTAssertEqual(entry(m.characters, "\n\n")?.inSentence, [.standard, .prompt, .writing])
+        XCTAssertEqual(entry(m.characters, "-")?.alsoInSentence, true)
+        XCTAssertEqual(entry(m.characters, "/")?.alsoInSentence, false)
+        XCTAssertEqual(entry(m.characters, "\n")?.alsoInSentence, true, "Prompt apps only becomes “Also in a sentence”")
+        // Left as it came: the new default.
+        XCTAssertEqual(entry(m.characters, ":")?.alsoInSentence, true)
+        XCTAssertEqual(entry(m.characters, "\n\n")?.alsoInSentence, true)
+        XCTAssertEqual(entry(m.characters, ".")?.alsoInSentence, true, "“never” as it came: the new default")
     }
 
     func testADeletedDefaultStaysDeleted() {
@@ -103,7 +104,8 @@ final class SpokenCharactersMigrationTests: XCTestCase {
         let sign = Replacement(spoken: ["Gruß"], output: "Viele Grüße", enabled: false, inSentence: .promptOnly)
         let star = Replacement(spoken: ["Stern"], output: "*")
         let m = SpokenCharacters.migration(from: [mail] + legacy + [sign, star], spokenPunctuation: true)
-        XCTAssertEqual(m.ownReplacements, [mail, sign, star])
+        XCTAssertEqual(m.ownReplacements, [mail, sign.inEveryApp, star])
+        XCTAssertEqual(m.ownReplacements[1].inSentence, .everywhere, "Prompt apps only is gone with the move")
         XCTAssertEqual(noIDs(m.characters), noIDs(SpokenCharacters.defaults))
     }
 
@@ -115,66 +117,48 @@ final class SpokenCharactersMigrationTests: XCTestCase {
         let comma = entry(m.characters, ",")
         XCTAssertEqual(comma?.spoken, ["Komma", "Comma", "Beistrich"])
         XCTAssertEqual(comma?.enabled, true, "on if either was on")
-        XCTAssertEqual(comma?.inSentence, [.prompt, .writing], "the default's Writing and the changed one's Prompt")
+        XCTAssertEqual(comma?.alsoInSentence, true)
         XCTAssertEqual(m.ownReplacements, [])
 
         // “Punkt” → “.” of one's own shares a spelling with the default: it is a version and merges too.
         let punkt = SpokenCharacters.migration(from: legacy + [Replacement(spoken: ["Punkt"], output: ".")], spokenPunctuation: true)
         XCTAssertEqual(punkt.merged, ["."])
-        XCTAssertEqual(entry(punkt.characters, ".")?.inSentence, [.standard, .prompt, .writing])
+        XCTAssertEqual(entry(punkt.characters, ".")?.alsoInSentence, true)
     }
 
-    func testSpokenPunctuationOffKeepsMarksOutOfWritingSentences() {
-        let items = edited(",") { $0.inSentence = .everywhere }
-        let m = SpokenCharacters.migration(from: items, spokenPunctuation: false)
-        for c in m.characters where SpokenCharacters.mark(for: c.output) != nil {
-            XCTAssertFalse(c.inSentence.contains(.writing), Replacements.display(c.output))
-        }
-        XCTAssertEqual(entry(m.characters, ",")?.inSentence, [.standard, .prompt])
-        XCTAssertEqual(entry(m.characters, ";")?.inSentence, [.prompt])
-        XCTAssertEqual(entry(m.characters, "?")?.inSentence, [])
-        XCTAssertEqual(entry(m.characters, SpokenCharacters.openQuote)?.inSentence, [])
-        // Line breaks are no marks: they keep Writing.
-        XCTAssertEqual(entry(m.characters, "\n")?.inSentence, [.standard, .prompt, .writing])
-        XCTAssertEqual(entry(m.characters, "/")?.inSentence, [.prompt])
+    func testSpokenPunctuationOffGoesByTheEntrysOwnScope() {
+        let m = SpokenCharacters.migration(from: edited(",") { $0.inSentence = .everywhere }, spokenPunctuation: false)
+        XCTAssertEqual(entry(m.characters, ",")?.alsoInSentence, true, "it worked in sentences outside Writing")
+        XCTAssertEqual(entry(m.characters, ";")?.alsoInSentence, true, "Prompt apps only")
+        XCTAssertEqual(entry(m.characters, ".")?.alsoInSentence, false, "never, and out of Writing")
+        XCTAssertEqual(entry(m.characters, "?")?.alsoInSentence, false)
+        XCTAssertEqual(entry(m.characters, SpokenCharacters.openQuote)?.alsoInSentence, false)
+        // No marks: as with the switch on.
+        XCTAssertEqual(entry(m.characters, "\n")?.alsoInSentence, true)
+        XCTAssertEqual(entry(m.characters, "/")?.alsoInSentence, true)
     }
 
-    func testWritingStaysOnAMarkWhenSpokenPunctuationWasOn() {
+    func testAMarkStaysInSentencesWhenSpokenPunctuationWasOn() {
         let promptOnly = edited(",") { $0.inSentence = .promptOnly }
         let a = entry(SpokenCharacters.migration(from: promptOnly, spokenPunctuation: true).characters, ",")
-        XCTAssertEqual(a?.inSentence, [.prompt, .writing])
+        XCTAssertEqual(a?.alsoInSentence, true)
         XCTAssertEqual(a?.enabled, true)
 
         let never = edited("/") { $0.inSentence = .never }
-        XCTAssertEqual(entry(SpokenCharacters.migration(from: never, spokenPunctuation: true).characters, "/")?.inSentence, [],
-                       "a slash is no mark: no Writing added")
+        XCTAssertEqual(entry(SpokenCharacters.migration(from: never, spokenPunctuation: true).characters, "/")?.alsoInSentence, false,
+                       "a slash is no mark")
+        let comma = edited(",") { $0.inSentence = .everywhere; $0.spoken = ["Beistrich", "Komma"] }
+        XCTAssertEqual(entry(SpokenCharacters.migration(from: comma, spokenPunctuation: true).characters, ",")?.alsoInSentence, true)
     }
 
-    func testAMarkSwitchedOffIsOnInWritingAppsOnlyWhenSpokenPunctuationWasOn() {
-        let off = edited(",") { $0.enabled = false }
-        let m = SpokenCharacters.migration(from: off, spokenPunctuation: true)
-        XCTAssertEqual(entry(m.characters, ",")?.enabled, true)
-        XCTAssertEqual(entry(m.characters, ",")?.inSentence, [.writing])
-
-        // Off and a changed scope: still Writing only.
-        let offPrompt = edited(",") { $0.enabled = false; $0.inSentence = .promptOnly }
-        let n = SpokenCharacters.migration(from: offPrompt, spokenPunctuation: true)
-        XCTAssertEqual(entry(n.characters, ",")?.inSentence, [.writing])
-
-        // Not a mark: stays off.
-        let slash = SpokenCharacters.migration(from: edited("/") { $0.enabled = false }, spokenPunctuation: true)
-        XCTAssertEqual(entry(slash.characters, "/")?.enabled, false)
-    }
-
-    func testWithSpokenPunctuationOffAMarkGetsNoWriting() {
-        let promptOnly = edited(",") { $0.inSentence = .promptOnly }
-        let a = SpokenCharacters.migration(from: promptOnly, spokenPunctuation: false)
-        XCTAssertEqual(entry(a.characters, ",")?.inSentence, [.prompt])
-
-        let off = edited(",") { $0.enabled = false }
-        let b = SpokenCharacters.migration(from: off, spokenPunctuation: false)
-        XCTAssertEqual(entry(b.characters, ",")?.enabled, false)
-        XCTAssertFalse(entry(b.characters, ",")?.inSentence.contains(.writing) ?? true)
+    /// There is no “on in Writing apps only” any more: an entry the user switched off stays off, marks too.
+    func testASwitchedOffEntryStaysOff() {
+        for punct in [true, false] {
+            for output in [",", "/"] {
+                let m = SpokenCharacters.migration(from: edited(output) { $0.enabled = false }, spokenPunctuation: punct)
+                XCTAssertEqual(entry(m.characters, output)?.enabled, false, "\(output), \(punct)")
+            }
+        }
     }
 
     func testASpellingTheUserRemovedStaysRemovedAndANewOneComes() {
@@ -204,41 +188,20 @@ final class SpokenCharactersMigrationTests: XCTestCase {
         }
     }
 
-    /// "Hallo Komma Welt" through the real pipeline in every mode, before (legacy context) and after (moved lists).
-    /// Stands in for dictating by voice, which a test can't do.
-    func testHalloKommaWeltBeforeAndAfterTheMove() {
-        func run(_ items: [Replacement], punct: Bool, moved: Bool, _ mode: AppMode, _ lang: Lang = .de) -> String {
+    /// After the move an entry works the same in every app. Stands in for dictating by voice, which a test can't do.
+    func testHalloKommaWeltAfterTheMove() {
+        func run(_ items: [Replacement], punct: Bool, _ mode: AppMode) -> String {
             let m = SpokenCharacters.migration(from: items, spokenPunctuation: punct)
-            let ctx = moved
-                ? PipelineContext(language: lang, replacements: m.ownReplacements, mode: mode, spokenCharacters: m.characters, spokenPunctuation: punct)
-                : PipelineContext(language: lang, replacements: items, mode: mode, spokenCharacters: nil, spokenPunctuation: punct)
-            return TextPipeline.process(lang == .de ? "Hallo Komma Welt" : "Hello comma world", ctx)
+            return TextPipeline.process("Hallo Komma Welt", PipelineContext(language: .de, replacements: m.ownReplacements, mode: mode,
+                                                                            spokenCharacters: m.characters, spokenPunctuation: punct))
         }
-        let cases: [(String, [Replacement])] = [
-            ("untouched", legacy),
-            ("Komma prompt only", edited(",") { $0.inSentence = .promptOnly }),
-            ("Komma off", edited(",") { $0.enabled = false }),
-        ]
-        for (name, items) in cases {
-            for punct in [true, false] {
-                for mode in [AppMode.standard, .prompt, .writing] {
-                    for lang in [Lang.de, .en] {
-                        XCTAssertEqual(run(items, punct: punct, moved: true, mode, lang), run(items, punct: punct, moved: false, mode, lang),
-                                       "\(name), spoken punctuation \(punct), \(mode), \(lang)")
-                    }
-                }
-            }
+        for mode in [AppMode.standard, .prompt, .writing] {
+            XCTAssertEqual(run(legacy, punct: true, mode), "Hallo, Welt", "untouched, \(mode)")
+            XCTAssertEqual(run(edited(",") { $0.inSentence = .promptOnly }, punct: true, mode), "Hallo, Welt", "\(mode)")
+            XCTAssertEqual(run(edited(",") { $0.inSentence = .promptOnly }, punct: false, mode), "Hallo, Welt", "it worked in Prompt, \(mode)")
+            XCTAssertEqual(run(legacy, punct: false, mode), "Hallo Komma Welt", "marks were off, \(mode)")
+            XCTAssertEqual(run(edited(",") { $0.enabled = false }, punct: true, mode), "Hallo Komma Welt", "off stays off, \(mode)")
         }
-        // The two cases of the brief, spelled out.
-        let promptOnly = cases[1].1
-        XCTAssertEqual(run(promptOnly, punct: true, moved: true, .writing), "Hallo, Welt")
-        XCTAssertEqual(run(promptOnly, punct: false, moved: true, .writing), "Hallo Komma Welt")
-        XCTAssertEqual(run(promptOnly, punct: true, moved: true, .prompt), "Hallo, Welt")
-        XCTAssertEqual(run(promptOnly, punct: true, moved: true, .standard), "Hallo Komma Welt")
-        let off = cases[2].1
-        XCTAssertEqual(run(off, punct: true, moved: true, .writing), "Hallo, Welt")
-        XCTAssertEqual(run(off, punct: true, moved: true, .prompt), "Hallo Komma Welt")
-        XCTAssertEqual(run(off, punct: false, moved: true, .writing), "Hallo Komma Welt")
     }
 
     // MARK: Backup and the move through AppState
@@ -365,7 +328,6 @@ final class SpokenCharactersMigrationTests: XCTestCase {
         let d = SpokenCharacters.defaults
         XCTAssertEqual(entry(d, ",")?.summary(for: .en), "“Comma”, “Komma”")
         XCTAssertEqual(entry(d, ",")?.summary(for: .de), "“Komma”, “Comma”")
-        XCTAssertEqual(entry(d, ",")?.summary(for: .de, quote: { "„\($0)“" }), "„Komma“, „Comma“")
         XCTAssertEqual(entry(d, ".")?.summary(for: .en), "“Period”, “Full stop” …")
         XCTAssertEqual(entry(d, ";")?.summary(for: .en), "“Semicolon”, “Semi colon” …")
         XCTAssertEqual(entry(d, ";")?.summary(for: .de), "“Semikolon”, “Semi-Kolon” …")
@@ -373,7 +335,7 @@ final class SpokenCharactersMigrationTests: XCTestCase {
         XCTAssertEqual(entry(d, SpokenCharacters.openQuote)?.summary(for: .en), "“Open quote”, “Anführungszeichen auf”")
         XCTAssertEqual(entry(d, ":")?.summary(for: .en), "“Doppelpunkt”")
         // A spelling of no known language keeps its place among the others.
-        let own = SpokenCharacter(spoken: ["Beistrich", "Komma", "Comma"], output: ",", inSentence: [.writing])
+        let own = SpokenCharacter(spoken: ["Beistrich", "Komma", "Comma"], output: ",", alsoInSentence: true)
         XCTAssertEqual(own.summary(for: .en), "“Comma”, “Beistrich” …")
         // Only the display: the stored order stays.
         XCTAssertEqual(entry(d, ",")?.spoken, ["Komma", "Comma"])

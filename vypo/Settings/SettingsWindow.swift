@@ -191,8 +191,17 @@ struct SettingsView: View {
         @Bindable var app = app
         NavigationSplitView {
             List(SettingsPane.visible, selection: $app.settingsPane) { pane in
-                Label(pane.title, systemImage: pane.symbol)
-                    .tag(pane)
+                HStack {
+                    Label(pane.title, systemImage: pane.symbol)
+                    if pane == .words && app.glossary.hasUnseenSuggestions {
+                        Spacer()
+                        Circle()
+                            .fill(Color.vyAccent)
+                            .frame(width: 7, height: 7)
+                            .accessibilityLabel("New suggestions")
+                    }
+                }
+                .tag(pane)
             }
             .navigationSplitViewColumnWidth(170)
             .scrollContentBackground(.hidden)

@@ -191,7 +191,7 @@ struct SuggestionBanner: View {
                     Text("Add \(Text(s.term).fontWeight(.semibold)) to your glossary?")
                         .foregroundStyle(Color.vyLabel)
                     HStack(spacing: 4) {
-                        Text(s.heard).strikethrough()
+                        Text(s.spellingsLine).strikethrough()
                         Image(systemName: "arrow.right").font(.system(size: 9)).accessibilityLabel("becomes")
                         Text(s.term + (s.count > 1 ? ", fixed \(s.count)×" : ""))
                     }
@@ -199,7 +199,7 @@ struct SuggestionBanner: View {
                     .foregroundStyle(Color.vyLabelSecondary)
                 }
                 Spacer(minLength: 0)
-                Button("Not now", action: onDismiss).buttonStyle(.plain).foregroundStyle(Color.vyAccent)
+                Button("Not Now", action: onDismiss).buttonStyle(.plain).foregroundStyle(Color.vyAccent)
                 Button("Add", action: onAdd).buttonStyle(.borderedProminent)
             case .added(let term):
                 Image(systemName: "checkmark").foregroundStyle(Color.vySuccess).accessibilityHidden(true)
@@ -224,6 +224,9 @@ struct SuggestionBanner: View {
 }
 
 enum Formatting {
+    /// A spelling in the quotes of vypo's language (“comma”, „Komma“).
+    static func quoted(_ text: String) -> String { String(localized: "“\(text)”") }
+
     /// "2 min ago" within a day, "Yesterday", else a date (§13), in the language vypo is shown in.
     static func relative(_ date: Date, now: Date = Date()) -> String {
         if now.timeIntervalSince(date) < 86_400 {

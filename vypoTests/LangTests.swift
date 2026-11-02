@@ -15,9 +15,7 @@ final class LangTests: XCTestCase {
         XCTAssertEqual(decoded, [.en, .de])
     }
 
-    func testExtrasOnlyForEnglishAndGerman() {
-        XCTAssertEqual(Set(Lang.allCases.filter(\.hasExtras)), [.en, .de])
-        XCTAssertTrue(FillerRemover.defaultWords(.fr).isEmpty)
+    func testSpokenPunctuationOnlyForEnglishAndGerman() {
         XCTAssertTrue(SpokenPunctuation.phrases(.fr).isEmpty)
         XCTAssertEqual(SpokenPunctuation.apply("bonjour virgule ça va", language: .fr), "bonjour virgule ça va")
     }

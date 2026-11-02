@@ -23,34 +23,28 @@ struct SetSheet: View {
     private var current: GlossarySet? { if case .edit(let s) = mode { s } else { nil } }
     private var isGeneral: Bool { current?.isGeneral == true }
 
+    private var deleteQuestion: String {
+        guard let current else { return "" }
+        return String(localized: "Delete “\(current.name)” and its \(app.glossary.count(in: current)) terms?")
+    }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: Space.s4) {
+        SettingsSheet(title: current == nil ? "New Set" : "Edit Set", width: SheetWidth.form) {
             Form {
                 TextField("Name", text: $name)
                     .disabled(isGeneral)
             }
-            .formStyle(.grouped)
-            HStack {
-                if let current, !current.isGeneral {
-                    Button("Delete set", role: .destructive) { confirmDelete = true }
-                        .foregroundStyle(Color.vyDanger)
-                }
-                Spacer()
-                Button("Cancel", role: .cancel) { dismiss() }
-                    .keyboardShortcut(.cancelAction)
-                Button("Save") {
-                    if let current { app.glossary.rename(current.id, to: name) } else { app.glossary.addSet(named: name) }
-                    dismiss()
-                }
-                .buttonStyle(.borderedProminent)
-                .keyboardShortcut(.defaultAction)
-                .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty || isGeneral)
+            .sheetForm()
+        } footer: {
+            SheetFormFooter(deleteTitle: "Delete…",
+                            onDelete: current?.isGeneral == false ? { confirmDelete = true } : nil,
+                            canSave: !name.trimmingCharacters(in: .whitespaces).isEmpty && !isGeneral) {
+                if let current { app.glossary.rename(current.id, to: name) } else { app.glossary.addSet(named: name) }
+                dismiss()
             }
-            .padding([.horizontal, .bottom], Space.s5)
         }
-        .frame(width: 400)
-        .onAppear { name = current?.name ?? "" }
-        .alert(current.map { "Delete “\($0.name)” and its \(app.glossary.count(in: $0)) terms?" } ?? "", isPresented: $confirmDelete) {
+        .onAppear { name = current?.displayName ?? "" }
+        .alert(deleteQuestion, isPresented: $confirmDelete) {
             Button("Delete", role: .destructive) {
                 if let current { app.glossary.deleteSet(current.id) }
                 dismiss()
@@ -81,9 +75,7 @@ struct ImportTermsSheet: View {
     @State private var newSetName = ""
 
     var body: some View {
-        VStack(alignment: .leading, spacing: Space.s3) {
-            Text("Found \(result.found.count) terms in \(result.fileName)")
-                .font(.title3.weight(.semibold))
+        SettingsSheet(title: "Found \(result.found.count) Terms in \(result.fileName)", width: SheetWidth.list) {
             List(result.found) { item in
                 Toggle(isOn: Binding(get: { checked.contains(item.term) },
                                      set: { if $0 { checked.insert(item.term) } else { checked.remove(item.term) } })) {
@@ -99,8 +91,8 @@ struct ImportTermsSheet: View {
             .listStyle(.bordered)
             HStack {
                 Picker("Set", selection: $target) {
-                    ForEach(app.glossary.sets) { Text($0.name).tag(Target.existing($0.id)) }
-                    Text("New set…").tag(Target.new)
+                    ForEach(app.glossary.sets) { Text($0.displayName).tag(Target.existing($0.id)) }
+                    Text("New Set…").tag(Target.new)
                 }
                 .pickerStyle(.menu)
                 .fixedSize()
@@ -108,18 +100,11 @@ struct ImportTermsSheet: View {
                     TextField("Name", text: $newSetName)
                 }
             }
-            HStack {
-                Spacer()
-                Button("Cancel", role: .cancel) { dismiss() }
-                    .keyboardShortcut(.cancelAction)
-                Button("Add \(checked.count) terms") { add() }
-                    .buttonStyle(.borderedProminent)
-                    .keyboardShortcut(.defaultAction)
-                    .disabled(checked.isEmpty || (target == .new && newSetName.trimmingCharacters(in: .whitespaces).isEmpty))
-            }
+        } footer: {
+            SheetConfirmFooter(action: "Add \(checked.count) Terms",
+                               enabled: !checked.isEmpty && !(target == .new && newSetName.trimmingCharacters(in: .whitespaces).isEmpty),
+                               perform: add)
         }
-        .padding(Space.s5)
-        .frame(width: 460)
         .onAppear {
             checked = Set(result.found.filter { $0.count >= 3 }.map(\.term))
             newSetName = (result.fileName as NSString).deletingPathExtension

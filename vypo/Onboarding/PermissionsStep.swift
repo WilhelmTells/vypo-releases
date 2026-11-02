@@ -36,7 +36,7 @@ struct PermissionsStep: View {
                 }
             }
             PermissionCard(symbol: "accessibility", title: "Accessibility",
-                           line: "So vypo notices your dictation key and can type the text for you.",
+                           line: "So vypo notices your dictation key, types the text for you and notices corrections to it.",
                            allowed: ax) {
                 if accessibilityAsked {
                     HStack(spacing: 6) {
@@ -62,8 +62,9 @@ struct PermissionsStep: View {
             }
             DisclosureGroup(isExpanded: $showDetails) {
                 VStack(alignment: .leading, spacing: 6) {
-                    detail("Accessibility", ["Notice when you press your dictation key.", "Paste your text into the field you’re typing in.",
-                                             "Nothing vypo sees is saved or sent. vypo doesn’t record your screen."])
+                    detail("Accessibility", ["Notice when you press your dictation key.",
+                                             "Paste your text into the field you’re typing in, and notice when you correct a word vypo wrote there.",
+                                             "Nothing vypo sees is sent. It keeps only the words you correct, on this Mac, to suggest them for the glossary. vypo doesn’t record your screen."])
                     detail("Microphone", ["vypo listens only while you dictate. Your audio is turned into text on this Mac and then discarded. It is never saved."])
                 }
                 .padding(.top, 6)
@@ -113,6 +114,7 @@ struct PermissionsStep: View {
 
     private func requestAccessibility() {
         accessibilityAsked = true
+        showDetails = false // The switch drawing needs the room.
         askedAt = Date()
         Permissions.requestAccessibility()
     }
@@ -179,7 +181,7 @@ struct SwitchIllustration: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Turn on the switch next to vypo.").font(OBFont.bodySemibold).foregroundStyle(Color.vyLabel)
                 Text("macOS may ask for your password or Touch ID.").font(OBFont.secondary).foregroundStyle(Color.vyLabelSecondary)
-                Text("vypo needs this only to notice your key and paste your text.").font(OBFont.secondary).foregroundStyle(Color.vyLabelSecondary)
+                Text("vypo needs this to notice your key, paste your text and notice corrections to it.").font(OBFont.secondary).foregroundStyle(Color.vyLabelSecondary)
             }
             .fixedSize(horizontal: false, vertical: true)
         }

@@ -12,6 +12,11 @@ xcodebuild -project vypo.xcodeproj -scheme vypo -destination 'platform=macOS,arc
   -derivedDataPath build.noindex/dd test "$@"
 result=$?
 
+# The test host holds a widget under the real ID. Macs keep a list of what apps bring; take it off again, so the
+# widget gallery only ever offers the installed app's.
+/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister \
+  -u build.noindex/dd/Build/Products/Debug/vypo.app 2>/dev/null
+
 # Tests keep their preferences in suites called vypo.<name>.<id> (one plist each in ~/Library/Preferences); the app's
 # own are com.wilhelmtells.vypo. Thousands piled up, so they go after every run.
 find "$HOME/Library/Preferences" -maxdepth 1 -name 'vypo.*.plist' -delete 2>/dev/null

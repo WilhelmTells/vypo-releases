@@ -351,7 +351,7 @@ final class SnapshotRenderTests: XCTestCase {
         try renderWindow("spellings-sheet", size: CGSize(width: 340, height: 440)) {
             SpellingsSheet().environment(app)
         }
-        try renderWindow("filler-sheet", size: CGSize(width: 440, height: 300)) {
+        try renderWindow("filler-sheet", size: CGSize(width: 540, height: 400)) {
             FillerWordsSheet().environment(app)
         }
     }

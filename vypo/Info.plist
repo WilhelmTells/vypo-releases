@@ -22,9 +22,20 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.4.0</string>
+	<string>0.4.1</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.wilhelmtells.vypo</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>vypo</string>
+			</array>
+		</dict>
+	</array>
 	<key>CFBundleVersion</key>
-	<string>4</string>
+	<string>5</string>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.productivity</string>
 	<key>LSMinimumSystemVersion</key>
@@ -43,5 +54,9 @@
 	<string>JZUAtmYxrDDdfgeaCJGxbAZ8Ll+rmgBxuYSL2wKVzJY=</string>
 	<key>SUScheduledCheckInterval</key>
 	<integer>86400</integer>
+	<key>VYPOAppGroup</key>
+	<string>$(DEVELOPMENT_TEAM).com.wilhelmtells.vypo</string>
+	<key>VYPOURLScheme</key>
+	<string>vypo</string>
 </dict>
 </plist>

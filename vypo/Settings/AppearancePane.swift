@@ -40,7 +40,7 @@ struct AppearancePane: View {
                         PillColorPicker(selection: $prefs.pillColor, customHex: $prefs.pillCustomColor)
                     }
                     LabeledContent {
-                        Button("Reset position") { app.pill?.resetPosition() }
+                        Button("Reset Position") { app.pill?.resetPosition() }
                     } label: {
                         RowLabel(title: "Position", description: "Drag the pill anywhere. It snaps to screen edges.")
                     }
