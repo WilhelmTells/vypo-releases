@@ -70,6 +70,8 @@ struct MenuBarMarkFrame: Equatable {
     var star: Double?
     /// 0 is the template image, 1 is fully `accent`.
     var tint = 0.0
+    /// 0 is the template image, 1 is fully `update-gold`: an update waits (`Updates.updateWaiting`).
+    var gold = 0.0
 
     static let rest = MenuBarMarkFrame()
 }
@@ -81,6 +83,9 @@ struct MenuBarMarkTimeline {
     var tintOption = false
     /// No motion at all; the mark is coloured while dictating instead, whatever the option.
     var reduceMotion = false
+    /// An update waits: the mark rests in gold. A dictation (from its start until its colour would fade) keeps the
+    /// mark as it always is; the gold comes back after it.
+    var updateWaiting = false
 
     private(set) var recording = false
     private(set) var processing = false
@@ -96,9 +101,11 @@ struct MenuBarMarkTimeline {
     private var level = 0.0
     private var bell = 1.0
     private var tint = 0.0
+    private var gold = 0.0
     private var lastTick: Double?
 
     private var tintTarget: Double { colored && (tintOption || reduceMotion) ? 1 : 0 }
+    private var goldTarget: Double { updateWaiting && !colored ? 1 : 0 }
 
     mutating func beginRecording(at now: Double) {
         recording = true
@@ -152,7 +159,7 @@ struct MenuBarMarkTimeline {
     /// Whether frames still change; false means the display link can stop.
     var isAnimating: Bool {
         startAt != nil || (recording && !reduceMotion) || releaseAt != nil || coasterAt != nil || starAt != nil
-            || shakeAt != nil || uncolorAt != nil || tint != tintTarget
+            || shakeAt != nil || uncolorAt != nil || tint != tintTarget || gold != goldTarget
     }
 
     /// Moves to `now`; `level` is the microphone level 0–1.
@@ -169,6 +176,8 @@ struct MenuBarMarkTimeline {
         let step = dt / MenuBarMotion.tintDuration
         tint = tint < tintTarget ? min(tintTarget, tint + step) : max(tintTarget, tint - step)
         frame.tint = tint
+        gold = gold < goldTarget ? min(goldTarget, gold + step) : max(goldTarget, gold - step)
+        frame.gold = gold
 
         if let at = startAt {
             let elapsed = now - at
@@ -304,24 +313,27 @@ enum MenuBarMarkRenderer {
         return p
     }
 
-    /// A template image at tint 0; otherwise drawn in the menu bar's ink blended toward `accent`.
+    /// A template image at tint and gold 0; otherwise drawn in the menu bar's ink blended toward `accent`, then
+    /// toward `update-gold`.
     static func image(_ frame: MenuBarMarkFrame) -> NSImage {
-        let tint = CGFloat(frame.tint)
+        let tint = CGFloat(frame.tint), gold = CGFloat(frame.gold)
         let image = NSImage(size: canvas, flipped: true) { _ in
             guard let ctx = NSGraphicsContext.current?.cgContext else { return false }
             let color: NSColor
-            if tint > 0 {
+            if tint > 0 || gold > 0 {
                 // Resolved in the appearance the status button draws in.
                 let ink = NSColor.textColor.usingColorSpace(.sRGB) ?? .black
                 let accent = (NSColor(named: "accent") ?? .controlAccentColor).usingColorSpace(.sRGB) ?? .red
-                color = ink.blended(withFraction: tint, of: accent) ?? accent
+                let goldColor = (NSColor(named: "update-gold") ?? .systemYellow).usingColorSpace(.sRGB) ?? .yellow
+                let tinted = tint > 0 ? ink.blended(withFraction: tint, of: accent) ?? accent : ink
+                color = gold > 0 ? tinted.blended(withFraction: gold, of: goldColor) ?? goldColor : tinted
             } else {
                 color = .black
             }
             draw(frame, in: ctx, color: color.cgColor)
             return true
         }
-        image.isTemplate = tint == 0
+        image.isTemplate = tint == 0 && gold == 0
         return image
     }
 
@@ -390,6 +402,7 @@ final class MenuBarIconAnimator: NSObject {
     private var timeline = MenuBarMarkTimeline()
     private var link: CADisplayLink?
     private var shown: MenuBarMarkFrame?
+    private var appearanceObservation: NSKeyValueObservation?
 
     var tintOption: Bool {
         get { timeline.tintOption }
@@ -400,11 +413,32 @@ final class MenuBarIconAnimator: NSObject {
         }
     }
 
+    /// An update waits (`Updates.updateWaiting`): the mark rests in gold.
+    var updateWaiting: Bool {
+        get { timeline.updateWaiting }
+        set {
+            guard newValue != timeline.updateWaiting else { return }
+            timeline.updateWaiting = newValue
+            kick()
+        }
+    }
+
     init(button: NSStatusBarButton, level: @escaping () -> Float) {
         self.button = button
         self.level = level
         super.init()
         show(.rest)
+        // A coloured mark is drawn for one appearance; the gold can stay for days, through a switch to Dark or a
+        // wallpaper that turns the menu bar light, so it is drawn again for the new one.
+        appearanceObservation = button.observe(\.effectiveAppearance) { [weak self] _, _ in
+            Task { @MainActor in self?.redraw() }
+        }
+    }
+
+    private func redraw() {
+        guard let frame = shown, frame.tint > 0 || frame.gold > 0 else { return }
+        shown = nil
+        show(frame)
     }
 
     func beginRecording() { event { $0.beginRecording(at: $1) } }
@@ -442,7 +476,8 @@ final class MenuBarIconAnimator: NSObject {
         guard frame != shown, let button else { return }
         shown = frame
         let image = MenuBarMarkRenderer.image(frame)
-        image.accessibilityDescription = timeline.recording ? String(localized: "vypo, recording") : "vypo"
+        image.accessibilityDescription = timeline.recording ? String(localized: "vypo, recording")
+            : timeline.updateWaiting ? String(localized: "vypo, update available") : "vypo"
         button.image = image
     }
 }

@@ -2,16 +2,23 @@ import KeyboardShortcuts
 import SwiftUI
 
 /// The panel under the menu bar mark, on left and right click (§14): dictation on/off,
-/// microphone, copy last, Settings, Quit. Only what dictating needs: models, history, glossary, updates,
+/// microphone, copy last, Settings, Quit, and on top an update waiting to be installed. Only what dictating needs: models, history, glossary, updates,
 /// help and About live in Settings.
 struct MenuBarContent: View {
     @Environment(AppState.self) private var app
     @State private var showDebug = false
     @State private var devices: [AudioInputDevice] = []
+    /// Stands in for `Updates.waitingVersion` in snapshots, which have no updater.
+    var previewUpdateVersion: String?
 
     var body: some View {
         @Bindable var prefs = app.prefs
         VStack(alignment: .leading, spacing: 0) {
+            // Only while an update the daily check found waits (the mark is gold); opens Sparkle's window.
+            if let version = previewUpdateVersion ?? app.updates?.waitingVersion {
+                UpdateAvailableRow(version: version) { app.updates?.checkNow() }
+                MenuSeparator()
+            }
             HStack {
                 Text("Dictation").fontWeight(.semibold)
                 Spacer()
@@ -71,6 +78,48 @@ struct MenuBarContent: View {
 
     private func shortcutText(_ name: KeyboardShortcuts.Name) -> String? {
         KeyboardShortcuts.getShortcut(for: name)?.description
+    }
+}
+
+/// “Update available” over the new version, and a vermilion “Install” on the right, laid out like the Dictation row.
+/// The whole row is one button (the Install capsule included): every click opens Sparkle's update window.
+struct UpdateAvailableRow: View {
+    var version: String
+    var action: () -> Void
+
+    var body: some View {
+        Button {
+            MenuDismiss.close()
+            action()
+        } label: {
+            HStack(spacing: 8) {
+                VStack(alignment: .leading, spacing: 1) {
+                    Text("Update available").fontWeight(.semibold).lineLimit(1)
+                    Text(verbatim: "vypo \(version)")
+                        .font(.system(size: 11))
+                        .foregroundStyle(Color.vyLabelSecondary)
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer(minLength: 0)
+                Text("Install")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .lineLimit(1)
+                    .fixedSize()
+                    .padding(.horizontal, 10)
+                    .frame(height: 20)
+                    // The Dictation switch's colour: the menu sets `.tint(.vyAccent)`.
+                    .background(Capsule().fill(Color.vyAccent))
+            }
+            .padding(.horizontal, 9)
+            .padding(.vertical, 5)
+            .frame(minHeight: 40)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(MenuRowButtonStyle())
+        // One button for VoiceOver too: “Update available, vypo 0.6.0, Install”.
+        .accessibilityLabel(Text("Update available") + Text(verbatim: ", vypo \(version), ") + Text("Install"))
     }
 }
 

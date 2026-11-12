@@ -259,7 +259,8 @@ final class AppCoordinator {
                                        mode: ctx.mode,
                                        spokenCharacters: app.spokenCharacters.map { prefs.spokenCharacters ? $0.items : [] },
                                        spokenPunctuation: prefs.spokenPunctuation,
-                                       typographicQuotes: prefs.typographicQuotes)
+                                       typographicQuotes: prefs.typographicQuotes,
+                                       numberedLists: prefs.numberedLists)
         var text = TextPipeline.process(raw, pipeline) { word in
             MainActor.assumeIsolated { !TermExtractor.spellCheckerUnknown(word) }
         }
@@ -481,6 +482,10 @@ final class AppCoordinator {
 
         let prefs = app.prefs
         #if DEBUG
+        // To see Try it's fallback: `-VYPOTryItDropPaste YES` skips the ⌘V while Try it is open (test app only).
+        if UserDefaults.standard.bool(forKey: "VYPOTryItDropPaste") {
+            Paster.dropsCommandV = { [weak self] in self?.tryItGate.isOpen() == true }
+        }
         // For screenshots of the live window: `-VYPOOnboardingStep 3` opens onboarding on that step (0 to 6).
         if let value = UserDefaults.standard.string(forKey: "VYPOOnboardingStep"), let step = Int(value) {
             showOnboarding(step: step)

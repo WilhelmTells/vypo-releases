@@ -99,8 +99,20 @@ enum Paster {
     /// Marks vypo's own key presses, so the event tap can tell them from yours.
     nonisolated static let syntheticMarker: Int64 = 0x7679_706F
 
+    #if DEBUG
+    /// Debug builds only: when this says yes, a ⌘V is not posted. Set by `-VYPOTryItDropPaste YES` for the
+    /// onboarding's Try it step, to show its fallback on a Mac where the paste works.
+    static var dropsCommandV: () -> Bool = { false }
+    #endif
+
     /// Posts a key press to the HID event tap.
     static func postKey(_ keyCode: Int, flags: CGEventFlags = []) {
+        #if DEBUG
+        if keyCode == kVK_ANSI_V && flags.contains(.maskCommand) && dropsCommandV() {
+            Log.output.notice("Debug: ⌘V not posted (-VYPOTryItDropPaste)")
+            return
+        }
+        #endif
         let source = CGEventSource(stateID: .hidSystemState)
         let down = CGEvent(keyboardEventSource: source, virtualKey: CGKeyCode(keyCode), keyDown: true)
         let up = CGEvent(keyboardEventSource: source, virtualKey: CGKeyCode(keyCode), keyDown: false)

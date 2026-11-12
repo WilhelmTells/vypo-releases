@@ -46,6 +46,12 @@ enum ContextFormatter {
             result = lowercasedFirst(result)
         }
 
+        // A numbered list (Writing apps) in the middle of a line starts on a line of its own.
+        if NumberedLists.startsWithList(result) {
+            if let prev, !prev.isNewline { result = "\n" + result }
+            return result
+        }
+
         // Leading space.
         if let prev, !prev.isWhitespace, !noSpaceAfter.contains(prev),
            prev.isLetter || prev.isNumber || spaceAfter.contains(prev),

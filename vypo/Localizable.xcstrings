@@ -2337,12 +2337,12 @@
         }
       }
     },
-    "For documents and notes: typographic quotes, and a capital letter after every line break." : {
+    "For documents and notes: typographic quotes, numbered lists, and a capital letter after every line break." : {
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Für Dokumente und Notizen: typografische Anführungszeichen und ein Großbuchstabe nach jedem Zeilenumbruch."
+            "value" : "Für Dokumente und Notizen: typografische Anführungszeichen, nummerierte Listen und ein Großbuchstabe nach jedem Zeilenumbruch."
           }
         }
       }
@@ -2684,16 +2684,6 @@
         }
       }
     },
-    "Heard: “%@” But it didn’t arrive in the field. Click into the field and try again." : {
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Gehört: „%@“ Aber es ist nicht im Feld angekommen. Klick ins Feld und versuch es noch einmal."
-          }
-        }
-      }
-    },
     "Heard: “%@” But vypo couldn’t paste it. Is Accessibility still on?" : {
       "localizations" : {
         "de" : {
@@ -2924,6 +2914,16 @@
         }
       }
     },
+    "In your apps, vypo writes the text where your cursor is." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In deinen Apps schreibt vypo den Text dorthin, wo dein Cursor steht."
+          }
+        }
+      }
+    },
     "Input device" : {
       "localizations" : {
         "de" : {
@@ -2940,6 +2940,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Eingefügt"
+          }
+        }
+      }
+    },
+    "Install" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Installieren"
           }
         }
       }
@@ -4014,6 +4024,16 @@
         }
       }
     },
+    "Numbered lists" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nummerierte Listen"
+          }
+        }
+      }
+    },
     "OK" : {
       "localizations" : {
         "de" : {
@@ -4555,6 +4575,16 @@
         }
       }
     },
+    "Recognized." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erkannt."
+          }
+        }
+      }
+    },
     "Recording" : {
       "localizations" : {
         "de" : {
@@ -4961,6 +4991,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sag „Komma“ oder „Slash“ und vypo schreibt „,“ oder „/“, in jeder App gleich. Unter Bearbeiten … stellst du ein, welche auch im Satz wirken."
+          }
+        }
+      }
+    },
+    "Say “first, second …” to start a list." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sag „erstens, zweitens …“, um eine Liste zu beginnen."
           }
         }
       }
@@ -6061,6 +6101,16 @@
         }
       }
     },
+    "Update available" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Update verfügbar"
+          }
+        }
+      }
+    },
     "Updates" : {
       "localizations" : {
         "de" : {
@@ -6978,6 +7028,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "vypo, Aufnahme läuft"
+          }
+        }
+      }
+    },
+    "vypo, update available" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "vypo, Update verfügbar"
           }
         }
       }

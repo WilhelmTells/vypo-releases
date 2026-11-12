@@ -12,9 +12,9 @@ final class TryItPasteFixTests: XCTestCase {
 
     func testPasteFailedWithAccessibilityOnShowsNoAccessibilityHint() {
         let line = state(ax: true, outcome: .couldntPaste(heard: "Hi")).resultLine
-        XCTAssertEqual(line, .didntArrive(heard: "Hi"))
+        XCTAssertEqual(line, .recognized("Hi"))
         let mapped = TryItState.outcome(for: .pasted("Hi"), accessibilityTrusted: true) { _ in false }
-        XCTAssertEqual(state(ax: true, outcome: mapped).resultLine, .didntArrive(heard: "Hi"))
+        XCTAssertEqual(state(ax: true, outcome: mapped).resultLine, .recognized("Hi"))
     }
 
     func testPasteFailedWithAccessibilityOffKeepsTheOldLineWithItsButton() {
@@ -22,7 +22,7 @@ final class TryItPasteFixTests: XCTestCase {
         XCTAssertEqual(mapped, .couldntPaste(heard: "Hi"))
         XCTAssertEqual(state(ax: false, outcome: mapped).resultLine, .couldntPaste(heard: "Hi"))
         // Revoked after the failure: the hint appears then, too.
-        XCTAssertEqual(state(ax: false, outcome: .didntArrive(heard: "Hi")).resultLine, .couldntPaste(heard: "Hi"))
+        XCTAssertEqual(state(ax: false, outcome: .recognized("Hi")).resultLine, .couldntPaste(heard: "Hi"))
     }
 
     func testAnotherWindowLineIsNotChangedByAccessibility() {

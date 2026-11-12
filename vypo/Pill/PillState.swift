@@ -94,6 +94,13 @@ enum PillVisibility {
         return showPill || needsYou(mode)
     }
 
+    /// The same while onboarding hides the pill (`AppState.pillVisible` false): only “Loading speech model…” still
+    /// shows, so a dictation in Try it that waits for the model is never silent (0.6.0). The pill setting still counts.
+    static func isVisible(_ mode: PillMode, showPill: Bool, pillHidden: Bool) -> Bool {
+        guard !pillHidden || mode == .loadingModel else { return false }
+        return isVisible(mode, showPill: showPill)
+    }
+
     /// Something to do or to know that the mark can't say: fix a permission or the setup, type a
     /// glossary term, or find the text on the clipboard after it couldn't be pasted.
     static func needsYou(_ mode: PillMode) -> Bool {

@@ -186,8 +186,9 @@ enum TryItOutcome: Equatable {
     case nothingHeard
     /// `heard` is nil when no text was produced (Accessibility is off).
     case couldntPaste(heard: String?)
-    /// Accessibility is on, but the text did not arrive in the field.
-    case didntArrive(heard: String)
+    /// Accessibility is on, but the ⌘V did not bring the text into the field, so the step wrote it there itself
+    /// (0.6.0, “Try it never raises a false alarm”). Never called “Inserted”.
+    case recognized(String)
     /// Another window stayed in front and vypo could not get there, so nothing was pasted (the text is on the clipboard).
     case anotherWindowInFront(heard: String)
     case modelFailed
@@ -208,9 +209,12 @@ enum DictationOutcome: Equatable, Sendable {
 
 /// The Try it step's state: the area, the pill and the result line follow from these four inputs.
 struct TryItState: Equatable {
-    enum ModelStatus: Equatable { case loading(percent: Int), ready, failed }
+    /// `preparing` is the compile after the download (the path bar's “Preparing…”), which has no percentage.
+    enum ModelStatus: Equatable { case loading(percent: Int), preparing, ready, failed }
     enum Activity: Equatable { case idle, recording, processing }
-    enum Area: Equatable { case locked(percent: Int?), notFocused, ready, recording, processing }
+    /// What the locked field waits for; a locked area without it is a failed model.
+    enum Waiting: Equatable { case download(percent: Int), preparing }
+    enum Area: Equatable { case locked(Waiting?), notFocused, ready, recording, processing }
 
     var model: ModelStatus
     var focused = false
@@ -220,8 +224,9 @@ struct TryItState: Equatable {
 
     var area: Area {
         switch model {
-        case .loading(let p): return .locked(percent: p)
-        case .failed: return .locked(percent: nil)
+        case .loading(let p): return .locked(.download(percent: p))
+        case .preparing: return .locked(.preparing)
+        case .failed: return .locked(nil)
         case .ready: break
         }
         switch activity {
@@ -234,31 +239,61 @@ struct TryItState: Equatable {
     /// The line under the area; it stays until the next attempt starts.
     var resultLine: TryItOutcome? {
         if model == .failed { return .modelFailed }
-        if case .loading = model { return nil }
+        if model != .ready { return nil }
         if activity != .idle { return nil }
         if let outcome { return Self.matching(outcome, accessibilityTrusted: accessibilityTrusted) }
         return accessibilityTrusted ? nil : .couldntPaste(heard: nil)
     }
 
     /// The Accessibility hint only shows when Accessibility is really off, whatever it was when the paste failed.
+    /// With Accessibility on, a text that was heard but not pasted is “Recognized”, never a red line.
     static func matching(_ outcome: TryItOutcome, accessibilityTrusted: Bool) -> TryItOutcome {
         switch outcome {
-        case .couldntPaste(let heard?) where accessibilityTrusted: .didntArrive(heard: heard)
-        case .didntArrive(let heard) where !accessibilityTrusted: .couldntPaste(heard: heard)
+        case .couldntPaste(let heard?) where accessibilityTrusted: .recognized(heard)
+        case .recognized(let heard) where !accessibilityTrusted: .couldntPaste(heard: heard)
         default: outcome
         }
     }
 
     mutating func attemptStarted() { outcome = nil }
 
-    /// Maps what the flow reported. `fieldText` is what the field holds right now: a paste into vypo's
-    /// own window counts only if the text is there.
+    /// What the dictation is doing, from the pill state it asked for. Waiting for the speech model
+    /// (“Loading speech model…”) is processing too: before 0.6.0 it read as idle, and the area fell back to the
+    /// prompt (“Click here, then hold fn” when the step's focus flag was off) in the middle of a dictation.
+    static func activity(for pill: PillMode) -> Activity {
+        if pill.isRecording { return .recording }
+        if pill.isProcessing { return .processing }
+        return .idle
+    }
+
+    /// The model as the path bar shows it, for the locked field: the compile is “Preparing…”, not “100 %”.
+    /// `isReady` is `ModelService.isReady`: a downloaded model that is still loading or warming up (at launch, after
+    /// a download, after a macOS update recompiles it) is “Preparing…” too, so Try it never invites a dictation that
+    /// would only wait for it (0.6.0, “Try it waits for the model”).
+    static func modelStatus(for badge: ModelBadge, isReady: Bool = true) -> ModelStatus {
+        switch badge {
+        case .ready: isReady ? .ready : .preparing
+        case .failed: .failed
+        case .downloading(let p): .loading(percent: p)
+        case .preparing: .preparing
+        case .notStarted: .loading(percent: 0)
+        }
+    }
+
+    /// Whether the step writes the text into the field itself: the text was heard and is not there.
+    static func needsFallback(_ outcome: TryItOutcome) -> Bool {
+        if case .recognized = outcome { return true }
+        return false
+    }
+
+    /// Maps what the flow reported. `fieldContains` checks what the field holds right now: a paste into vypo's
+    /// own window counts as “Inserted” only if the text is there. Otherwise, with Accessibility on, the step writes
+    /// the text into the field itself (`needsFallback`) and says “Recognized”.
     static func outcome(for result: DictationOutcome, accessibilityTrusted: Bool = true,
                         fieldContains: (String) -> Bool) -> TryItOutcome {
         switch result {
-        case .pasted(let text):
+        case .pasted(let text), .clipboardOnly(let text):
             fieldContains(text) ? .inserted(text) : matching(.couldntPaste(heard: text), accessibilityTrusted: accessibilityTrusted)
-        case .clipboardOnly(let text): matching(.couldntPaste(heard: text), accessibilityTrusted: accessibilityTrusted)
         case .anotherWindowInFront(let text): .anotherWindowInFront(heard: text)
         case .notInYourLanguages(let heard): .notInYourLanguages(heard: heard)
         case .nothingHeard: .nothingHeard
@@ -334,5 +369,57 @@ enum TryItWatch {
             await sleep(step)
             waited += step
         }
+    }
+}
+
+/// Try it's fallback (0.6.0): when the ⌘V did not bring the text into vypo's own field, the step writes it there
+/// itself. A ⌘V that still arrives afterwards must not show the text twice.
+enum TryItFallback {
+    /// How long after the fallback a late paste of the same text is taken out again (the paste's own cap is 3 s,
+    /// plus the retry one second after it).
+    static let lateWindow: Duration = .seconds(6)
+
+    /// The field after the fallback: the text at the end, separated by a space from anything already there.
+    static func write(_ text: String, into field: String) -> String {
+        let wanted = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !wanted.isEmpty else { return field }
+        if field.isEmpty || field.last?.isWhitespace == true { return field + wanted }
+        return field + " " + wanted
+    }
+
+    /// After the fallback: takes a late paste of the same text out again, for `lateWindow`. The fallback's own write
+    /// (the change to `written`) looks like such a paste too, so it is never touched.
+    struct LatePasteGuard: Equatable {
+        let text: String
+        let written: String
+        let until: ContinuousClock.Instant
+
+        init(text: String, written: String, now: ContinuousClock.Instant = .now) {
+            self.text = text
+            self.written = written
+            until = now + TryItFallback.lateWindow
+        }
+
+        /// The field to set instead of `new`, or nil to leave it.
+        func fix(old: String, new: String, now: ContinuousClock.Instant = .now) -> String? {
+            guard now < until, new != written else { return nil }
+            return TryItFallback.withoutLatePaste(old: old, new: new, wanted: text)
+        }
+    }
+
+    /// The field without a late paste: if the change from `old` to `new` only inserted `wanted` (with or without
+    /// the spaces smart spacing adds), the result is `old`. Any other change (typing, deleting, another text) is
+    /// left alone (nil).
+    static func withoutLatePaste(old: String, new: String, wanted: String) -> String? {
+        let target = wanted.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !target.isEmpty, new.count > old.count else { return nil }
+        let o = Array(old), n = Array(new)
+        var prefix = 0
+        while prefix < o.count && o[prefix] == n[prefix] { prefix += 1 }
+        var suffix = 0
+        while suffix < o.count - prefix && o[o.count - 1 - suffix] == n[n.count - 1 - suffix] { suffix += 1 }
+        guard prefix + suffix == o.count else { return nil }
+        let inserted = String(n[prefix..<(n.count - suffix)])
+        return inserted.trimmingCharacters(in: .whitespacesAndNewlines) == target ? old : nil
     }
 }

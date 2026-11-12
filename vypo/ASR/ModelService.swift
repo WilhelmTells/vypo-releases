@@ -11,15 +11,16 @@ final class ModelService {
     /// The model is installed but could not be loaded (the onboarding path bar says so).
     var loadFailed = false
     /// Loaded and run once, so a dictation starts without waiting for Core ML. False while the model loads, is
-    /// prepared or warms up, and again after a new download. The pill reads it when a dictation starts.
-    @ObservationIgnored private(set) var isReady = false
+    /// prepared or warms up, and again after a new download. The pill reads it when a dictation starts, and the
+    /// onboarding's Try it shows “Preparing…” until it is true (0.6.0). Observed, so it is set only when it changes.
+    private(set) var isReady = false
 
     init(manager: ModelManager = ModelManager(), engines: EngineManager? = nil) {
         self.manager = manager
         self.engines = engines ?? EngineManager(models: manager)
         manager.onInstalled = { [weak self] id in
             guard id == ModelCatalog.speech else { return }
-            self?.isReady = false
+            self?.setReady(false)
             self?.preload()
         }
     }
@@ -48,7 +49,7 @@ final class ModelService {
                 try await engines.load(id)
                 loadFailed = false
                 await engines.warmUp(id)
-                isReady = true
+                setReady(true)
             } catch {
                 loadFailed = true
                 Log.asr.error("Preloading \(id.rawValue, privacy: .public) failed: \(error.localizedDescription, privacy: .public)")
@@ -62,9 +63,18 @@ final class ModelService {
         guard let engine = engines.engine(for: id) else { throw ASREngineError.modelFilesMissing }
         let text = try await engine.transcribe(samples, language: hint)
         // A transcription that worked proves the model is prepared, whatever the warm-up did.
-        isReady = true
+        setReady(true)
         return text
     }
+
+    private func setReady(_ ready: Bool) {
+        if isReady != ready { isReady = ready }
+    }
+
+    #if DEBUG
+    /// Snapshots and tests: the model as if it were loaded and warmed (or not).
+    func setPreviewReady(_ ready: Bool) { setReady(ready) }
+    #endif
 
     func lastTiming(for id: ModelID) async -> TranscriptionTiming? {
         await engines.engine(for: id)?.lastTiming

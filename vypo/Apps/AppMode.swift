@@ -34,7 +34,7 @@ enum AppMode: String, Codable, CaseIterable, Sendable {
             String(localized: "For AI chats, terminals and code editors: no final period unless you say it, and it can send automatically.")
         case .prompt: String(localized: "For AI chats, terminals and code editors: no final period, so you can keep typing; can send automatically. Replacements set to “Prompt apps only” work in a sentence here.")
         case .writing where layout == .spokenCharacters:
-            String(localized: "For documents and notes: typographic quotes, and a capital letter after every line break.")
+            String(localized: "For documents and notes: typographic quotes, numbered lists, and a capital letter after every line break.")
         case .writing: String(localized: "For documents and notes: say “comma” or “new paragraph”, and quotes become typographic.")
         case .excluded: String(localized: "vypo doesn’t dictate here, e.g. in apps with confidential content.")
         }

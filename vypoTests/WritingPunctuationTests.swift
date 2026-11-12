@@ -5,10 +5,10 @@ import XCTest
 @MainActor
 final class WritingPunctuationTests: XCTestCase {
     private func writing(_ raw: String, _ lang: Lang = .de, glossary: [GlossaryEntry] = [], spellings: [String] = [],
-                         replacements: [Replacement]? = nil, smartSpacing: Bool = false) -> String {
+                         replacements: [Replacement]? = nil, smartSpacing: Bool = false, lists: Bool = true) -> String {
         var text = TextPipeline.process(raw, PipelineContext(language: lang, glossary: glossary,
                                                              replacements: replacements ?? Replacements.defaults,
-                                                             spellings: spellings, mode: .writing))
+                                                             spellings: spellings, mode: .writing, numberedLists: lists))
         if smartSpacing {
             // The paste-time pass with the cursor at the start of an empty field.
             text = ContextFormatter.format(text, context: InsertionContext(before: "", after: nil), language: lang,
@@ -21,7 +21,8 @@ final class WritingPunctuationTests: XCTestCase {
 
     func testACapitalAfterASpokenNewLine() {
         XCTAssertEqual(writing("Erste Zeile neue Zeile zweite Zeile"), "Erste Zeile⏎Zweite Zeile")
-        XCTAssertEqual(writing("First line new line second line", .en), "First line⏎Second line")
+        // “First … second …” is a numbered list since 0.6.0 (`NumberedListsTests`); this test is about the capital.
+        XCTAssertEqual(writing("First line new line second line", .en, lists: false), "First line⏎Second line")
     }
 
     func testSmartSpacingDoesNotFixItInTheMiddle() {

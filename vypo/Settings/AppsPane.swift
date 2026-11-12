@@ -43,6 +43,9 @@ struct AppsPane: View {
                     }
                 }
                 Toggle("Typographic quotes", isOn: $prefs.typographicQuotes)
+                Toggle(isOn: $prefs.numberedLists) {
+                    RowLabel(title: "Numbered lists", description: "Say “first, second …” to start a list.")
+                }
             } header: {
                 Text("In Writing apps")
             } footer: {

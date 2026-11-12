@@ -121,6 +121,7 @@ enum DefaultsKey {
     static let spokenSymbols = "spokenSymbols"
     static let spokenSymbolsAlone = "spokenSymbolsAlone"
     static let typographicQuotes = "typographicQuotes"
+    static let numberedLists = "numberedLists"
     static let preferBuiltInMic = "preferBuiltInMic"
     static let hideFromCapture = "hideFromCapture"
     static let pillColor = "pillColor"
@@ -166,6 +167,7 @@ final class Preferences {
             DefaultsKey.spokenCharacters: true,
             DefaultsKey.spokenCharactersHintDismissed: false,
             DefaultsKey.typographicQuotes: true,
+            DefaultsKey.numberedLists: true,
             DefaultsKey.preferBuiltInMic: true,
             DefaultsKey.hideFromCapture: true,
             DefaultsKey.collectStats: true,
@@ -212,6 +214,7 @@ final class Preferences {
         spokenCharacters = defaults.bool(forKey: DefaultsKey.spokenCharacters)
         spokenCharactersHintDismissed = defaults.bool(forKey: DefaultsKey.spokenCharactersHintDismissed)
         typographicQuotes = defaults.bool(forKey: DefaultsKey.typographicQuotes)
+        numberedLists = defaults.bool(forKey: DefaultsKey.numberedLists)
         preferBuiltInMic = defaults.bool(forKey: DefaultsKey.preferBuiltInMic)
         hideFromCapture = defaults.bool(forKey: DefaultsKey.hideFromCapture)
         // "accent" was the system accent colour, now vypo's own orange.
@@ -276,6 +279,7 @@ final class Preferences {
         didSet { defaults.set(spokenCharactersHintDismissed, forKey: DefaultsKey.spokenCharactersHintDismissed) }
     }
     var typographicQuotes: Bool { didSet { defaults.set(typographicQuotes, forKey: DefaultsKey.typographicQuotes) } }
+    var numberedLists: Bool { didSet { defaults.set(numberedLists, forKey: DefaultsKey.numberedLists) } }
     var preferBuiltInMic: Bool { didSet { defaults.set(preferBuiltInMic, forKey: DefaultsKey.preferBuiltInMic) } }
     var hideFromCapture: Bool { didSet { defaults.set(hideFromCapture, forKey: DefaultsKey.hideFromCapture) } }
     var pillColor: PillColor { didSet { defaults.set(pillColor.rawValue, forKey: DefaultsKey.pillColor) } }

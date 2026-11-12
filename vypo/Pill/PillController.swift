@@ -127,7 +127,7 @@ final class PillController {
         let mode = inputs.base
         let size = PillMetrics.size(for: mode)
         // No idle pill: it shows only while something happens.
-        let visible = inputs.pillVisible && PillVisibility.isVisible(mode, showPill: inputs.showPill)
+        let visible = PillVisibility.isVisible(mode, showPill: inputs.showPill, pillHidden: !inputs.pillVisible)
 
         let modeChanged = shownMode != mode
         shownMode = mode

@@ -42,7 +42,7 @@ final class OnboardingSnapshotTests: XCTestCase {
 
     /// An app on a scratch store with the permissions and the model in the given state.
     private func app(mic: Bool = true, micDenied: Bool = false, ax: Bool = true, globe: Int? = 0, model: ModelInstallState = .installed,
-                     failure: ModelProblem? = nil, loadFailed: Bool = false, languages: [Lang] = [.en],
+                     failure: ModelProblem? = nil, loadFailed: Bool = false, ready: Bool = true, languages: [Lang] = [.en],
                      key: DictationKey = .fn) -> AppState {
         let store = Store(directory: FileManager.default.temporaryDirectory.appendingPathComponent("vypo-onb-\(UUID().uuidString)"))
         let prefs = Preferences(defaults: UserDefaults(suiteName: "vypo.snap.\(UUID().uuidString)")!)
@@ -52,6 +52,7 @@ final class OnboardingSnapshotTests: XCTestCase {
         let service = ModelService(manager: ModelManager(store: store))
         service.manager.setPreviewState(model, failure: failure)
         service.loadFailed = loadFailed
+        service.setPreviewReady(ready)
         app.models = service
         app.permissions.micGranted = mic
         app.permissions.micDenied = micDenied
@@ -151,6 +152,11 @@ final class OnboardingSnapshotTests: XCTestCase {
             try shoot(name, size: big) { onboarding(a, step: 5) { p, _ in p.tryOutcome = outcome; p.tryText = text; p.tryFocused = focused } }
         }
         try tryIt("s6-locked", app(model: .downloading(0.576)), focused: false)
+        try tryIt("s6-locked-preparing", app(model: .downloading(0.93)), focused: false)
+        // Downloaded, but still loading at launch (or recompiling after a macOS update): Preparing, no prompt (0.6.0).
+        try tryIt("s6-locked-loading", app(ready: false), focused: false)
+        // A dictation waits for the model: the stage pill keeps its dots, no prompt.
+        try tryIt("s6-loading-model", app(), focused: false, pill: .loadingModel)
         try tryIt("s6-unfocused", app(), focused: false)
         try tryIt("s6-ready", app(), focused: true)
         try tryIt("s6-recording", app(), focused: true, pill: .listening)
@@ -161,7 +167,8 @@ final class OnboardingSnapshotTests: XCTestCase {
         try tryIt("s6-long", app(languages: [.de]), outcome: .notInYourLanguages(heard: "Hello, this is a rather long test of the dictation to see how the wrong language hint behaves when the heard text keeps going and going."))
         try tryIt("s6-too-quiet", app(), outcome: .nothingHeard)
         try tryIt("s6-couldnt-paste", app(ax: false), outcome: .couldntPaste(heard: "Hello, this is a test."))
-        try tryIt("s6-didnt-arrive", app(), outcome: .didntArrive(heard: "Hello, this is a test."))
+        try tryIt("s6-recognized", app(), outcome: .recognized("vypo turns my voice into text on my own Mac."),
+                  text: "vypo turns my voice into text on my own Mac.")
         try tryIt("s6-another-window", app(), outcome: .anotherWindowInFront(heard: "vypo turns my voice into text on my own Mac."))
         try tryIt("s6-ax-revoked", app(ax: false), focused: true)
         try tryIt("s6-model-failed", app(model: .installed, loadFailed: true), focused: false)

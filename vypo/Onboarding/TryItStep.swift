@@ -2,8 +2,9 @@ import AppKit
 import NaturalLanguage
 import SwiftUI
 
-/// Step 6: a real text area on the dawn scene. Nothing is written into it directly: the dictation runs the real
-/// paste path, and every outcome gets a result line.
+/// Step 6: a real text area on the dawn scene. The dictation runs the real paste path first, and every outcome gets
+/// a result line. If the ⌘V doesn't bring the text into this field although Accessibility is on, the step writes it
+/// there itself and says “Recognized” (0.6.0, see DECISIONS, “Try it never raises a false alarm”).
 struct TryItStep: View {
     @Environment(AppState.self) private var app
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -14,6 +15,8 @@ struct TryItStep: View {
     @FocusState private var fieldFocused: Bool
     @State private var wasReady = false
     @State private var handled = 0
+    /// After the fallback wrote a text: takes a late ⌘V of it out again.
+    @State private var latePaste: TryItFallback.LatePasteGuard?
     private let previewFocused: Bool?
 
     /// The `preview…` values show a state in snapshots, where nothing can be dictated or focused.
@@ -71,7 +74,12 @@ struct TryItStep: View {
         }
         .onDisappear { model.tryItFieldFocused = false }
         .onChange(of: app.pillBase) { _, mode in
-            if mode == .listening || mode == .handsfree { outcome = nil }
+            if mode == .listening || mode == .handsfree { outcome = nil; latePaste = nil }
+        }
+        .onChange(of: text) { old, new in
+            guard let fixed = latePaste?.fix(old: old, new: new) else { return }
+            text = fixed
+            Log.output.notice("Try it: a late paste after the fallback was taken out again")
         }
         .onChange(of: app.lastOutcome?.id) { _, id in
             guard let id, id != handled, let result = app.lastOutcome?.outcome else { return }
@@ -87,18 +95,8 @@ struct TryItStep: View {
     private var current: TryItState {
         let badge = ModelBadge.make(state: app.models?.state ?? .notInstalled, loadFailed: app.models?.loadFailed ?? false,
                                     failure: app.models?.manager.lastFailure)
-        let modelStatus: TryItState.ModelStatus = switch badge {
-        case .ready: .ready
-        case .failed: .failed
-        case .downloading(let p): .loading(percent: p)
-        case .preparing: .loading(percent: 100)
-        case .notStarted: .loading(percent: 0)
-        }
-        let activity: TryItState.Activity = switch app.pillBase {
-        case .listening, .handsfree: .recording
-        case .processing: .processing
-        default: .idle
-        }
+        let modelStatus = TryItState.modelStatus(for: badge, isReady: app.models?.isReady ?? true)
+        let activity = TryItState.activity(for: app.pillBase)
         return TryItState(model: modelStatus, focused: previewFocused ?? (fieldFocused && activeState != .inactive), activity: activity, outcome: outcome,
                           accessibilityTrusted: app.permissions.accessibilityTrusted)
     }
@@ -127,27 +125,47 @@ struct TryItStep: View {
 
     /// Maps what the dictation reported. A paste into vypo's own window counts only once the text is there: the field
     /// is checked until the text shows up, and at the latest when the paste is done with (the clipboard restore).
+    /// If it never shows up and Accessibility is on, the step writes the text into the field itself (the fallback).
     private func receive(_ result: DictationOutcome, id: Int) {
-        let trusted = app.permissions.accessibilityTrusted
-        guard case .pasted(let pasted) = result else {
-            outcome = TryItState.outcome(for: result, accessibilityTrusted: trusted) { _ in false }
-            if case .clipboardOnly(let text) = result { Self.logOutcome(length: text.count, arrived: false, how: "no paste", app: app) }
+        let heard: String
+        let settled: () -> Bool
+        let how: () -> String
+        switch result {
+        case .pasted(let text):
+            heard = text
+            settled = { (app.settledOutcome?.id ?? 0) >= id }
+            how = { (app.settledOutcome?.id == id ? app.settledOutcome?.how : nil) ?? "not settled" }
+        case .clipboardOnly(let text) where app.permissions.accessibilityTrusted:
+            // No text field was seen in front. ⌘V may still have been posted (Electron rule): one short look, then the fallback.
+            heard = text
+            settled = { true }
+            how = { "no paste" }
+        default:
+            outcome = TryItState.outcome(for: result, accessibilityTrusted: app.permissions.accessibilityTrusted) { _ in false }
+            if case .clipboardOnly(let text) = result {
+                Self.logOutcome(length: text.count, arrived: false, fallback: false, how: "no paste", app: app)
+            }
             return
         }
-        let wanted = pasted.trimmingCharacters(in: .whitespacesAndNewlines)
+        let wanted = heard.trimmingCharacters(in: .whitespacesAndNewlines)
         Task { @MainActor in
-            let arrived = await TryItWatch.textArrived(contains: { text.contains(wanted) },
-                                                       settled: { (app.settledOutcome?.id ?? 0) >= id })
-            outcome = TryItState.outcome(for: result, accessibilityTrusted: app.permissions.accessibilityTrusted) { _ in arrived }
-            let how = (app.settledOutcome?.id == id ? app.settledOutcome?.how : nil) ?? "not settled"
-            Self.logOutcome(length: wanted.count, arrived: arrived, how: how, app: app)
+            let arrived = await TryItWatch.textArrived(contains: { text.contains(wanted) }, settled: settled)
+            let mapped = TryItState.outcome(for: result, accessibilityTrusted: app.permissions.accessibilityTrusted) { _ in arrived }
+            let fallback = TryItState.needsFallback(mapped)
+            if fallback {
+                let written = TryItFallback.write(wanted, into: text)
+                latePaste = TryItFallback.LatePasteGuard(text: wanted, written: written)
+                text = written
+            }
+            outcome = mapped
+            Self.logOutcome(length: wanted.count, arrived: arrived, fallback: fallback, how: how(), app: app)
         }
     }
 
     /// One line per Try it dictation: lengths and app IDs only, never the dictated text.
-    static func logOutcome(length: Int, arrived: Bool, how: String, app: AppState) {
+    static func logOutcome(length: Int, arrived: Bool, fallback: Bool, how: String, app: AppState) {
         let t = app.tryItTrace
-        Log.output.notice("Try it: expected \(length) characters, field held them: \(arrived ? "yes" : "no", privacy: .public); front at key press \(t.frontAtKeyPress, privacy: .public), at paste \(t.frontAtPaste, privacy: .public); brought forward: \(t.broughtForward ? "yes" : "no", privacy: .public); retried: \(t.retried ? "yes" : "no", privacy: .public); restore: \(how, privacy: .public); Accessibility: \(app.permissions.accessibilityTrusted ? "on" : "off", privacy: .public)")
+        Log.output.notice("Try it: expected \(length) characters, field held them: \(arrived ? "yes" : "no", privacy: .public); fallback: \(fallback ? "yes" : "no", privacy: .public); front at key press \(t.frontAtKeyPress, privacy: .public), at paste \(t.frontAtPaste, privacy: .public); brought forward: \(t.broughtForward ? "yes" : "no", privacy: .public); retried: \(t.retried ? "yes" : "no", privacy: .public); restore: \(how, privacy: .public); Accessibility: \(app.permissions.accessibilityTrusted ? "on" : "off", privacy: .public)")
     }
 
     // MARK: Field
@@ -171,11 +189,12 @@ struct TryItStep: View {
         .frame(width: 460, height: 60)
         .background(shape.fill(Color.vyBgControl))
         .overlay(shape.strokeBorder(Color.vySeparator, lineWidth: 0.5))
-        .overlay(shape.stroke(Color.vyAccent.opacity(state.focused ? 0.2 : 0), lineWidth: 3).padding(-1.5))
+        // No focus ring on a locked field: it must not look ready for a dictation (0.6.0).
+        .overlay(shape.stroke(Color.vyAccent.opacity(state.focused && !isLocked(state.area) ? 0.2 : 0), lineWidth: 3).padding(-1.5))
         .opacity(isLocked(state.area) ? 0.5 : 1)
         .overlay {
-            if case .locked(let percent) = state.area, let percent {
-                waiting(percent).allowsHitTesting(false)
+            if case .locked(let waiting?) = state.area {
+                self.waiting(waiting).allowsHitTesting(false)
             }
         }
     }
@@ -195,12 +214,23 @@ struct TryItStep: View {
         }
     }
 
-    private func waiting(_ percent: Int) -> some View {
+    /// Downloading shows its percentage; the compile after it shows “Preparing…” with a pulsing ring, like the path bar.
+    private func waiting(_ waiting: TryItState.Waiting) -> some View {
         HStack(spacing: 10) {
-            ModelRing(fraction: Double(min(percent, 100)) / 100, size: 22)
+            switch waiting {
+            case .download(let percent):
+                ModelRing(fraction: Double(min(percent, 100)) / 100, size: 22)
+            case .preparing:
+                ModelRing(fraction: 0.9, size: 22, pulsing: true)
+            }
             VStack(alignment: .leading, spacing: 0) {
                 Text("Waiting for the speech model").font(OBFont.bodySemibold).foregroundStyle(Color.vyLabel)
-                Text("\(percent) %").font(OBFont.secondary).monospacedDigit().foregroundStyle(Color.vyLabelSecondary)
+                switch waiting {
+                case .download(let percent):
+                    Text("\(percent) %").font(OBFont.secondary).monospacedDigit().foregroundStyle(Color.vyLabelSecondary)
+                case .preparing:
+                    Text("Preparing…").font(OBFont.secondary).foregroundStyle(Color.vyLabelSecondary)
+                }
             }
         }
         .padding(.horizontal, 10)
@@ -228,6 +258,14 @@ struct TryItStep: View {
         case .inserted:
             Image(systemName: "checkmark.circle.fill").foregroundStyle(Color.vySuccess).font(.system(size: 16))
             Text("Inserted").font(OBFont.bodySemibold).foregroundStyle(Color.vySuccess)
+        case .recognized:
+            Image(systemName: "checkmark.circle.fill").foregroundStyle(Color.vySuccess).font(.system(size: 16))
+            (Text("Recognized.").fontWeight(.semibold).foregroundStyle(Color.vySuccess)
+                + Text(verbatim: " ")
+                + Text("In your apps, vypo writes the text where your cursor is.").foregroundStyle(Color.vyLabel))
+                .font(OBFont.body)
+                .lineLimit(4).fixedSize(horizontal: false, vertical: true)
+                .layoutPriority(1)
         case .notInYourLanguages(let heard):
             icon("exclamationmark.triangle.fill", .vyWarning)
             lineText("Heard: “\(Self.shorten(heard))” \(Self.languageSentence(heard))")
@@ -241,9 +279,6 @@ struct TryItStep: View {
             } else {
                 lineText("vypo can’t paste without Accessibility. Is it still on?")
             }
-        case .didntArrive(let heard):
-            icon("xmark.circle.fill", .vyDanger)
-            lineText("Heard: “\(Self.shorten(heard))” But it didn’t arrive in the field. Click into the field and try again.")
         case .anotherWindowInFront(let heard):
             icon("exclamationmark.triangle.fill", .vyWarning)
             lineText("Heard: “\(Self.shorten(heard))” Another window was in front, so vypo didn’t paste it. Click into the field and try again.")
@@ -255,7 +290,7 @@ struct TryItStep: View {
 
     @ViewBuilder private func resultAction(_ line: TryItOutcome) -> some View {
         switch line {
-        case .inserted, .didntArrive, .anotherWindowInFront: EmptyView()
+        case .inserted, .recognized, .anotherWindowInFront: EmptyView()
         case .notInYourLanguages:
             Button("Choose languages") { model.step = OnboardingStep.languages.rawValue }.buttonStyle(.ob(.small))
         case .nothingHeard:

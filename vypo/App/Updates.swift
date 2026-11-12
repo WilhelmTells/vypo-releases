@@ -6,6 +6,10 @@ import Sparkle
 /// Updates with Sparkle: a check once a day (Info.plist: `SUFeedURL`, `SUScheduledCheckInterval`), and
 /// “Check for Updates…” by hand. Sparkle verifies every download with the EdDSA key in `SUPublicEDKey`.
 /// vypo isn't sandboxed, so Sparkle's XPC services aren't needed.
+///
+/// An update the daily check finds opens no window: the menu bar mark turns gold and the menu shows an
+/// “Update available” row with the new version and an Install button (`waitingVersion`). A check by hand shows
+/// Sparkle's window as before.
 @MainActor
 @Observable
 final class Updates {
@@ -21,6 +25,10 @@ final class Updates {
     private(set) var canCheck: Bool
     /// When Sparkle last asked the server, if it ever has.
     private(set) var lastChecked: Date?
+    /// The display version of an update the daily check found and that waits for the user (“0.6.0”), nil without
+    /// one. While set, the mark is gold and the menu offers it.
+    private(set) var waitingVersion: String?
+    var updateWaiting: Bool { waitingVersion != nil }
 
     init() {
         controller = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: delegate, userDriverDelegate: delegate)
@@ -31,6 +39,7 @@ final class Updates {
             guard let self else { return }
             self.lastChecked = self.controller.updater.lastUpdateCheckDate
         }
+        delegate.onHintChange = { [weak self] hint in self?.waitingVersion = hint.waiting ? hint.version : nil }
         observation = controller.updater.observe(\.canCheckForUpdates, options: [.new]) { [weak self] _, change in
             let can = change.newValue ?? true
             Task { @MainActor in self?.canCheck = can }
@@ -43,11 +52,20 @@ final class Updates {
                 self?.checkNow()
             }
         }
+        // `-VYPOScheduledCheckAtLaunch YES` runs the check the daily schedule runs (not one by hand), for the gold hint.
+        if UserDefaults.standard.bool(forKey: "VYPOScheduledCheckAtLaunch") {
+            Task { @MainActor [weak self] in
+                try? await Task.sleep(for: .seconds(3))
+                self?.controller.updater.checkForUpdatesInBackground()
+            }
+        }
         // `-VYPOAutoClick YES` presses the update window's buttons for the test, a few seconds after each shows.
         if UserDefaults.standard.bool(forKey: "VYPOAutoClick") { Self.pressUpdateButtons() }
         #endif
     }
 
+    /// “Check for Updates…”, “Check Now”, and the menu's “Update available” row: with an update waiting, Sparkle brings
+    /// its window forward instead of asking again (`SPUUpdater.checkForUpdates`, `showUpdateInFocus`).
     func checkNow() {
         // vypo has no Dock icon: bring it forward, or the update window opens behind other apps.
         NSApp.activate()
@@ -63,24 +81,65 @@ final class Updates {
     }
 }
 
-/// Sparkle's two delegates in one. vypo is a menu bar app, so an update that a daily check finds has to come
-/// forward itself, or its window would open behind the other apps and nobody would see it (Sparkle's “gentle
-/// reminders” for background apps).
+/// Whether an update found by the daily check waits for the user. Pure, so the rules are testable without Sparkle.
+struct UpdateHint: Equatable {
+    private(set) var waiting = false
+    /// Sparkle's display version of the waiting update (`SUAppcastItem.displayVersionString`).
+    private(set) var version = ""
+
+    /// Sparkle is about to show an update. Only one the daily check found, and that vypo shows itself (Sparkle
+    /// doesn't), waits; a check by hand always gets Sparkle's window and changes nothing here.
+    mutating func willShowUpdate(handledBySparkle: Bool, userInitiated: Bool, version: String) {
+        guard !handledBySparkle && !userInitiated else { return }
+        waiting = true
+        self.version = version
+    }
+
+    /// Sparkle's update session ends: the update was skipped, put off (“Remind Me Later”, or the window closed),
+    /// or failed. An installed update relaunches vypo, which starts without a hint. After “Remind Me Later” the
+    /// next daily check can set it again.
+    mutating func sessionFinished() {
+        waiting = false
+        version = ""
+    }
+}
+
+/// Sparkle's two delegates in one. vypo is a menu bar app, so an update that a daily check finds would open behind
+/// the other apps; instead vypo shows it itself with Sparkle's “gentle reminders”: Sparkle keeps the window back
+/// (`standardUserDriverShouldHandleShowingScheduledUpdate` → false), the mark turns gold, and the menu entry brings the
+/// window forward with `checkForUpdates`. See https://sparkle-project.org/documentation/gentle-reminders.
 ///
 /// In debug builds the feed can also be pointed elsewhere (`-VYPOFeedURL http://127.0.0.1:8000/appcast.xml`) to
 /// test an update against a local server. Release builds don't have this at all.
 @MainActor
-private final class UpdateDelegate: NSObject, @preconcurrency SPUUpdaterDelegate, @preconcurrency SPUStandardUserDriverDelegate {
+final class UpdateDelegate: NSObject, @preconcurrency SPUUpdaterDelegate, @preconcurrency SPUStandardUserDriverDelegate {
     var supportsGentleScheduledUpdateReminders: Bool { true }
     var onCycleFinished: () -> Void = {}
+    var onHintChange: (UpdateHint) -> Void = { _ in }
+    private(set) var hint = UpdateHint() {
+        didSet { if hint != oldValue { onHintChange(hint) } }
+    }
 
     func updater(_ updater: SPUUpdater, didFinishUpdateCycleFor updateCheck: SPUUpdateCheck, error: Error?) {
         onCycleFinished()
     }
 
+    /// Never a window for an update the daily check found, not even after days; the gold mark stands for it.
+    func standardUserDriverShouldHandleShowingScheduledUpdate(_ update: SUAppcastItem, andInImmediateFocus immediateFocus: Bool) -> Bool {
+        false
+    }
+
     func standardUserDriverWillHandleShowingUpdate(_ handleShowingUpdate: Bool, forUpdate update: SUAppcastItem, state: SPUUserUpdateState) {
-        guard handleShowingUpdate, !state.userInitiated else { return }
-        NSApp.activate()
+        willShowUpdate(handledBySparkle: handleShowingUpdate, userInitiated: state.userInitiated, version: update.displayVersionString)
+    }
+
+    func standardUserDriverWillFinishUpdateSession() {
+        hint.sessionFinished()
+    }
+
+    /// The part of `standardUserDriverWillHandleShowingUpdate` that doesn't need Sparkle's state object.
+    func willShowUpdate(handledBySparkle: Bool, userInitiated: Bool, version: String) {
+        hint.willShowUpdate(handledBySparkle: handledBySparkle, userInitiated: userInitiated, version: version)
     }
 
     #if DEBUG

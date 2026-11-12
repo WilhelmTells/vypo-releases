@@ -26,6 +26,8 @@ final class StatusItemController: NSObject {
             guard let self else { return }
             self.update(mode: self.app.pillBase, insertions: self.app.insertions,
                         tint: self.app.prefs.menuBarTintWhileDictating)
+            // Gold while an update the daily check found waits; the dictation states above keep priority.
+            self.animator?.updateWaiting = self.app.updates?.updateWaiting ?? false
         }
     }
 

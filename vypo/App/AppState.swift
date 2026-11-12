@@ -43,7 +43,7 @@ final class AppState {
     var pillBase: PillMode = .ready
     /// A permission error that stays until fixed.
     var persistentError: PillError?
-    /// False until onboarding is done.
+    /// False while onboarding is open; then only “Loading speech model…” shows (`PillVisibility`).
     var pillVisible = true
     /// The selected Settings pane.
     var settingsPane: SettingsPane = .general

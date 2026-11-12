@@ -17,6 +17,8 @@ struct PipelineContext: Sendable {
     /// Writing apps, `legacy` layout only.
     var spokenPunctuation = true
     var typographicQuotes = true
+    /// Writing apps: ordinal words become a numbered list (`NumberedLists`).
+    var numberedLists = true
 }
 
 /// Cleans up raw transcriptions before pasting (§8, §23.0). Smart spacing happens later, at paste time.
@@ -60,6 +62,10 @@ enum TextPipeline {
             }
             // A line break from a replacement (“new line”) is not seen by `SpokenPunctuation`: capital after it too.
             text = SpokenPunctuation.capitalizeAfterLineBreaks(text, terms: terms)
+            // Last, so the items see the final punctuation.
+            if ctx.numberedLists {
+                text = NumberedLists.apply(text, language: ctx.language, terms: terms)
+            }
         }
         text = ProfileTweaks.apply(text, mode: ctx.mode, saidPeriod: saidPeriod)
         return text

@@ -22,10 +22,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     /// Unit tests run inside the app; skip startup side effects then.
     static var isRunningTests: Bool { RunEnvironment.isTesting }
 
+    private static var testAppHasLocalFeed: Bool {
+        #if DEBUG
+        UserDefaults.standard.string(forKey: "VYPOFeedURL") != nil
+        #else
+        false
+        #endif
+    }
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         guard !Self.isRunningTests else { return }
-        // The test app never looks for updates (it is a throwaway copy with its own bundle ID).
-        app.updates = RunEnvironment.isTestApp ? nil : Updates()
+        // The test app never looks for updates (it is a throwaway copy with its own bundle ID), except in a debug
+        // build pointed at a local feed (`-VYPOFeedURL`), for trying the update hint.
+        app.updates = RunEnvironment.isTestApp && !Self.testAppHasLocalFeed ? nil : Updates()
         coordinator = AppCoordinator(app: app)
         coordinator?.start()
         statusItem = StatusItemController(app: app)

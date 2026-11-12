@@ -412,6 +412,23 @@ final class SnapshotRenderTests: XCTestCase {
         }
     }
 
+    /// Settings → Apps with “Numbered lists” as a new installation has it (on), and off. The offscreen window is never
+    /// key, so macOS draws an on switch grey too (knob right); off has the knob left. Making the window look key
+    /// (overriding `isKeyWindow`, or `controlActiveState`) didn't change that.
+    func testNumberedListsSwitch() throws {
+        let size = CGSize(width: 720, height: 760)
+        let on = sampleApp(.spokenCharacters)
+        XCTAssertTrue(on.prefs.numberedLists)
+        try renderWindow("numbered-lists-apps-pane-on", size: size) {
+            AppsPane().environment(on).background(Color.vyBgWindow)
+        }
+        let off = sampleApp(.spokenCharacters)
+        off.prefs.numberedLists = false
+        try renderWindow("numbered-lists-apps-pane-off", size: size) {
+            AppsPane().environment(off).background(Color.vyBgWindow)
+        }
+    }
+
     /// The Stats pane near the owner's state (about 35,000 words, eight apps) and the History cards with the
     /// middle one hovered.
     func testStatsPaneAndHistoryHover() throws {
@@ -473,6 +490,77 @@ final class SnapshotRenderTests: XCTestCase {
             try rep.representation(using: .png, properties: [:])!.write(to: dir.appendingPathComponent("menu-\(dark ? "dark" : "light").png"))
             window.close()
         }
+    }
+
+    /// The menu while an update waits: the “Update available” row on top, with a normal and a long version line.
+    /// Run with `-testLanguage de` for German.
+    func testMenuWithUpdateWaiting() throws {
+        let app = sampleApp()
+        guard let dir else { throw XCTSkip("No snapshot dir") }
+        let lang = Locale.preferredLanguages.first?.hasPrefix("de") == true ? "de" : "en"
+        for (name, version) in [("short", "0.6.0"), ("long", "0.6.0 Vorabversion für Testerinnen und Tester (Build 1234)")] {
+            for dark in [false, true] {
+                let content = MenuBarContent(previewUpdateVersion: version).environment(app).tint(.vyAccent).background(Color.vyBgMenu)
+                let host = NSHostingView(rootView: content)
+                let size = host.fittingSize
+                let window = NSWindow(contentRect: NSRect(origin: .zero, size: size), styleMask: [.borderless], backing: .buffered, defer: false)
+                window.isReleasedWhenClosed = false
+                window.appearance = NSAppearance(named: dark ? .darkAqua : .aqua)
+                window.contentView = host
+                host.frame = NSRect(origin: .zero, size: size)
+                RunLoop.main.run(until: Date().addingTimeInterval(0.4))
+                let rep = try XCTUnwrap(NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: Int(size.width) * 2, pixelsHigh: Int(size.height) * 2,
+                                                          bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
+                                                          colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0))
+                rep.size = size
+                host.cacheDisplay(in: host.bounds, to: rep)
+                try rep.representation(using: .png, properties: [:])!
+                    .write(to: dir.appendingPathComponent("menu-update-\(name)-\(lang)-\(dark ? "dark" : "light").png"))
+                window.close()
+            }
+        }
+    }
+
+    /// The gold mark (an update waits) as the status button draws it, 8× on a light and a dark menu bar, next to the
+    /// plain mark and the accent tint while dictating.
+    func testMenuBarMarkGold() throws {
+        guard let dir else { throw XCTSkip("No snapshot dir") }
+        var gold = MenuBarMarkFrame(); gold.gold = 1
+        var tint = MenuBarMarkFrame(); tint.tint = 1
+        let frames = [MenuBarMarkFrame.rest, gold, tint]
+        let scale: CGFloat = 8, cell = MenuBarMarkRenderer.canvas
+        let size = NSSize(width: cell.width * scale * CGFloat(frames.count), height: cell.height * scale * 2)
+        let bars: [(NSAppearance.Name, NSColor)] = [(.aqua, NSColor(white: 0.93, alpha: 1)), (.darkAqua, NSColor(white: 0.15, alpha: 1))]
+        let image = NSImage(size: size, flipped: true) { _ in
+            for (row, (name, bar)) in bars.enumerated() {
+                NSAppearance(named: name)!.performAsCurrentDrawingAppearance {
+                    for (i, frame) in frames.enumerated() {
+                        let rect = NSRect(x: CGFloat(i) * cell.width * scale, y: CGFloat(row) * cell.height * scale,
+                                          width: cell.width * scale, height: cell.height * scale)
+                        bar.setFill(); rect.fill()
+                        let mark = MenuBarMarkRenderer.image(frame)
+                        if mark.isTemplate {
+                            // What the menu bar does with a template image: the ink of its appearance.
+                            let ink = NSImage(size: cell, flipped: false) { r in
+                                mark.draw(in: r); NSColor.labelColor.set(); r.fill(using: .sourceAtop); return true
+                            }
+                            ink.draw(in: rect)
+                        } else {
+                            mark.draw(in: rect)
+                        }
+                    }
+                }
+            }
+            return true
+        }
+        let rep = try XCTUnwrap(NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: Int(size.width), pixelsHigh: Int(size.height),
+                                                  bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
+                                                  colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0))
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
+        image.draw(in: NSRect(origin: .zero, size: size))
+        NSGraphicsContext.restoreGraphicsState()
+        try rep.representation(using: .png, properties: [:])!.write(to: dir.appendingPathComponent("menubar-mark-gold.png"))
     }
 
     func testHistoryPane() throws {

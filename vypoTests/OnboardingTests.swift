@@ -192,18 +192,21 @@ final class OnboardingTests: XCTestCase {
     }
 
     func testAreaFollowsModelFocusAndActivity() {
-        XCTAssertEqual(state(model: .loading(percent: 64)).area, .locked(percent: 64))
-        XCTAssertEqual(state(model: .failed).area, .locked(percent: nil))
+        XCTAssertEqual(state(model: .loading(percent: 64)).area, .locked(.download(percent: 64)))
+        XCTAssertEqual(state(model: .preparing).area, .locked(.preparing))
+        XCTAssertEqual(state(model: .failed).area, .locked(nil))
         XCTAssertEqual(state(focused: false).area, .notFocused)
         XCTAssertEqual(state(focused: true).area, .ready)
         XCTAssertEqual(state(activity: .recording).area, .recording)
         XCTAssertEqual(state(activity: .processing).area, .processing)
         // The model wins over everything while it isn't ready.
-        XCTAssertEqual(state(model: .loading(percent: 3), activity: .recording).area, .locked(percent: 3))
+        XCTAssertEqual(state(model: .loading(percent: 3), activity: .recording).area, .locked(.download(percent: 3)))
+        XCTAssertEqual(state(model: .preparing, activity: .recording).area, .locked(.preparing))
     }
 
     func testResultLineIsEmptyWhileWaitingAndWhileDictating() {
         XCTAssertNil(state(model: .loading(percent: 10), outcome: .nothingHeard).resultLine)
+        XCTAssertNil(state(model: .preparing, outcome: .nothingHeard).resultLine)
         XCTAssertNil(state(activity: .recording, outcome: .nothingHeard).resultLine)
         XCTAssertNil(state(activity: .processing, outcome: .inserted("x")).resultLine)
         XCTAssertEqual(state(outcome: .nothingHeard).resultLine, .nothingHeard)
@@ -232,10 +235,11 @@ final class OnboardingTests: XCTestCase {
             TryItState.outcome(for: o) { _ in inField }
         }
         XCTAssertEqual(map(.pasted("Hi"), inField: true), .inserted("Hi"))
-        // Pasted into vypo's own window but the text never arrived: reported, never silent.
-        // With Accessibility on, the Accessibility hint does not show (0.4.1); with it off it does.
-        XCTAssertEqual(map(.pasted("Hi"), inField: false), .didntArrive(heard: "Hi"))
-        XCTAssertEqual(map(.clipboardOnly("Hi")), .didntArrive(heard: "Hi"))
+        // Pasted into vypo's own window but the text never arrived: with Accessibility on the step writes it there
+        // itself and says “Recognized” (0.6.0); with it off the Accessibility hint shows.
+        XCTAssertEqual(map(.pasted("Hi"), inField: false), .recognized("Hi"))
+        XCTAssertEqual(map(.clipboardOnly("Hi")), .recognized("Hi"))
+        XCTAssertEqual(map(.clipboardOnly("Hi"), inField: true), .inserted("Hi"))
         XCTAssertEqual(TryItState.outcome(for: .clipboardOnly("Hi"), accessibilityTrusted: false) { _ in false }, .couldntPaste(heard: "Hi"))
         XCTAssertEqual(map(.anotherWindowInFront("Hi")), .anotherWindowInFront(heard: "Hi"))
         XCTAssertEqual(map(.notInYourLanguages(heard: "Hallo")), .notInYourLanguages(heard: "Hallo"))

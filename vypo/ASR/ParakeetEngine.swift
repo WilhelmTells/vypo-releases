@@ -31,7 +31,9 @@ actor ParakeetEngine: ASREngine {
     func load() async throws {
         guard manager == nil else { return }
         let began = ContinuousClock.now
-        // Concurrent callers share one load.
+        // Concurrent callers share one load. Only the caller that started it says “Loaded”; one that joined it (a
+        // dictation that arrived during the launch preload) says how long it waited, so one load is one line.
+        let joined = loading != nil
         let task = loading ?? Task { [directory, config] in
             let models = try await AsrModels.load(from: directory, version: Self.version)
             let m = AsrManager(config: config)
@@ -41,7 +43,12 @@ actor ParakeetEngine: ASREngine {
         loading = task
         defer { loading = nil }
         manager = try await task.value
-        Log.asr.info("Loaded Parakeet Ultra in \((ContinuousClock.now - began).milliseconds) ms")
+        let ms = (ContinuousClock.now - began).milliseconds
+        if joined {
+            Log.asr.info("Waited \(ms) ms for the running load of Parakeet Ultra")
+        } else {
+            Log.asr.info("Loaded Parakeet Ultra in \(ms) ms")
+        }
     }
 
     func unload() async {
